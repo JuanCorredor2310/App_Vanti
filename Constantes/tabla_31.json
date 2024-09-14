@@ -1,0 +1,8 @@
+{
+    "descripcion": "Grupo de suscriptores",
+    "datos": {
+        "1": "Usuarios residenciales pertenecientes a los estratos 1 y 2",
+        "2": "Usuarios regulados diferentes a los residenciales de los Estratos 1 y 2",
+        "3": "Totalidad de usuarios regulados"
+    }
+}

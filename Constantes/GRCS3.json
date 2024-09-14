@@ -1,0 +1,45 @@
+{
+    "generales": {
+        "NIU": "NIU",
+        "Fecha_medicion": "Fecha de medici\u00f3n",
+        "Hora_medicion": "Hora de medici\u00f3n",
+        "Tipo_gas": "Tipo de Gas",
+        "Presion_medida": "Presion Medida (mbar)",
+        "Metodo": "M\u00e9todo",
+        "Sustancia_odorante": "Sustancia Odorante",
+        "Nivel_concentracion_minimo": "Nivel de Concentraci\u00f3n M\u00ednimo",
+        "Nivel_concentracion_medido": "Nivel de Concentraci\u00f3n Medido ( mg/m\u00b3 )",
+        "Observaciones": "Observaciones"
+    },
+    "generales_no_float": [
+        "NIU",
+        "Tipo_gas",
+        "Metodo",
+        "Sustancia_odorante",
+        "Observaciones"
+    ],
+    "generales_float": [
+        "Presion_medida",
+        "Nivel_concentracion_minimo",
+        "Nivel_concentracion_medido"
+    ],
+    "generales_hora": [
+        "Hora_medicion"
+    ],
+    "generales_fecha": [
+        "Fecha_medicion"
+    ],
+    "seleccionados": [
+        "NIU",
+        "Fecha_medicion",
+        "Hora_medicion",
+        "Tipo_gas",
+        "Metodo",
+        "Sustancia_odorante",
+        "Observaciones",
+        "Presion_medida",
+        "Nivel_concentracion_minimo",
+        "Nivel_concentracion_medido"
+    ],
+    "cantidad_columnas": 10
+}

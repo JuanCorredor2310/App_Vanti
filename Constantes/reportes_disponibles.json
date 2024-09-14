@@ -1,0 +1,23 @@
+{
+    "descripcion": "reportes_disponibles",
+    "datos": {
+        "Tarifario": [
+            "GRT1",
+            "GRT3"
+        ],
+        "Comercial": [
+            "GRC1",
+            "GRC2",
+            "GRC3",
+            "GRTT2"
+        ],
+        "Tecnico": [
+            "GRCS1",
+            "GRCS2",
+            "GRCS3",
+            "GRCS7",
+            "GRCS9",
+            "GRS1"
+        ]
+    }
+}

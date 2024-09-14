@@ -1,0 +1,8 @@
+{
+    "descripcion": "Tipo de suspensi\u00f3n",
+    "datos": {
+        "1": "IS",
+        "2": "ER",
+        "3": "NER"
+    }
+}

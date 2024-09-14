@@ -1,0 +1,65 @@
+{
+    "carpeta_1": [
+        "NUEVO SUI"
+    ],
+    "carpeta_2": [
+        "Reportes Nuevo SUI"
+    ],
+    "carpeta_3": [
+        "2023",
+        "2024"
+    ],
+    "carpeta_4": [
+        "VANTI",
+        "GNCB",
+        "GNCR",
+        "GOR",
+        "CALIDAD",
+        "REPORTES_GENERADOS_APLICATIVO"
+    ],
+    "carpeta_5": [
+        "Compilado",
+        "Enero",
+        "Febrero",
+        "Marzo",
+        "Abril",
+        "Mayo",
+        "Junio",
+        "Julio",
+        "Agosto",
+        "Septiembre",
+        "Octubre",
+        "Noviembre",
+        "Diciembre"
+    ],
+    "carpeta_6": {
+        "Comercial": [
+            "GRTT2",
+            "GRC1",
+            "GRC2",
+            "GRC3",
+            "GRC4",
+            "GRC5",
+            "GRC6",
+            "RSGN",
+            "GRC8"
+        ],
+        "Tarifario": [
+            "GRT1",
+            "GRT2",
+            "GRT3"
+        ],
+        "Tecnico": [
+            "GRS1",
+            "GRCS1",
+            "GRCS2",
+            "GRCS3",
+            "GRCS4",
+            "GRCS5",
+            "GRCS6",
+            "GRCS7",
+            "GRCS8",
+            "GRCS9"
+        ]
+    }
+}

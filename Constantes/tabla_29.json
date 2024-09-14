@@ -1,0 +1,12 @@
+{
+    "descripcion": "Tipo de usuario estructura tarifaria",
+    "datos": {
+        "1": "Residencial",
+        "2": "Comercial",
+        "3": "Industrial",
+        "4": "Gas Natural Vehicular",
+        "5": "Cogeneraci\u00f3n",
+        "6": "Autogeneraci\u00f3n",
+        "7": "Otro"
+    }
+}

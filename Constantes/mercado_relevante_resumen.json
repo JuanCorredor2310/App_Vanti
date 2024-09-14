@@ -1,0 +1,86 @@
+{
+    "9": {
+        "Id_empresa": "526",
+        "Nombre_mercado": "Floridablanca",
+        "Nombre_municipio": "FLORIDABLANCA",
+        "Latitud": "7.072056799999999",
+        "Longitud": "-73.1068227"
+    },
+    "11": {
+        "Id_empresa": "526",
+        "Nombre_mercado": "Santander-Sur Bol\u00edvar",
+        "Nombre_municipio": "BUCARAMANGA",
+        "Latitud": "7.119349",
+        "Longitud": "-73.1227416"
+    },
+    "16": {
+        "Id_empresa": "526",
+        "Nombre_mercado": "Santander-Antioquia",
+        "Nombre_municipio": "BARRANCABERMEJA",
+        "Latitud": "7.0617085",
+        "Longitud": "-73.8519319"
+    },
+    "21": {
+        "Id_empresa": "525",
+        "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+        "Nombre_municipio": "AGUACHICA",
+        "Latitud": "8.2707367",
+        "Longitud": "-73.6065223"
+    },
+    "23": {
+        "Id_empresa": "488",
+        "Nombre_mercado": "Bogot\u00e1-Centro Cundinamarca",
+        "Nombre_municipio": "BOGOTA D.C.",
+        "Latitud": "4.710988599999999",
+        "Longitud": "-74.072092"
+    },
+    "80": {
+        "Id_empresa": "525",
+        "Nombre_mercado": "San Martin-Cesar",
+        "Nombre_municipio": "SAN MARTIN",
+        "Latitud": "3.696944",
+        "Longitud": "-73.698611"
+    },
+    "106": {
+        "Id_empresa": "2225",
+        "Nombre_mercado": "Subachoque",
+        "Nombre_municipio": "SUBACHOQUE",
+        "Latitud": "4.929001",
+        "Longitud": "-74.172465"
+    },
+    "113": {
+        "Id_empresa": "488",
+        "Nombre_mercado": "La Calera",
+        "Nombre_municipio": "LA CALERA",
+        "Latitud": "4.7191983",
+        "Longitud": "-73.9690753"
+    },
+    "139": {
+        "Id_empresa": "488",
+        "Nombre_mercado": "El Rosal",
+        "Nombre_municipio": "EL ROSAL",
+        "Latitud": "4.852250000000001",
+        "Longitud": "-74.26482399999999"
+    },
+    "149": {
+        "Id_empresa": "488",
+        "Nombre_mercado": "LA MESA Y ANOLAIMA",
+        "Nombre_municipio": "LA MESA",
+        "Latitud": "32.7678287",
+        "Longitud": "-117.0230839"
+    },
+    "169": {
+        "Id_empresa": "2225",
+        "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+        "Nombre_municipio": "TUNJA",
+        "Latitud": "5.5446422",
+        "Longitud": "-73.3575572"
+    },
+    "1825": {
+        "Id_empresa": "2225",
+        "Nombre_mercado": "MONGUA",
+        "Nombre_municipio": "MONGUA",
+        "Latitud": "5.7541536",
+        "Longitud": "-72.7998479"
+    }
+}

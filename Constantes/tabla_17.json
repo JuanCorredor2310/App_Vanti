@@ -1,0 +1,9 @@
+{
+    "descripcion": [
+        "Tipo sector consumo"
+    ],
+    "datos": {
+        "1": "Residencial",
+        "2": "No Residencial"
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "descripcion": "Actividad del comprador",
+    "datos": {
+        "1": "Comercializador",
+        "2": "Distribuidor - Comercializador",
+        "3": "Productor - Comercializador",
+        "4": "Transportador",
+        "5": "Usuario No Regulado",
+        "6": "Generador t\u00e9rmico"
+    }
+}

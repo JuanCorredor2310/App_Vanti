@@ -1,0 +1,60 @@
+{
+    "generales": {
+        "ID_Mercado": "ID Mercado",
+        "Codigo_DANE": "C\u00f3digo DANE",
+        "Suspension_programada": "\u00bfSuspensi\u00f3n fue programada?",
+        "Codigo_evento": "C\u00f3digo de evento",
+        "Tipo_gas": "Tipo de Gas",
+        "Fecha_inicio_suspension": "Fecha de inicio de la suspensi\u00f3n",
+        "Hora_inicio_suspension": "Hora de inicio de la suspensi\u00f3n",
+        "Fecha_final_suspension": "Fecha final de la suspensi\u00f3n",
+        "Hora_final_suspension": "Hora final de la suspensi\u00f3n",
+        "Tipo_suspension": "Tipo de suspensi\u00f3n",
+        "Origen_suspension": "Origen de la suspensi\u00f3n",
+        "Genero_compensacion": "Gener\u00f3 compensaci\u00f3n",
+        "Numero_suscriptores_afectados": "Numero de Suscriptores afectados",
+        "Medio_comunicacion": "Medio de comunicaci\u00f3n",
+        "Fecha_publicacion": "Fecha de publicacion",
+        "Observaciones": "Observaciones"
+    },
+    "generales_no_float": [
+        "ID_Mercado",
+        "Codigo_DANE",
+        "Suspension_programada",
+        "Codigo_evento",
+        "Tipo_gas",
+        "Tipo_suspension",
+        "Origen_suspension",
+        "Genero_compensacion",
+        "Numero_suscriptores_afectados",
+        "Medio_comunicacion",
+        "Observaciones"
+    ],
+    "generales_float": [],
+    "generales_hora": [
+        "Hora_inicio_suspension",
+        "Hora_final_suspension"
+    ],
+    "generales_fecha": [
+        "Fecha_inicio_suspension",
+        "Fecha_final_suspension",
+        "Fecha_publicacion"
+    ],
+    "seleccionados": [
+        "ID_Mercado",
+        "Codigo_DANE",
+        "Suspension_programada",
+        "Codigo_evento",
+        "Tipo_gas",
+        "Fecha_inicio_suspension",
+        "Hora_inicio_suspension",
+        "Fecha_final_suspension",
+        "Hora_final_suspension",
+        "Tipo_suspension",
+        "Origen_suspension",
+        "Genero_compensacion",
+        "Numero_suscriptores_afectados",
+        "Fecha_publicacion"
+    ],
+    "cantidad_columnas": 16
+}

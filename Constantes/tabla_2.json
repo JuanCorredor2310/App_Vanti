@@ -1,0 +1,8 @@
+{
+    "descripcion": "Tipo de Factura",
+    "datos": {
+        "1": "Normal",
+        "2": "Refacturaci\u00f3n",
+        "3": "Normal y refacturaci\u00f3n"
+    }
+}

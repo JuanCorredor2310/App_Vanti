@@ -1,0 +1,9 @@
+{
+    "descripcion": "Tipo de Lectura",
+    "datos": {
+        "1": "Real",
+        "2": "Estimada",
+        "3": "Medici\u00f3n prepaga",
+        "4": "Sin Lectura"
+    }
+}

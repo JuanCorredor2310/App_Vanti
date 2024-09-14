@@ -1,0 +1,35 @@
+{
+    "generales": {
+        "NIU": "NIU",
+        "Grupo": "Grupo",
+        "Numero_medidor": "N\u00famero de medidor",
+        "Tipo_revision": "Tipo de revisi\u00f3n",
+        "Fecha_revision": "Fecha de revisi\u00f3n",
+        "Numero_certificado": "N\u00famero de certificado",
+        "Empresa_certificacion": "Empresa de certificaci\u00f3n",
+        "Codigo_acreditacion_ONAC": "C\u00f3digo de acreditaci\u00f3n ONAC"
+    },
+    "generales_no_float": [
+        "NIU",
+        "Grupo",
+        "Numero_medidor",
+        "Tipo_revision",
+        "Numero_certificado",
+        "Empresa_certificacion",
+        "Codigo_acreditacion_ONAC"
+    ],
+    "generales_float": [],
+    "generales_hora": [],
+    "generales_fecha": [
+        "Fecha_revision"
+    ],
+    "seleccionados": [
+        "NIU",
+        "Grupo",
+        "Numero_medidor",
+        "Tipo_revision",
+        "Numero_certificado",
+        "Empresa_certificacion"
+    ],
+    "cantidad_columnas": 8
+}

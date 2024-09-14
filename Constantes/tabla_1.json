@@ -1,0 +1,10 @@
+{
+    "descripcion": "Tipo de Gas",
+    "datos": {
+        "1": "Gas Natural GN",
+        "2": "Gas Natural Comprimido GNC",
+        "3": "Gas Licuado de Petr\u00f3leo GLP",
+        "4": "Aire Propanado AP",
+        "5": "Gas Metano en Dep\u00f3sitos de Carb\u00f3n GMDC"
+    }
+}

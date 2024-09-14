@@ -1,0 +1,58 @@
+{
+    "generales": {
+        "Tipo_gas": "Tipo de gas",
+        "IPLI": "IPLI (\u00edndice de Presi\u00f3n en L\u00edneas Individuales)",
+        "IO": "IO (\u00edndice de Odorizaci\u00f3n)",
+        "IRST_EG": "IRST - EG (\u00edndice de Respuesta a Servicio T\u00e9cnico - Escape de Gas)",
+        "IRST_IN": "IRST - IN (\u00edndice de Respuesta a Servicio - T\u00e9cnico - Incendio)",
+        "IRST_CL": "IRST -CL (\u00edndice de Respuesta a Servicio T\u00e9cnico - Calidad de la Llama)",
+        "IRST_IS": "IRST - IS (\u00edndice de Respuesta a Servicio T\u00e9cnico - interrupci\u00f3n del Servicio)",
+        "IRST_0": "IRST -0 (\u00edndice de Respuesta a Servicio T\u00e9cnico - Otros)",
+        "DES_IS": "DES - IS (Duraci\u00f3n Equivalente de interrupci\u00f3n en Inter\u00e9s del Servicio)",
+        "Suscriptores_DES_IS": "Suscriptores DES - IS (Suscriptores con interrupciones en Inter\u00e9s del Servicio)",
+        "Cantidad_eventos_DES_IS": "Cantidad de eventos DES - IS",
+        "DES_ER": "DES - ER (Duraci\u00f3n Equivalente de Interrupci\u00f3n del Servicio por eventos Eximentes de Responsabilidad)",
+        "Suscriptores_DES_ER": "Suscriptores DES - ER (Suscriptores con interrupci\u00f3n del servicio por eventos Eximentes de Responsabilidad)",
+        "Cantidad_eventos_DES_ER": "Cantidad de eventos DES - ER",
+        "DES_NER": "DES - NER (Duraci\u00f3n Equivalente de Interrupci\u00f3n del Servicio por eventos No Eximentes de Responsabilidad)",
+        "Suscriptores_DES_NER": "Suscriptores DES - NER (Suscriptores con interrupci\u00f3n del servicio por eventos No Eximentes de Responsabilidad)",
+        "Cantidad_eventos_DES_NER": "Cantidad de eventos DES - NER"
+    },
+    "generales_no_float": [
+        "Tipo_gas",
+        "Suscriptores_DES_IS",
+        "Cantidad_eventos_DES_IS",
+        "Suscriptores_DES_ER",
+        "Cantidad_eventos_DES_ER",
+        "Suscriptores_DES_NER",
+        "Cantidad_eventos_DES_NER"
+    ],
+    "generales_float": [
+        "IPLI",
+        "IO",
+        "IRST_EG",
+        "IRST_IN",
+        "IRST_CL",
+        "IRST_IS",
+        "IRST_0"
+    ],
+    "generales_hora": [
+        "DES_IS",
+        "DES_ER",
+        "DES_NER"
+    ],
+    "generales_fecha": [],
+    "seleccionados": [
+        "IPLI",
+        "IO",
+        "IRST_EG",
+        "Tipo_gas",
+        "DES_ER",
+        "Suscriptores_DES_ER",
+        "Cantidad_eventos_DES_ER",
+        "DES_NER",
+        "Suscriptores_DES_NER",
+        "Cantidad_eventos_DES_NER"
+    ],
+    "cantidad_columnas": 17
+}

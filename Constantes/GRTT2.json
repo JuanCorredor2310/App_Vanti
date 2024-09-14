@@ -1,0 +1,56 @@
+{
+    "generales": {
+        "NIU": "NIU",
+        "Tipo_usuario": "Tipo usuario",
+        "ID_Comercializador": "ID Comercializador",
+        "ID_Mercado": "ID Mercado",
+        "Codigo_DANE": "C\u00f3digo DANE",
+        "Ubicacion": "Ubicaci\u00f3n",
+        "Direccion": "Direcci\u00f3n",
+        "Informacion_predial_actualizada": "Informaci\u00f3n Predial Actualizada",
+        "Cedula_Catastral": "C\u00e9dula Catastral",
+        "Estrato": "Estrato",
+        "Altitud": "Altitud",
+        "Longitud": "Longitud",
+        "Latitud": "Latitud",
+        "Estado": "Estado",
+        "Fecha_ajuste": "Fecha ajuste"
+    },
+    "generales_no_float": [
+        "NIU",
+        "Tipo_usuario",
+        "ID_Comercializador",
+        "ID_Mercado",
+        "Codigo_DANE",
+        "Ubicacion",
+        "Direccion",
+        "Informacion_predial_actualizada",
+        "Cedula_Catastral",
+        "Estrato",
+        "Altitud",
+        "Estado"
+    ],
+    "generales_float": [
+        "Longitud",
+        "Latitud"
+    ],
+    "generales_hora": [],
+    "generales_fecha": [
+        "Fecha ajuste"
+    ],
+    "seleccionados": [
+        "Longitud",
+        "Latitud",
+        "NIU",
+        "Tipo_usuario",
+        "ID_Comercializador",
+        "ID_Mercado",
+        "Codigo_DANE",
+        "Estrato",
+        "Altitud",
+        "Estado",
+        "Direccion",
+        "Cedula_Catastral"
+    ],
+    "cantidad_columnas": 15
+}

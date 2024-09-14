@@ -1,0 +1,10 @@
+{
+    "descripcion": "Tipo de evento servicio t\u00e9cnico",
+    "datos": {
+        "1": "Escape de gas",
+        "2": "Incendio",
+        "3": "Calidad de la llama",
+        "4": "Interrupci\u00f3n del servicio",
+        "5": "Otros"
+    }
+}

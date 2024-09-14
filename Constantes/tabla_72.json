@@ -1,0 +1,7 @@
+{
+    "descripcion": "Estado suscriptor",
+    "datos": {
+        "1": "Activo",
+        "2": "Inactivo"
+    }
+}

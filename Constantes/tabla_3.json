@@ -1,0 +1,21 @@
+{
+    "descripcion": "Sector de Consumo usuarios regulados",
+    "datos": {
+        "1": "Residencial Bajo - Bajo",
+        "2": "Residencial Bajo",
+        "3": "Residencial Medio - Bajo",
+        "4": "Residencial Medio",
+        "5": "Residencial Medio- Alto",
+        "6": "Residencial Alto",
+        "7": "Comercial",
+        "8": "Industrial",
+        "9": "Oficial",
+        "10": "Especial Asistencial - EA",
+        "11": "Especial Educativo - ED",
+        "12": "Usuario Exento - UE",
+        "13": "Industrial Exento - IE",
+        "14": "Zonas comunes",
+        "15": "Distrito de riego",
+        "16": "Provisional"
+    }
+}

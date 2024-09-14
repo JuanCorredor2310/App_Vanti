@@ -1,0 +1,14 @@
+{
+    "descripcion": "Sector de consumo usuarios no regulados",
+    "datos": {
+        "1": "Comercial",
+        "2": "Comercializadoras de gas natural",
+        "3": "Transportadores de gas natural",
+        "4": "GNCV",
+        "5": "Petroqu\u00edmica",
+        "6": "Industrial",
+        "7": "Oficiales",
+        "8": "Termoel\u00e9ctrico",
+        "9": "Refiner\u00eda"
+    }
+}

@@ -1,0 +1,46 @@
+{
+    "generales": {
+        "ID_Mercado": "ID Mercado",
+        "K": "K",
+        "PV": "PV",
+        "SA": "SA",
+        "VR": "VR",
+        "CUvR": "CUvR",
+        "CUvA": "CUvA",
+        "CUvAm-1": "CUvAm-1",
+        "r": "r",
+        "rEA": "rEA",
+        "Meses": "Meses"
+    },
+    "generales_no_float": [
+        "ID_Mercado",
+        "K",
+        "SA",
+        "VR",
+        "CUvR",
+        "CUvA",
+        "CUvAm-1",
+        "Meses"
+    ],
+    "generales_float": [
+        "PV",
+        "r",
+        "rEA"
+    ],
+    "generales_hora": [],
+    "generales_fecha": [],
+    "seleccionados": [
+        "PV",
+        "r",
+        "rEA",
+        "ID_Mercado",
+        "K",
+        "SA",
+        "VR",
+        "CUvR",
+        "CUvA",
+        "CUvAm-1",
+        "Meses"
+    ],
+    "cantidad_columnas": 11
+}

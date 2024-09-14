@@ -1,0 +1,44 @@
+{
+    "generales": {
+        "Radicado_recibido": "Radicado recibido",
+        "Tipo_gas": "Tipo de gas",
+        "NIU": "NIU",
+        "Tipo_evento": "Tipo evento",
+        "Tipo_solicitud": "Tipo solicitud",
+        "Fecha_solicitud": "Fecha solicitud",
+        "Hora_solicitud": "Hora solicitud",
+        "Fecha_llegada_servicio_tecnico": "Fecha de llegada del servicio t\u00e9cnico",
+        "Hora_llegada_servicio_tecnico": "Hora de llegada del servicio t\u00e9cnico",
+        "Observaciones": "Observaciones"
+    },
+    "generales_no_float": [
+        "Radicado recibido",
+        "Tipo_gas",
+        "NIU",
+        "Tipo_evento",
+        "Tipo_solicitud",
+        "Observaciones"
+    ],
+    "generales_float": [],
+    "generales_hora": [
+        "Hora_solicitud",
+        "Hora_llegada_servicio_tecnico"
+    ],
+    "generales_fecha": [
+        "Fecha_solicitud",
+        "Fecha_llegada_servicio_tecnico"
+    ],
+    "seleccionados": [
+        "Radicado_recibido",
+        "Tipo_gas",
+        "NIU",
+        "Tipo_evento",
+        "Tipo_solicitud",
+        "Fecha_solicitud",
+        "Hora_solicitud",
+        "Fecha_llegada_servicio_tecnico",
+        "Hora_llegada_servicio_tecnico",
+        "Observaciones"
+    ],
+    "cantidad_columnas": 10
+}

@@ -1,0 +1,45 @@
+{
+    "generales": {
+        "NIU": "NIU",
+        "Tipo_gas": "Tipo de gas",
+        "Tipo_sector_consumo": "Tipo sector de consumo",
+        "ID_Factura": "ID Factura",
+        "Periodo_compensado": "Periodo compensado",
+        "Anio": "A\u00f1o",
+        "DES": "DES",
+        "CI": "CI",
+        "Demanda_promedio": "Demanda promedio",
+        "Valor_compensado": "Valor compensado",
+        "Codigo_causal": "C\u00f3digo causal"
+    },
+    "generales_no_float": [
+        "NIU",
+        "Tipo_gas",
+        "Tipo_sector_consumo",
+        "ID_Factura",
+        "Periodo_compensado",
+        "Anio",
+        "CI",
+        "Valor_compensado",
+        "Codigo_causal"
+    ],
+    "generales_float": [
+        "Demanda_promedio"
+    ],
+    "generales_hora": [
+        "DES"
+    ],
+    "generales_fecha": [],
+    "seleccionados": [
+        "NIU",
+        "Tipo_sector_consumo",
+        "ID_Factura",
+        "Periodo_compensado",
+        "Anio",
+        "CI",
+        "Valor_compensado",
+        "Codigo_causal",
+        "Demanda_promedio"
+    ],
+    "cantidad_columnas": 11
+}
