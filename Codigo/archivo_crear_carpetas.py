@@ -20,7 +20,7 @@ def configuracion_inicial():
 
 def funcion_creacion_carpetas(nombre):
     dic_carpetas = mod_2.leer_archivos_json(ruta_constantes+nombre+".json")
-    lista_ubicaciones = [ruta_archivos]
+    ista_ubicaciones = [ruta_archivos]
     for llave, valor in dic_carpetas.items():
         if llave != "carpeta_6":
             lista_ubicaciones_2 = []
@@ -45,8 +45,8 @@ def funcion_creacion_carpetas(nombre):
                     lista_enumerada_1 = mod_1.enumerar_lista(dic_carpetas[llave][elemento], True)
                     for elemento_1 in lista_enumerada_1:
                         lista_ubicaciones_3.append(carpeta+"/"+lista_enumerada[i]+"/"+elemento_1)
-            mod_1.creacion_carpeta(lista_ubicaciones_2)
-            mod_1.creacion_carpeta(lista_ubicaciones_3)
+            #mod_1.creacion_carpeta(lista_ubicaciones_2)
+            #mod_1.creacion_carpeta(lista_ubicaciones_3)
 
 def iniciar_funcion_crear_carpetas():
     funcion_creacion_carpetas("carpetas")

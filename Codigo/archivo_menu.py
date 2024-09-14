@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import subprocess
 import ruta_principal as mod_rp
 global ruta_principal, ruta_codigo, ruta_constantes, ruta_nuevo_sui, ruta_archivos, ruta_guardar_archivos
 ruta_principal = mod_rp.v_ruta_principal()
@@ -97,10 +98,13 @@ def comprobar_opcion_lista_menu(lista, opcion):
     else:
         return False
 
-def confirmacion_seleccion(lista):
+def confirmacion_seleccion(lista, texto=None):
     centinela = True
     while centinela:
-        print("\n¿Desea continuar?")
+        if texto:
+            print(texto)
+        else:
+            print("\n¿Desea continuar?")
         dic_menu = lista_opciones_menu(lista,False)
         option = str(input("Ingrese la opción a seleccionar: "))
         rta = comprobar_opcion_lista_menu(dic_menu, option)
@@ -245,9 +249,24 @@ def menu_configuracion_inicial(option):
             print("\n")
     #? Agregar un nuevo año
     elif option == "2":
-        # TODO: Agregar nuevo año a las carpetas
-        # Llamado a mod_3 (archivo_crear_carpetas)
-        print("Función agregar nuevo año")
+        centinela = True
+        while centinela:
+            anio = input("Ingrese el nuevo año a almacenar: ")
+            try:
+                valor = int(anio)
+                if valor > 2024:
+                    centinela = False
+                else:
+                    print("\nEl año ingresado no es válido\n")
+            except TypeError:
+                print("\nEl año ingresado no es válido\n")
+            except ValueError:
+                print("\nEl año ingresado no es válido\n")
+        lista_menu_1 = ["Sí","No"]
+        option_1,valor_1 = confirmacion_seleccion(lista_menu_1, f"¿Desea ingresar el año {valor} a las carpetas de archivos?")
+        if option_1 == "1":
+            mod_2.cambiar_diccionario(str(valor))
+            mod_3.configuracion_inicial()
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Menú de edición de archivos
@@ -904,11 +923,10 @@ def menu_inicial(lista, nombre):
     option,valor = opcion_menu_valida(lista, nombre, False)
     if option == str(len(lista)):
         mod_1.mostrar_texto("Adiós","texto")
-        sys.exit()
-        time.sleep(4)
-        os.system("taskkill /IM pwsh.exe /F")
+        time.sleep(3)
+        subprocess.run(['taskkill', '/F', '/IM', 'pwsh.exe', '/T'], check=True)
         os.system("exit")
-        os.system("taskkill /F /IM cmd.exe") 
+        #os.system("taskkill /F /IM cmd.exe") 
     elif option == "1":
         lista_menu = ["Creación de espacio de trabajo (Carpetas)",
                         "Agregar un nuevo año"]

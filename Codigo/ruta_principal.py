@@ -1,5 +1,3 @@
-import os
-import sys
 def v_ruta_principal(t=""):
     if t != "":
         valor = r"c:\\Aplicativo_Regulacion_Vanti"+"\\"+t
@@ -8,11 +6,11 @@ def v_ruta_principal(t=""):
     return valor
 
 def v_codigo():
-    valor = v_ruta_principal("Archivos\\Codigo_Vanti\\")
+    valor = v_ruta_principal("App_Vanti\\Codigo\\")
     return valor
 
 def v_constantes():
-    valor = v_ruta_principal("Archivos\\Constantes\\")
+    valor = v_ruta_principal("App_Vanti\\Constantes\\")
     return valor
 
 def v_nuevo_sui():

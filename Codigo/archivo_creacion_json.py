@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 import ruta_principal as mod_rp
 global ruta_principal, ruta_codigo, ruta_constantes, ruta_nuevo_sui, ruta_archivos
 ruta_principal = mod_rp.v_ruta_principal()
@@ -8,7 +9,6 @@ ruta_nuevo_sui = mod_rp.v_nuevo_sui()
 ruta_codigo = mod_rp.v_codigo()
 ruta_archivos = mod_rp.v_archivos()
 sys.path.append(os.path.abspath(ruta_codigo))
-import json
 import modulo as mod_1
 
 def almacenar_json(diccionario, nombre_archivo):
@@ -20,9 +20,14 @@ def leer_archivos_json(archivo):
         return data
 
 def creacion_directorio_carpetas_principales():
+        lista_anios_txt = ["Compilado"]
+        with open(ruta_constantes+"Anios.txt", 'r') as archivo:
+                        lineas = archivo.readlines()
+        l1 = [str(linea.strip()) for linea in lineas]
+        lista_anios_txt.extend(l1)
         carpetas = {"carpeta_1":["NUEVO SUI"], # Carpeta general
                         "carpeta_2":["Reportes Nuevo SUI"], # Carpeta principal
-                        "carpeta_3":["Compilado","2023","2024"], #Años registrados
+                        "carpeta_3":lista_anios_txt, #Años registrados
                         "carpeta_4":["VANTI",
                                 "GNCB",
                                 "GNCR",
@@ -58,46 +63,20 @@ def creacion_directorio_carpetas_principales():
                                         "Monitoreo y Control",
                                         "Tableau",
                                         "Tablas Maestras"], # Carpeta principal
-                        "carpeta_3":["Compilado","2023","2024"], #Años registrados
+                        "carpeta_3":lista_anios_txt, #Años registrados
                         "carpeta_4":["VANTI",
                                 "GNCB",
                                 "GNCR",
                                 "GOR",
                                 "CALIDAD"]}
         almacenar_json(carpetas_1, ruta_constantes+"carpetas_extra.json")
-def cambiar_diccionario(archivo, opcion):
-        with open(archivo) as file:
-                data = json.load(file)
-                variable_cambio = data.copy()
-        mod_1.mostrar_titulo("Cambio de elementos")
-        mod_1.mostrar_texto("", "salto")
-        print("Cambio del archivo "+archivo)
-        mod_1.mostrar_texto("", "salto")
 
-        if opcion == "crear":
-                mod_1.mostrar_texto("", "salto")
-                print("Elemento a agregar en: "+mod_1.lista_a_texto(list(variable_cambio.keys()), ",", False))
-                indicador = input("Ingrese el nombre del indicador a agregar: ")
-                elemento = input(f"Ingrese el nombre del elemento a agregar en el indicador {indicador}: ")
-                variable_cambio[indicador] = [elemento]
-                print(f"Información agregada en: {{{indicador}}}: {elemento}")
-        elif opcion == "eliminar":
-                mod_1.mostrar_texto("", "salto")
-                print("Elemento a eliminar en: "+mod_1.lista_a_texto(list(variable_cambio.keys()), ",", False))
-                indicador = input("Ingrese el nombre del indicador a eiminar: ")
-                if indicador in variable_cambio:
-                        del variable_cambio[indicador]
-                        print(f"Información eliminada del indicador: {indicador}")
-                else:
-                        print(f"No existe el indicador{indicador} en el archivo {archivo}")
-                        return
-        elif opcion == "agregar":
+def cambiar_diccionario(anio):
+        try:
+                with open(ruta_constantes+"Anios.txt", 'a') as file:
+                        file.write(anio + '\n')
+        except IOError:
                 pass
-        confirmacion = bool(int(input("Está segur@ de los cambios generados: 1. Sí, 0. No")))
-        if confirmacion:
-                almacenar_json(variable_cambio, archivo)
-        else:
-                return
 
 def guardar_diccionario_ruta(diccionario,nombre):
         n_archivo = ruta_constantes+nombre+".json"
@@ -106,7 +85,6 @@ def guardar_diccionario_ruta(diccionario,nombre):
 def variables_reportes(reporte):
         n_archivo = reporte
         if reporte == "GRT1":
-        
                 generales_no_float = ["ID_Mercado","Metodologia","Tipo_gas","Tipo_usuario","Rango","Piso_rango","Techo_rango","Vendedor_excedente_suministro","PMS","Cglp","CTT","CP",
                         "CTTG","IVE_aplicado_gestor_transporte","IVE_aplicado_comercializador_transporte","Vendedor_Excedente_Transporte"]
                 generales_float = ["Cuv","Cuf","G","T","D","FPC","Cv","Cc","Cf","P_perdidas","CCG",
@@ -674,11 +652,16 @@ def variables_reportes(reporte):
                         "datos":data}
                 guardar_diccionario_ruta(datos, n_archivo)
         elif reporte == "anios":
+                with open(ruta_constantes+"Anios.txt", 'r') as archivo:
+                        lineas = archivo.readlines()
+                lista_anios_txt = [linea.strip() for linea in lineas]
                 desc = "Anios"
-                data = {"1":"2023",
-                        "2":"2024"}
+                data = {}
+                for i in range(1,len(lista_anios_txt)):
+                        data[str(i)] = lista_anios_txt[i]
                 datos = {"descripcion":desc,
                         "datos":data}
+                print(datos)
                 guardar_diccionario_ruta(datos, n_archivo)
 
 def crear_archivos_json_principales():
