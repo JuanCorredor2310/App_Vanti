@@ -23,7 +23,7 @@ def creacion_directorio_carpetas_principales():
         lista_anios_txt = ["Compilado"]
         with open(ruta_constantes+"Anios.txt", 'r') as archivo:
                         lineas = archivo.readlines()
-        l1 = [str(linea.strip()) for linea in lineas]
+        l1 = [str(linea.strip()) for linea in lineas][1:]
         lista_anios_txt.extend(l1)
         carpetas = {"carpeta_1":["NUEVO SUI"], # Carpeta general
                         "carpeta_2":["Reportes Nuevo SUI"], # Carpeta principal
@@ -69,7 +69,31 @@ def creacion_directorio_carpetas_principales():
                                 "GNCR",
                                 "GOR",
                                 "CALIDAD"]}
-        almacenar_json(carpetas_1, ruta_constantes+"carpetas_extra.json")
+        almacenar_json(carpetas_1, ruta_constantes+"carpetas_1.json")
+        carpetas_2 = {"carpeta_1":["NUEVO SUI"], # Carpeta general
+                        "carpeta_2":["Reportes Nuevo SUI"], # Carpeta principal
+                        "carpeta_3":lista_anios_txt, #Años registrados
+                        "carpeta_4":["VANTI",
+                                "GNCB",
+                                "GNCR",
+                                "GOR",
+                                "CALIDAD",
+                                "REPORTES_GENERADOS_APLICATIVO"], # Empresas asociadas
+                        "carpeta_5":["Compilado",
+                                "Enero",
+                                "Febrero",
+                                "Marzo",
+                                "Abril",
+                                "Mayo",
+                                "Junio",
+                                "Julio",
+                                "Agosto",
+                                "Septiembre",
+                                "Octubre",
+                                "Noviembre",
+                                "Diciembre"], # Separación por meses
+                        "carpeta_7":["Comercial","Tarifario","Tecnico"]} # Tipos de reporte
+        almacenar_json(carpetas_2, ruta_constantes+"carpetas_2.json")
 
 def cambiar_diccionario(anio):
         try:
@@ -661,7 +685,6 @@ def variables_reportes(reporte):
                         data[str(i)] = lista_anios_txt[i]
                 datos = {"descripcion":desc,
                         "datos":data}
-                print(datos)
                 guardar_diccionario_ruta(datos, n_archivo)
 
 def crear_archivos_json_principales():

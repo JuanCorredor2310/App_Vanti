@@ -16,8 +16,8 @@ lista_anios = list(mod_2.leer_archivos_json(ruta_constantes+"anios.json")["datos
 lista_meses = list(mod_2.leer_archivos_json(ruta_constantes+"tabla_18.json")["datos"].values())
 lista_filiales = list(mod_2.leer_archivos_json(ruta_constantes+"tabla_empresa.json")["datos"].keys())
 dic_reportes = mod_2.leer_archivos_json(ruta_constantes+"carpetas.json")["carpeta_6"]
-lista_reportes_generales = mod_2.leer_archivos_json(ruta_constantes+"carpetas_extra.json")["carpeta_2"]
-reportes_generados = mod_2.leer_archivos_json(ruta_constantes+"carpetas_extra.json")["carpeta_4"]
+lista_reportes_generales = mod_2.leer_archivos_json(ruta_constantes+"carpetas_1.json")["carpeta_2"]
+reportes_generados = mod_2.leer_archivos_json(ruta_constantes+"carpetas_1.json")["carpeta_4"]
 
 def busqueda_archivos_lista_ubicaciones(lista_archivos, lista_busqueda, tipo):
     for carpeta in lista_busqueda:

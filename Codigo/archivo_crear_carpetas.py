@@ -20,7 +20,7 @@ def configuracion_inicial():
 
 def funcion_creacion_carpetas(nombre):
     dic_carpetas = mod_2.leer_archivos_json(ruta_constantes+nombre+".json")
-    ista_ubicaciones = [ruta_archivos]
+    lista_ubicaciones = [ruta_archivos]
     for llave, valor in dic_carpetas.items():
         if llave != "carpeta_6":
             lista_ubicaciones_2 = []
@@ -45,20 +45,19 @@ def funcion_creacion_carpetas(nombre):
                     lista_enumerada_1 = mod_1.enumerar_lista(dic_carpetas[llave][elemento], True)
                     for elemento_1 in lista_enumerada_1:
                         lista_ubicaciones_3.append(carpeta+"/"+lista_enumerada[i]+"/"+elemento_1)
-            #mod_1.creacion_carpeta(lista_ubicaciones_2)
-            #mod_1.creacion_carpeta(lista_ubicaciones_3)
+            mod_1.creacion_carpeta(lista_ubicaciones_2)
+            mod_1.creacion_carpeta(lista_ubicaciones_3)
 
 def iniciar_funcion_crear_carpetas():
     funcion_creacion_carpetas("carpetas")
-    funcion_creacion_carpetas("carpetas_extra")
+    funcion_creacion_carpetas("carpetas_1")
+    funcion_creacion_carpetas("carpetas_2")
     df = mod_1.leer_dataframe(ruta_constantes+"mercado_relevante.csv")
     dic_DANE = {}
     for i in range(len(df)):
         dic_DANE[str(df["Codigo_DANE"][i])] = {"Id_mercado":str(df["Id_mercado"][i]),
                                                 "Id_empresa":str(df["Id_empresa"][i]),
-                                                "Nombre_municipio":str(df["Nombre_municipio"][i]),
-                                                "Latitud":str(df["Latitud"][i]),
-                                                "Longitud":str(df["Longitud"][i])}
+                                                "Nombre_municipio":str(df["Nombre_municipio"][i])}
     mod_2.almacenar_json(dic_DANE, ruta_constantes+"mercado_relevante.json")
     df = mod_1.leer_dataframe(ruta_constantes+"mercado_relevante_resumen.csv")
     dic_mercado_rele = {}

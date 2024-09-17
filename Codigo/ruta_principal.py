@@ -1,6 +1,6 @@
 def v_ruta_principal(t=""):
     if t != "":
-        valor = r"c:\\Aplicativo_Regulacion_Vanti"+"\\"+t
+        valor = r"c:\\Aplicativo_Regulacion_Vanti\\"+t
     else:
         valor = r"c:\\Aplicativo_Regulacion_Vanti"
     return valor
@@ -22,5 +22,5 @@ def v_archivos():
     return valor
 
 def v_guardar_archivos():
-    valor = v_ruta_principal("Archivos\\Gurdar_Archivos")
+    valor = v_ruta_principal(r"Archivos\\Guardar_Archivos\\")
     return valor
