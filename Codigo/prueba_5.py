@@ -1,19 +1,15 @@
-import os
-import sys
-def v_ruta_principal(t=""):
-    if t != "":
-        valor = r"c:\\Aplicativo_Regulacion_Vanti"+"\\"+t
-    else:
-        valor = r"c:\\Aplicativo_Regulacion_Vanti"
-    return valor
+import dash
+import dash_html_components as html
+from dash.dependencies import Input, Output
 
-def v_codigo():
-    valor = v_ruta_principal("Codigo_Vanti")
-    return valor
+# Load the image
+ruta = r'C:\\Users\\default.LAPTOP-BMGM3VDA\\Downloads\\plantilla.png'
 
-def v_constantes():
-    valor = v_ruta_principal("Constantes")
-    return valor
+app = dash.Dash(__name__)
 
+app.layout = html.Div([
+    html.Img(id='image', src='file://' + ruta, style={'width': '100%', 'height': '100vh'})
+], style={'margin': 0, 'padding': 0, 'overflow': 'hidden'})
 
-
+if __name__ == '__main__':
+    app.run_server()

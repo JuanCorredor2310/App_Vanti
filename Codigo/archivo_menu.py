@@ -738,7 +738,7 @@ def menu_comercial(option,valor):
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Menú de reportes tarifarios
 # * -------------------------------------------------------------------------------------------------------
-def menu_tarifario(option):
+def menu_tarifario(option,valor):
     #? Generación de reportes tarifarios mensual
     if option == "1":
         seleccionar_reporte = funcion_seleccionar_reportes("reporte_tarifas_mensual")
@@ -747,13 +747,15 @@ def menu_tarifario(option):
             t_i = time.time()
         proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1])
         if proceso:
+            print(f"\nInicio de procesamiento para: {valor}\n\n")
             mod_1.reporte_tarifas_mensual(lista_archivos, True, seleccionar_reporte)
             if opciones_adicionales[0]:
                 t_f = time.time()
                 mod_1.mostrar_tiempo(t_f, t_i)
     #? Generación de reportes tarifarios anual
     elif option == "2":
-        seleccionar_reporte = funcion_seleccionar_reportes("reporte_tarifas_anual")
+        print(valor)
+        """seleccionar_reporte = funcion_seleccionar_reportes("reporte_tarifas_anual")
         seleccionar_reporte_copia = seleccionar_reporte.copy()
         opciones_adicionales = anadir_opciones(True, mostrar_archivos=True)
         if opciones_adicionales[0]:
@@ -816,45 +818,29 @@ def menu_tarifario(option):
                     mod_1.reporte_tarifas_anual(lista_archivos,lista_archivos_copia, True, seleccionar_reporte, lista_fechas)
                     if opciones_adicionales[0]:
                         t_f = time.time()
-                        mod_1.mostrar_tiempo(t_f, t_i)
+                        mod_1.mostrar_tiempo(t_f, t_i)"""
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Menú de reportes técnicos
 # * -------------------------------------------------------------------------------------------------------
-def menu_tecnico(option):
+def menu_tecnico(option,valor):
+    #? Generación de consolidación de indicadores técnicos (IPLI,IO,IRST-EG) mensual
     if option == "1":
         seleccionar_reporte = funcion_seleccionar_reportes("reportes_indicadores_tecnicos_mensual")
         opciones_adicionales = anadir_opciones(True)
         if opciones_adicionales[0]:
             t_i = time.time()
-        tipo = ".csv"
-        lista_evitar = especificar_lista_reportes_generados([tipo.replace(".txt","").replace(".csv","")])
-        lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
-        if len(lista_archivos) == 0:
-            print(f"\nNo se encontraron archivos con la extensión {tipo}\n")
-        else:
-            if opciones_adicionales[1]:
-                mod_1.estandarizacion_archivos(lista_archivos,False)
-            tipo = "_form_estandar.csv"
-            lista_evitar = especificar_lista_reportes_generados([tipo.replace(".txt","").replace(".csv","")])
-            lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
-            if len(lista_archivos) == 0:
-                print(f"\nNo se encontraron archivos con la extensión {tipo}\n")
-            else:
-                if opciones_adicionales[1]:
-                    mod_1.archivos_resumen(lista_archivos,False)
-                tipo = "_resumen.csv"
-                lista_evitar = especificar_lista_reportes_generados([tipo.replace(".txt","").replace(".csv","")])
-                lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
-                if len(lista_archivos) == 0:
-                    print(f"\nNo se encontraron archivos con la extensión {tipo}\n")
-                else:
-                    mod_1.generar_reporte_indicadores_tecnicos_mensual(lista_archivos, seleccionar_reporte, True)
-                    if opciones_adicionales[0]:
-                        t_f = time.time()
-                        mod_1.mostrar_tiempo(t_f, t_i)
+        proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1])
+        if proceso:
+            print(f"\nInicio de procesamiento para: {valor}\n\n")
+            mod_1.generar_reporte_indicadores_tecnicos_mensual(lista_archivos, seleccionar_reporte, True)
+            if opciones_adicionales[0]:
+                t_f = time.time()
+                mod_1.mostrar_tiempo(t_f, t_i)
+    #? Generación de consolidación de indicadores técnicos (IPLI,IO,IRST-EG) anual
     elif option == "2":
-        seleccionar_reporte = funcion_seleccionar_reportes("reportes_indicadores_tecnicos_anual")
+        print(valor)
+        """seleccionar_reporte = funcion_seleccionar_reportes("reportes_indicadores_tecnicos_anual")
         tipo = ".csv"
         lista_evitar = especificar_lista_reportes_generados([tipo.replace(".txt","").replace(".csv","")])
         lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
@@ -885,41 +871,42 @@ def menu_tecnico(option):
                     if len(seleccionar_reporte["filial"]) == 1:
                         mod_1.generar_reporte_indicadores_tecnicos_anual(lista_archivos, True, seleccionar_reporte["filial"][0], seleccionar_reporte)
                     else:
-                        mod_1.generar_reporte_indicadores_tecnicos_anual_total(lista_archivos, True, seleccionar_reporte)
+                        mod_1.generar_reporte_indicadores_tecnicos_anual_total(lista_archivos, True, seleccionar_reporte)"""
+    #? Generación de reporte de suspensiones mensual
     elif option == "3":
         seleccionar_reporte = funcion_seleccionar_reportes("reportes_suspension_mensual")
         opciones_adicionales = anadir_opciones(True)
         if opciones_adicionales[0]:
             t_i = time.time()
-        tipo = ".csv"
-        lista_evitar = especificar_lista_reportes_generados([tipo.replace(".txt","").replace(".csv","")])
-        lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
-        if len(lista_archivos) == 0:
-            print(f"\nNo se encontraron archivos con la extensión {tipo}\n")
-        else:
-            if opciones_adicionales[1]:
-                mod_1.estandarizacion_archivos(lista_archivos,False)
-            tipo = "_form_estandar.csv"
-            lista_evitar = especificar_lista_reportes_generados([tipo.replace(".txt","").replace(".csv","")])
-            lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
-            if len(lista_archivos) == 0:
-                print(f"\nNo se encontraron archivos con la extensión {tipo}\n")
-            else:
-                if opciones_adicionales[1]:
-                    mod_1.archivos_resumen(lista_archivos,False)
-                tipo = "_resumen.csv"
-                lista_evitar = especificar_lista_reportes_generados([tipo.replace(".txt","").replace(".csv","")])
-                lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
-                if len(lista_archivos) == 0:
-                    print(f"\nNo se encontraron archivos con la extensión {tipo}\n")
-                else:
-                    mod_1.generar_reporte_suspension_mensual(lista_archivos, seleccionar_reporte, True)
-                    if opciones_adicionales[0]:
-                        t_f = time.time()
-                        mod_1.mostrar_tiempo(t_f, t_i)
+        proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1])
+        if proceso:
+            print(f"\nInicio de procesamiento para: {valor}\n\n")
+            mod_1.generar_reporte_suspension_mensual(lista_archivos, seleccionar_reporte, True)
+            if opciones_adicionales[0]:
+                t_f = time.time()
+                mod_1.mostrar_tiempo(t_f, t_i)
+    #? Generación de reporte de suspensiones anual
     elif option == "4":
         seleccionar_reporte = funcion_seleccionar_reportes("reportes_suspension_anual")
         print("Reporte a generar:",seleccionar_reporte)
+    #? Generación de reporte de información de respuesta a servicio técnico (IRST) mensual
+    elif option == "5":
+        seleccionar_reporte = funcion_seleccionar_reportes("reportes_indicadores_tecnicos_IRST_mensual")
+        opciones_adicionales = anadir_opciones(True)
+        if opciones_adicionales[0]:
+            t_i = time.time()
+        proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1])
+        if proceso:
+            print(f"\nInicio de procesamiento para: {valor}\n\n")
+            mod_1.generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos, seleccionar_reporte)
+            if opciones_adicionales[0]:
+                t_f = time.time()
+                mod_1.mostrar_tiempo(t_f, t_i)
+    #? Generación de reporte de información de respuesta a servicio técnico (IRST) anual
+    elif option == "6":
+        print(valor)
+        #seleccionar_reporte = funcion_seleccionar_reportes("reportes_indicadores_tecnicos_IRST_anual")
+        #print("Reporte a generar:",seleccionar_reporte)
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Menú general
@@ -959,15 +946,17 @@ def menu_inicial(lista, nombre):
                     "Generación de reportes tarifarios anual",
                     "Regresar al menú inicial"]
         option,valor = opcion_menu_valida(lista_menu, "Reportes Tarifarios", False)
-        menu_tarifario(option)
+        menu_tarifario(option,valor)
     elif option == "5":
-        lista_menu = ["Generación de indicadores técnicos mensual",
-                    "Generación de indicadores técnicos anual",
+        lista_menu = ["Generación de consolidación de indicadores técnicos (IPLI,IO,IRST-EG) mensual",
+                    "Generación de consolidación de indicadores técnicos (IPLI,IO,IRST-EG) anual",
                     "Generación de reporte de suspensiones mensual",
                     "Generación de reporte de suspensiones anual",
+                    "Generación de reporte de información de respuesta a servicio técnico (IRST) mensual",
+                    "Generación de reporte de información de respuesta a servicio técnico (IRST) anual",
                     "Regresar al menú inicial"]
         option,valor = opcion_menu_valida(lista_menu, "Reportes Técnicos", False)
-        menu_tecnico(option)
+        menu_tecnico(option,valor)
     elif option == "6":
         print("\nCreación de Dashboard en proceso...\n")
     return True
@@ -1163,6 +1152,20 @@ def funcion_seleccionar_reportes(tipo):
         seleccionar_reportes = eleccion_rango_anual(seleccionar_reportes)
         seleccionar_reportes = eleccion_elemento(seleccionar_reportes, lista_filiales.copy(), "Seleccionar todas las filiales", "Elección filial", "filial", False)
         return seleccionar_reportes
+    elif tipo == "reportes_indicadores_tecnicos_IRST_mensual":
+        seleccionar_reportes["ubicacion"] = ["Reportes Nuevo SUI"]
+        seleccionar_reportes["tipo"] = ["Tecnico"]
+        seleccionar_reportes["clasificacion"] = ["GRCS1"]
+        seleccionar_reportes = eleccion_fecha_personalizada(seleccionar_reportes, True)
+        seleccionar_reportes = eleccion_elemento(seleccionar_reportes, lista_filiales.copy(), "Seleccionar todas las filiales", "Elección filial", "filial", False)
+        return seleccionar_reportes
+    elif tipo == "reportes_indicadores_tecnicos_IRST_anual":
+        seleccionar_reportes["ubicacion"] = ["Reportes Nuevo SUI"]
+        seleccionar_reportes["tipo"] = ["Tecnico"]
+        seleccionar_reportes["clasificacion"] = ["GRCS1"]
+        seleccionar_reportes = eleccion_rango_anual(seleccionar_reportes)
+        seleccionar_reportes = eleccion_elemento(seleccionar_reportes, lista_filiales.copy(), "Seleccionar todas las filiales", "Elección filial", "filial", False)
+        return seleccionar_reportes
     iniciar_menu()
 
 # * -------------------------------------------------------------------------------------------------------
@@ -1302,6 +1305,8 @@ mostrar_inicio_app()
     # Generar la opción de un nuevo formato
     # Generar la opción de cambiar un formato actual
     #Incluir las suspenciones por hora
+    #Incluir los porcentajes del AEGR
+    #Encontrar los reportes mensuales generados y faltantes para los reportes anuales
     #Archivos necesarios para el Dashboard (cambiar la función de archivos esperados)
 
 # TODO Aplicativo:
