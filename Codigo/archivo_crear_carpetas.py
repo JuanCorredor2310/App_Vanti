@@ -68,11 +68,4 @@ def iniciar_funcion_crear_carpetas():
                                                 "Latitud":str(df["Latitud"][i]),
                                                 "Longitud":str(df["Longitud"][i])}
     mod_2.almacenar_json(dic_mercado_rele, ruta_constantes+"mercado_relevante_resumen.json")
-    lista = mod_1.buscar_carpetas(ruta_nuevo_sui)
-    ruta_1 = None
-    for i in lista:
-        if "Tablas Maestras" in i:
-            ruta_1 = i
-    if ruta_1:
-        df.to_csv(ruta_constantes+"mercado_relevante.csv", index=False)
 

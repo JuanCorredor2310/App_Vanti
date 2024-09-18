@@ -28,8 +28,11 @@ lista_filiales = list(mod_2.leer_archivos_json(ruta_constantes+"tabla_empresa.js
 dic_reportes = mod_2.leer_archivos_json(ruta_constantes+"carpetas.json")["carpeta_6"]
 lista_reportes_generales = mod_2.leer_archivos_json(ruta_constantes+"carpetas_1.json")["carpeta_2"]
 reportes_generados = mod_2.leer_archivos_json(ruta_constantes+"carpetas_1.json")["carpeta_4"]
-lista_reportes_generados = ["_resumen","_form_estandar","_indicador_tecnico","_reporte_consumo","_CLD","_PRD","_porcentaje","_total","_comparacion_iguales",
-                            "_comparacion_diferentes","_subdio","_info_comercial","_reporte_tarifario","_reporte_suspension","_inventario_suscriptores","_reporte_compensacion"]
+lista_reportes_generados = ["_resumen","_form_estandar",
+                            "_indicador_tecnico",
+                            "_reporte_consumo","_CLD","_PRD","_porcentaje","_total","_comparacion_iguales",
+                            "_comparacion_diferentes","_subdio","_info_comercial","_reporte_tarifario",
+                            "_reporte_suspension","_inventario_suscriptores","_reporte_compensacion"]
 cantidad_datos_estilo_excel = 80000
 
 def crear_lista_reportes_totales():
@@ -137,21 +140,28 @@ def elegir_codigo_DANE():
     if option == str(len(lista)):
         iniciar_menu()
     elif option == "1":
-        try:
-            codigo_DANE = int(input("\nIngresar el Código DANE a buscar: "))
-            print(f"\nCódigo DANE seleccionado: {codigo_DANE}\n")
-            return [codigo_DANE]
-        except ValueError:
-            return None
-        except TypeError:
-            return None
+        centinela = True
+        while centinela:
+            try:
+                codigo_DANE = int(input("\nIngresar el Código DANE a buscar: "))
+                if len(str(codigo_DANE)) != 8:
+                    print("El código DANE ingresado debe tener 8 dígitos")
+                else:
+                    print(f"\nCódigo DANE seleccionado: {codigo_DANE}\n")
+                    centinela = False
+            except ValueError:
+                print("El código DANE ingresado no es válido")
+            except TypeError:
+                print("El código DANE ingresado no es válido")
+        return [codigo_DANE]
     elif option == "2":
-        codigo_DANE = input("\nIngresar los Código DANE a buscar separados por comas: ")
+        codigo_DANE = str(input("\nIngresar los Código DANE a buscar separados por comas (,): ")).replace(" ","").replace(".","")
         lista_codigo_DANE = []
         for codigo in codigo_DANE.split(","):
             try:
                 valor = int(codigo)
-                lista_codigo_DANE.append(valor)
+                if len(str(valor)) == 8:
+                    lista_codigo_DANE.append(valor)
             except ValueError:
                 pass
             except TypeError:
@@ -368,22 +378,23 @@ def menu_opciones_archivos(option):
 def comprimir_archivos(seleccionar_reporte, evitar_extra=[]):
     lista_archivos_comprimir = []
     tipo = ".csv"
-    proceso, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte,evitar_extra)
+    proceso, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte,evitar_extra, informar=False)
     if proceso:
         lista_archivos_comprimir.extend(lista_archivos)
-        tipo = "_form_estandar.csv"
-        proceso, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte,evitar_extra)
-        if proceso:
-            lista_archivos_comprimir.extend(lista_archivos)
-            tipo = ".txt"
-            proceso, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte,evitar_extra)
-            if proceso:
-                lista_archivos_comprimir.extend(lista_archivos)
-                tipo = ".txt".upper()
-                proceso, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte,evitar_extra)
-                if proceso:
-                    pass
-                    mod_1.comprimir_archivos(lista_archivos_comprimir)
+    tipo = "_form_estandar.csv"
+    proceso, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte,evitar_extra, informar=False)
+    if proceso:
+        lista_archivos_comprimir.extend(lista_archivos)
+    tipo = ".txt"
+    proceso, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte,evitar_extra, txt=True, informar=False)
+    if proceso:
+        lista_archivos_comprimir.extend(lista_archivos)
+    tipo = ".txt".upper()
+    proceso, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte,evitar_extra, txt=True, informar=False)
+    if proceso:
+        lista_archivos_comprimir.extend(lista_archivos)
+    if len(lista_archivos_comprimir):
+        mod_1.comprimir_archivos(lista_archivos_comprimir)
 
 def generar_archivos_extra(seleccionar_reporte, regenerar=False, evitar_extra=[]):
     if regenerar:
@@ -406,7 +417,7 @@ def generar_archivos_extra(seleccionar_reporte, regenerar=False, evitar_extra=[]
         proceso, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte)
         return proceso, lista_archivos
 
-def busqueda_archivos_tipo(tipo, seleccionar_reporte, evitar_extra=[], txt=False):
+def busqueda_archivos_tipo(tipo, seleccionar_reporte, evitar_extra=[], txt=False, informar=True):
     if txt:
         l1 = [tipo.replace(".csv","")]
     else:
@@ -416,7 +427,8 @@ def busqueda_archivos_tipo(tipo, seleccionar_reporte, evitar_extra=[], txt=False
     lista_evitar = especificar_lista_reportes_generados(l1)
     lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
     if len(lista_archivos) == 0:
-        print(f"\nNo se encontraron archivos con la extensión {tipo}\n")
+        if informar:
+            print(f"\nNo se encontraron archivos con la extensión {tipo}\n")
         return False,lista_archivos
     else:
         return True,lista_archivos
@@ -424,10 +436,11 @@ def busqueda_archivos_tipo(tipo, seleccionar_reporte, evitar_extra=[], txt=False
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Menú de reportes comerciales
 # * -------------------------------------------------------------------------------------------------------
+
 def menu_comercial_sectores_consumo(option,valor):
-    #? Generación de reportes comerciales (Consumo por estratos [GRC1,GRC2,GRTT2])
+    #? Generación de información comercial por sectores de consumo mensual
     if option == "1":
-        seleccionar_reporte = funcion_seleccionar_reportes("reporte_comercial_mensual_sector_consumo")
+        seleccionar_reporte = funcion_seleccionar_reportes("reporte_comercial_mensual")
         opciones_adicionales = anadir_opciones(True, True, True)
         if opciones_adicionales[0]:
             t_i = time.time()
@@ -436,45 +449,34 @@ def menu_comercial_sectores_consumo(option,valor):
             codigo_DANE = opciones_adicionales[2]
             valor_facturado = opciones_adicionales[3]
             print(f"\nInicio de procesamiento para: {valor}\n\n")
-            mod_1.reporte_comercial_sector_consumo(lista_archivos, codigo_DANE, True, seleccionar_reporte, valor_facturado)
+            mod_1.reporte_comercial_sector_consumo(lista_archivos, seleccionar_reporte, codigo_DANE, valor_facturado)
             if opciones_adicionales[0]:
                 t_f = time.time()
                 mod_1.mostrar_tiempo(t_f, t_i)
-    #? Generación de reporte de usuarios activos mensual (GRC1)
+    #? Generación de información comercial por sectores de consumo anual
     elif option == "2":
-        seleccionar_reporte = funcion_seleccionar_reportes("reporte_info_comercial_mensual")
-        opciones_adicionales = anadir_opciones(True)
+        print(valor)
+        #reporte_comercial_anual
+    #? Generación de información comercial (sumatoria) mensual
+    elif option == "3":
+        seleccionar_reporte = funcion_seleccionar_reportes("reporte_comercial_mensual")
+        opciones_adicionales = anadir_opciones(True, True, True)
         if opciones_adicionales[0]:
             t_i = time.time()
-        tipo = ".csv"
-        lista_evitar = especificar_lista_reportes_generados([tipo.replace(".txt","").replace(".csv","")])
-        lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
-        if len(lista_archivos) == 0:
-            print(f"\nNo se encontraron archivos con la extensión {tipo}\n")
-        else:
-            if opciones_adicionales[1]:
-                mod_1.estandarizacion_archivos(lista_archivos,False)
-            tipo = "_form_estandar.csv"
-            lista_evitar = especificar_lista_reportes_generados([tipo.replace(".txt","").replace(".csv","")])
-            lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
-            if len(lista_archivos) == 0:
-                print(f"\nNo se encontraron archivos con la extensión {tipo}\n")
-            else:
-                if opciones_adicionales[1]:
-                    mod_1.archivos_resumen(lista_archivos,False)
-                tipo = "_resumen.csv"
-                lista_evitar = especificar_lista_reportes_generados([tipo.replace(".txt","").replace(".csv","")])
-                lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
-                if len(lista_archivos) == 0:
-                    print(f"\nNo se encontraron archivos con la extensión {tipo}\n")
-                else:
-                    mod_1.reporte_info_comercial_mensual(lista_archivos, True, seleccionar_reporte)
-                    if opciones_adicionales[0]:
-                        t_f = time.time()
-                        mod_1.mostrar_tiempo(t_f, t_i)
-    #? Generación de reporte de usuarios activos anual (GRC1)
-    elif option == "3":
-        seleccionar_reporte = funcion_seleccionar_reportes("reporte_info_comercial_anual")
+        proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1])
+        if proceso:
+            codigo_DANE = opciones_adicionales[2]
+            valor_facturado = opciones_adicionales[3]
+            print(f"\nInicio de procesamiento para: {valor}\n\n")
+            mod_1.reporte_comercial_sector_consumo(lista_archivos, seleccionar_reporte, codigo_DANE, valor_facturado, total=True)
+            if opciones_adicionales[0]:
+                t_f = time.time()
+                mod_1.mostrar_tiempo(t_f, t_i)
+    #? Generación de información comercial (sumatoria) anual
+    elif option == "4":
+        print(valor)
+        #reporte_comercial_anual
+        """seleccionar_reporte = funcion_seleccionar_reportes("reporte_info_comercial_anual")
         seleccionar_reporte_copia = seleccionar_reporte.copy()
         opciones_adicionales = anadir_opciones(True, mostrar_archivos=True)
         if opciones_adicionales[0]:
@@ -537,41 +539,45 @@ def menu_comercial_sectores_consumo(option,valor):
                     mod_1.reporte_info_comercial_anual(lista_archivos,lista_archivos_copia, True, seleccionar_reporte, lista_fechas)
                     if opciones_adicionales[0]:
                         t_f = time.time()
-                        mod_1.mostrar_tiempo(t_f, t_i)
-    #? Generación de reportes comerciales para usuarios subsidiados (Consumo por estratos [GRC1,GRTT2])
-    elif option == "7":
-        seleccionar_reporte = funcion_seleccionar_reportes("reporte_comercial_mensual_sector_consumo_subsidio")
+                        mod_1.mostrar_tiempo(t_f, t_i)"""
+    #? Generación de información comercial por sectores de consumo para usuarios subsidiados mensual
+    elif option == "5":
+        seleccionar_reporte = funcion_seleccionar_reportes("reporte_comercial_subsidio_mensual")
         opciones_adicionales = anadir_opciones(True, True, True)
         if opciones_adicionales[0]:
             t_i = time.time()
-        tipo = ".csv"
-        lista_evitar = especificar_lista_reportes_generados([tipo.replace(".txt","").replace(".csv","")])
-        lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
-        if len(lista_archivos) == 0:
-            print(f"\nNo se encontraron archivos con la extensión {tipo}\n")
-        else:
-            if opciones_adicionales[1]:
-                mod_1.estandarizacion_archivos(lista_archivos,False)
-            tipo = "_form_estandar.csv"
-            lista_evitar = especificar_lista_reportes_generados([tipo.replace(".txt","").replace(".csv","")])
-            lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
-            if len(lista_archivos) == 0:
-                print(f"\nNo se encontraron archivos con la extensión {tipo}\n")
-            else:
-                if opciones_adicionales[1]:
-                    mod_1.archivos_resumen(lista_archivos,False)
-                tipo = "_resumen.csv"
-                lista_evitar = especificar_lista_reportes_generados([tipo.replace(".txt","").replace(".csv","")])
-                lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
-                if len(lista_archivos) == 0:
-                    print(f"\nNo se encontraron archivos con la extensión {tipo}\n")
-                else:
-                    codigo_DANE = opciones_adicionales[2]
-                    valor_facturado = opciones_adicionales[3]
-                    mod_1.reporte_comercial_sector_consumo_subsidio(lista_archivos, codigo_DANE, True, seleccionar_reporte, valor_facturado)
-                    if opciones_adicionales[0]:
-                        t_f = time.time()
-                        mod_1.mostrar_tiempo(t_f, t_i)
+        proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1])
+        if proceso:
+            codigo_DANE = opciones_adicionales[2]
+            valor_facturado = opciones_adicionales[3]
+            print(f"\nInicio de procesamiento para: {valor}\n\n")
+            mod_1.reporte_comercial_sector_consumo(lista_archivos, seleccionar_reporte, codigo_DANE, valor_facturado, subsidio=True)
+            if opciones_adicionales[0]:
+                t_f = time.time()
+                mod_1.mostrar_tiempo(t_f, t_i)
+    #? Generación de información comercial por sectores de consumo para usuarios subsidiados anual
+    elif option == "6":
+        print(valor)
+        #reporte_comercial_subsidio_anual
+    #? Generación de información comercial (sumatoria) mensual
+    elif option == "7":
+        seleccionar_reporte = funcion_seleccionar_reportes("reporte_comercial_subsidio_mensual")
+        opciones_adicionales = anadir_opciones(True, True, True)
+        if opciones_adicionales[0]:
+            t_i = time.time()
+        proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1])
+        if proceso:
+            codigo_DANE = opciones_adicionales[2]
+            valor_facturado = opciones_adicionales[3]
+            print(f"\nInicio de procesamiento para: {valor}\n\n")
+            mod_1.reporte_comercial_sector_consumo(lista_archivos, seleccionar_reporte, codigo_DANE, valor_facturado, total=True, subsidio=True)
+            if opciones_adicionales[0]:
+                t_f = time.time()
+                mod_1.mostrar_tiempo(t_f, t_i)
+    #? Generación de información comercial (sumatoria) anual
+    elif option == "8":
+        print(valor)
+        #reporte_comercial_subsidio_anual
 
 def menu_comercial_compensaciones(option,valor):
     #? Generación de reportes de compensaciones mensual
@@ -692,9 +698,13 @@ def menu_comercial(option,valor):
     #? Información comercial por sector de consumo
     if option == "1":
         lista_menu = ["Generación de información comercial por sectores de consumo mensual",
-                    "Generación de información comercial por sectores de consumo anual"
+                    "Generación de información comercial por sectores de consumo anual",
+                    "Generación de información comercial (sumatoria) mensual",
+                    "Generación de información comercial (sumatoria) anual",
                     "Generación de información comercial por sectores de consumo para usuarios subsidiados mensual",
                     "Generación de información comercial por sectores de consumo para usuarios subsidiados anual",
+                    "Generación de información comercial (sumatoria) para usuarios subsidiados mensual",
+                    "Generación de información comercial (sumatoria) para usuarios subsidiados anual",
                     "Regresar al menú inicial"]
         option,valor = opcion_menu_valida(lista_menu, "Información comercial por sector de consumo")
         menu_comercial_sectores_consumo(option,valor)
@@ -732,35 +742,15 @@ def menu_tarifario(option):
     #? Generación de reportes tarifarios mensual
     if option == "1":
         seleccionar_reporte = funcion_seleccionar_reportes("reporte_tarifas_mensual")
-        opciones_adicionales = anadir_opciones(True)
+        opciones_adicionales = anadir_opciones(regenerar=True)
         if opciones_adicionales[0]:
             t_i = time.time()
-        tipo = ".csv"
-        lista_evitar = especificar_lista_reportes_generados([tipo.replace(".txt","").replace(".csv","")])
-        lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
-        if len(lista_archivos) == 0:
-            print(f"\nNo se encontraron archivos con la extensión {tipo}\n")
-        else:
-            if opciones_adicionales[1]:
-                mod_1.estandarizacion_archivos(lista_archivos,False)
-            tipo = "_form_estandar.csv"
-            lista_evitar = especificar_lista_reportes_generados([tipo.replace(".txt","").replace(".csv","")])
-            lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
-            if len(lista_archivos) == 0:
-                print(f"\nNo se encontraron archivos con la extensión {tipo}\n")
-            else:
-                if opciones_adicionales[1]:
-                    mod_1.archivos_resumen(lista_archivos,False)
-                tipo = "_resumen.csv"
-                lista_evitar = especificar_lista_reportes_generados([tipo.replace(".txt","").replace(".csv","")])
-                lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
-                if len(lista_archivos) == 0:
-                    print(f"\nNo se encontraron archivos con la extensión {tipo}\n")
-                else:
-                    mod_1.reporte_tarifas_mensual(lista_archivos, True, seleccionar_reporte)
-                    if opciones_adicionales[0]:
-                        t_f = time.time()
-                        mod_1.mostrar_tiempo(t_f, t_i)
+        proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1])
+        if proceso:
+            mod_1.reporte_tarifas_mensual(lista_archivos, True, seleccionar_reporte)
+            if opciones_adicionales[0]:
+                t_f = time.time()
+                mod_1.mostrar_tiempo(t_f, t_i)
     #? Generación de reportes tarifarios anual
     elif option == "2":
         seleccionar_reporte = funcion_seleccionar_reportes("reporte_tarifas_anual")
@@ -1073,18 +1063,32 @@ def funcion_seleccionar_reportes(tipo):
         seleccionar_reportes = eleccion_rango_anual(seleccionar_reportes)
         seleccionar_reportes = eleccion_elemento(seleccionar_reportes, lista_filiales.copy(), "Seleccionar todas las filiales", "Elección filial", "filial", False)
         return seleccionar_reportes
-    elif tipo == "reporte_comercial_mensual_sector_consumo":
+    elif tipo == "reporte_comercial_mensual":
         seleccionar_reportes["ubicacion"] = ["Reportes Nuevo SUI"]
         seleccionar_reportes["tipo"] = ["Comercial"]
         seleccionar_reportes["clasificacion"] = ["GRC1","GRC2","GRTT2"]
         seleccionar_reportes = eleccion_fecha_personalizada(seleccionar_reportes, True)
         seleccionar_reportes = eleccion_elemento(seleccionar_reportes, lista_filiales.copy(), "Seleccionar todas las filiales", "Elección filial", "filial", False)
         return seleccionar_reportes
-    elif tipo == "reporte_comercial_mensual_sector_consumo_subsidio":
+    elif tipo == "reporte_comercial_anual":
+        seleccionar_reportes["ubicacion"] = ["Reportes Nuevo SUI"]
+        seleccionar_reportes["tipo"] = ["Comercial"]
+        seleccionar_reportes["clasificacion"] = ["GRC1","GRC2","GRTT2"]
+        seleccionar_reportes = eleccion_rango_anual(seleccionar_reportes)
+        seleccionar_reportes = eleccion_elemento(seleccionar_reportes, lista_filiales.copy(), "Seleccionar todas las filiales", "Elección filial", "filial", False)
+        return seleccionar_reportes
+    elif tipo == "reporte_comercial_subsidio_mensual":
         seleccionar_reportes["ubicacion"] = ["Reportes Nuevo SUI"]
         seleccionar_reportes["tipo"] = ["Comercial"]
         seleccionar_reportes["clasificacion"] = ["GRC1","GRTT2"]
         seleccionar_reportes = eleccion_fecha_personalizada(seleccionar_reportes, True)
+        seleccionar_reportes = eleccion_elemento(seleccionar_reportes, lista_filiales.copy(), "Seleccionar todas las filiales", "Elección filial", "filial", False)
+        return seleccionar_reportes
+    elif tipo == "reporte_comercial_subsidio_anual":
+        seleccionar_reportes["ubicacion"] = ["Reportes Nuevo SUI"]
+        seleccionar_reportes["tipo"] = ["Comercial"]
+        seleccionar_reportes["clasificacion"] = ["GRC1","GRTT2"]
+        seleccionar_reportes = eleccion_rango_anual(seleccionar_reportes)
         seleccionar_reportes = eleccion_elemento(seleccionar_reportes, lista_filiales.copy(), "Seleccionar todas las filiales", "Elección filial", "filial", False)
         return seleccionar_reportes
     elif tipo == "reporte_comparacion_PRD_CLD":
@@ -1099,20 +1103,6 @@ def funcion_seleccionar_reportes(tipo):
         seleccionar_reportes["tipo"] = ["Comercial"]
         seleccionar_reportes["clasificacion"] = ["GRC1"]
         seleccionar_reportes = eleccion_fecha_personalizada(seleccionar_reportes, True)
-        seleccionar_reportes = eleccion_elemento(seleccionar_reportes, lista_filiales.copy(), "Seleccionar todas las filiales", "Elección filial", "filial", False)
-        return seleccionar_reportes
-    elif tipo == "reporte_info_comercial_mensual":
-        seleccionar_reportes["ubicacion"] = ["Reportes Nuevo SUI"]
-        seleccionar_reportes["tipo"] = ["Comercial"]
-        seleccionar_reportes["clasificacion"] = ["GRC1","GRC2","GRTT2"]
-        seleccionar_reportes = eleccion_fecha_personalizada(seleccionar_reportes, True)
-        seleccionar_reportes = eleccion_elemento(seleccionar_reportes, lista_filiales.copy(), "Seleccionar todas las filiales", "Elección filial", "filial", False)
-        return seleccionar_reportes
-    elif tipo == "reporte_info_comercial_anual":
-        seleccionar_reportes["ubicacion"] = ["Reportes Nuevo SUI"]
-        seleccionar_reportes["tipo"] = ["Comercial"]
-        seleccionar_reportes["clasificacion"] = ["GRC1","GRC2","GRTT2"]
-        seleccionar_reportes = eleccion_rango_anual(seleccionar_reportes)
         seleccionar_reportes = eleccion_elemento(seleccionar_reportes, lista_filiales.copy(), "Seleccionar todas las filiales", "Elección filial", "filial", False)
         return seleccionar_reportes
     elif tipo == "reportes_compensacion_mensual":
@@ -1306,11 +1296,13 @@ mostrar_inicio_app()
 # TODO Pendientes:
     #Descargar archivos
     # Archivos anuales
-    #Unir subsidio, comercial por estratos y reporte DANE (GRC1) en una misma función
     #Cambiar a compilado 00.
     #Revisar llamado de todas las funciones
     # Crear carpeta comercial,tarifario,tecnico en cada reporte anual
-    #Archivos necesarios para el Dashboard
+    # Generar la opción de un nuevo formato
+    # Generar la opción de cambiar un formato actual
+    #Incluir las suspenciones por hora
+    #Archivos necesarios para el Dashboard (cambiar la función de archivos esperados)
 
 # TODO Aplicativo:
     # Generación de gráficas
