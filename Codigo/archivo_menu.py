@@ -21,7 +21,6 @@ import archivo_busqueda_reportes as mod_4
 # * -------------------------------------------------------------------------------------------------------
 global version, lista_meses, lista_empresas,lista_anios,dic_reportes,lista_reportes_generales,reportes_generados,lista_reportes_totales,t_i,t_f,lista_reportes_generados,cantidad_datos_estilo_excel
 version = "1.0"
-
 lista_anios = list(mod_2.leer_archivos_json(ruta_constantes+"anios.json")["datos"].values())
 lista_meses = list(mod_2.leer_archivos_json(ruta_constantes+"tabla_18.json")["datos"].values())
 lista_filiales = list(mod_2.leer_archivos_json(ruta_constantes+"tabla_empresa.json")["datos"].keys())
@@ -30,7 +29,7 @@ lista_reportes_generales = mod_2.leer_archivos_json(ruta_constantes+"carpetas_1.
 reportes_generados = mod_2.leer_archivos_json(ruta_constantes+"carpetas_1.json")["carpeta_4"]
 lista_reportes_generados = ["_resumen","_form_estandar",
                             "_indicador_tecnico",
-                            "_reporte_consumo","_CLD","_PRD","_porcentaje","_total","_comparacion_iguales",
+                            "_reporte_consumo","_CLD","_PRD","_porcentaje_comparacion_SAP","_total_comparacion_SAP","_comparacion_iguales",
                             "_comparacion_diferentes","_subdio","_info_comercial","_reporte_tarifario",
                             "_reporte_suspension","_inventario_suscriptores","_reporte_compensacion"]
 cantidad_datos_estilo_excel = 80000
@@ -239,8 +238,7 @@ def elegir_cantidad_filas():
     else:
         return cantidad_datos_estilo_excel
 
-def anadir_opciones(regenerar=False, codigo_DANE=False, valor_facturado=False, cantidad_filas=False, mostrar_archivos=False):
-    calcular_tiempo = elegir_tiempo()
+def anadir_opciones(regenerar=False, codigo_DANE=False, valor_facturado=False, cantidad_filas=False, mostrar_archivos=False, calcular_tiempo=True):
     if regenerar:
         regenerar = elegir_regenerar_archivos()
     if codigo_DANE:
@@ -301,7 +299,7 @@ def menu_configuracion_inicial(option):
 # *                                             Menú de edición de archivos
 # * -------------------------------------------------------------------------------------------------------
 
-def menu_opciones_archivos(option):
+def menu_opciones_archivos(option, valor):
     #? Conversión de archivos txt a csv
     if option == "1":
         tipo = ".txt"
@@ -320,7 +318,8 @@ def menu_opciones_archivos(option):
         if len(lista_archivos) == 0:
             print(f"\nNo se encontraron archivos con la extensión {tipo}\n")
         else:
-            mod_1.conversion_archivos_lista(lista_archivos,"txt","csv",",")
+            print(f"\nInicio de procesamiento para: {valor}\n\n")
+            mod_1.conversion_archivos_lista(lista_archivos,"txt","csv")
             if eliminar:
                 mod_1.eliminar_archivos(lista_archivos)
                 print(f"\nArchivos con formato {tipo} eliminados\n")
@@ -329,13 +328,11 @@ def menu_opciones_archivos(option):
                 mod_1.mostrar_tiempo(t_f, t_i)
     #? Almacenar archivos
     elif option == "2":
-        opciones_adicionales = anadir_opciones()
-        if opciones_adicionales[0]:
-            t_i = time.time()
+        t_i = time.time()
+        print(f"\nInicio de procesamiento para: {valor}\n\n")
         mod_1.almacenar_archivos(ruta_guardar_archivos.replace('\\', '\\\\'),True)
-        if opciones_adicionales[0]:
-                t_f = time.time()
-                mod_1.mostrar_tiempo(t_f, t_i)
+        t_f = time.time()
+        mod_1.mostrar_tiempo(t_f, t_i)
     #? Estandarización de archivos
     elif option == "3":
         seleccionar_reporte = funcion_seleccionar_reportes("reporte_vanti")
@@ -352,6 +349,7 @@ def menu_opciones_archivos(option):
         if len(lista_archivos) == 0:
             print(f"\nNo se encontraron archivos con la extensión {tipo}\n")
         else:
+            print(f"\nInicio de procesamiento para: {valor}\n\n")
             mod_1.estandarizacion_archivos(lista_archivos, True)
             if opciones_adicionales[0]:
                 t_f = time.time()
@@ -365,6 +363,7 @@ def menu_opciones_archivos(option):
         tipo = ".CSV"
         lista_evitar = especificar_lista_reportes_generados(["_CLD","_PRD"])
         lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
+        print(f"\nInicio de procesamiento para: {valor}\n\n")
         mod_1.conversion_archivos_CSV(lista_archivos)
         proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1],["_CLD","_PRD"])
         if proceso and opciones_adicionales[0]:
@@ -375,7 +374,7 @@ def menu_opciones_archivos(option):
 # *                                             Activación de menú
 # * -------------------------------------------------------------------------------------------------------
 
-def comprimir_archivos(seleccionar_reporte, evitar_extra=[]):
+def comprimir_archivos(seleccionar_reporte, evitar_extra=["_CLD","_PRD"]):
     lista_archivos_comprimir = []
     tipo = ".csv"
     proceso, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte,evitar_extra, informar=False)
@@ -386,10 +385,6 @@ def comprimir_archivos(seleccionar_reporte, evitar_extra=[]):
     if proceso:
         lista_archivos_comprimir.extend(lista_archivos)
     tipo = ".txt"
-    proceso, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte,evitar_extra, txt=True, informar=False)
-    if proceso:
-        lista_archivos_comprimir.extend(lista_archivos)
-    tipo = ".txt".upper()
     proceso, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte,evitar_extra, txt=True, informar=False)
     if proceso:
         lista_archivos_comprimir.extend(lista_archivos)
@@ -410,18 +405,17 @@ def generar_archivos_extra(seleccionar_reporte, regenerar=False, evitar_extra=[]
                 proceso, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte,evitar_extra)
                 comprimir_archivos(seleccionar_reporte, evitar_extra)
                 return proceso, lista_archivos
+            else:
+                return False, []
         else:
             return False,[]
     else:
         tipo = "_resumen.csv"
-        proceso, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte)
+        proceso, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte, evitar_extra)
         return proceso, lista_archivos
 
 def busqueda_archivos_tipo(tipo, seleccionar_reporte, evitar_extra=[], txt=False, informar=True):
-    if txt:
-        l1 = [tipo.replace(".csv","")]
-    else:
-        l1 = [tipo.replace(".txt","").replace(".csv","")]
+    l1 = [tipo.replace(".txt","").replace(".txt".upper(),"").replace(".csv","").replace(".csv".upper(),"")]
     if len(evitar_extra) > 0:
         l1.extend(evitar_extra)
     lista_evitar = especificar_lista_reportes_generados(l1)
@@ -588,6 +582,7 @@ def menu_comercial_compensaciones(option,valor):
             t_i = time.time()
         proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1])
         if proceso:
+            print(f"\nInicio de procesamiento para: {valor}\n\n")
             mod_1.generar_reporte_compensacion_mensual(lista_archivos, seleccionar_reporte, True)
             if opciones_adicionales[0]:
                 t_f = time.time()
@@ -660,39 +655,47 @@ def menu_comercial_cer_cld_prd(option,valor):
     #? Generación de reporte de comparación Producción - Calidad (GRC1-SAP)
     if option == "1":
         seleccionar_reporte = funcion_seleccionar_reportes("reporte_comparacion_PRD_CLD")
-        opciones_adicionales = anadir_opciones(True, False)
-        if opciones_adicionales[0]:
-            t_i = time.time()
+        opciones_adicionales = anadir_opciones(True)
+        t_i = time.time()
         proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1],["_CLD","_PRD"])
         if proceso:
+            print(f"\nInicio de procesamiento para: {valor}\n\n")
             mod_1.reporte_comparacion_prd_cld_cer(lista_archivos, seleccionar_reporte, True)
-            if opciones_adicionales[0]:
-                t_f = time.time()
-                mod_1.mostrar_tiempo(t_f, t_i)
+            t_f = time.time()
+            mod_1.mostrar_tiempo(t_f, t_i)
     #? Generación de reporte de comparación Certificación - Calidad (GRC1-SAP)
     elif option == "2":
         seleccionar_reporte = funcion_seleccionar_reportes("reporte_comparacion_CLD")
         opciones_adicionales = anadir_opciones(regenerar=True, cantidad_filas=True)
-        if opciones_adicionales[0]:
-            t_i = time.time()
+        t_i = time.time()
         proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1],["_CLD","_PRD"])
         if proceso:
-            mod_1.reporte_comparacion_cld(lista_archivos, seleccionar_reporte, True, opciones_adicionales[4])
-            if opciones_adicionales[0]:
-                t_f = time.time()
-                mod_1.mostrar_tiempo(t_f, t_i)
-    #? Generación de reporte de comparación Producción - Calidad (GRC1-SAP)
+            print(f"\nInicio de procesamiento para: {valor}\n\n")
+            mod_1.reporte_comparacion_SAP(lista_archivos, seleccionar_reporte, True, opciones_adicionales[4], "GRC1_", "_CLD")
+            t_f = time.time()
+            mod_1.mostrar_tiempo(t_f, t_i)
+    #? Generación de reporte de comparación Certificación - Producción (GRC1-SAP)
     elif option == "3":
         seleccionar_reporte = funcion_seleccionar_reportes("reporte_comparacion_CLD")
         opciones_adicionales = anadir_opciones(regenerar=True, cantidad_filas=True)
-        if opciones_adicionales[0]:
-            t_i = time.time()
+        t_i = time.time()
         proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1],["_CLD","_PRD"])
         if proceso:
-            mod_1.reporte_comparacion_prd_cld(lista_archivos, seleccionar_reporte, True, opciones_adicionales[4])
-            if opciones_adicionales[0]:
-                t_f = time.time()
-                mod_1.mostrar_tiempo(t_f, t_i)
+            print(f"\nInicio de procesamiento para: {valor}\n\n")
+            mod_1.reporte_comparacion_SAP(lista_archivos, seleccionar_reporte, True, opciones_adicionales[4], "GRC1_", "_PRD")
+            t_f = time.time()
+            mod_1.mostrar_tiempo(t_f, t_i)
+    #? Generación de reporte de comparación Producción - Calidad (GRC1-SAP)
+    elif option == "4":
+        seleccionar_reporte = funcion_seleccionar_reportes("reporte_comparacion_CLD")
+        opciones_adicionales = anadir_opciones(regenerar=True, cantidad_filas=True)
+        t_i = time.time()
+        proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1],["_CLD","_PRD"], "_PRD", "_CLD")
+        if proceso:
+            print(f"\nInicio de procesamiento para: {valor}\n\n")
+            mod_1.reporte_comparacion_SAP(lista_archivos, seleccionar_reporte, True, opciones_adicionales[4])
+            t_f = time.time()
+            mod_1.mostrar_tiempo(t_f, t_i)
 
 def menu_comercial(option,valor):
     #? Información comercial por sector de consumo
@@ -728,9 +731,10 @@ def menu_comercial(option,valor):
         menu_comercial_analisis_previo(option,valor)
     #? "Análisis previo para comprobar la calidad de la información
     elif option == "4":
-        lista_menu = ["Generación de reporte de comparación Certificación - Calidad - Producción (GRC1-SAP)", #Op4
-                    "Generación de reporte de comparación Certificación - Calidad (GRC1-SAP)", #Op5
-                    "Generación de reporte de comparación Calidad - Producción (GRC1-SAP)", #Op6
+        lista_menu = ["Generación de reporte de comparación Certificación - Calidad - Producción (GRC1-SAP)", #Op1
+                    "Generación de reporte de comparación Certificación - Calidad (GRC1-SAP)", #Op2
+                    "Generación de reporte de comparación Certificación - Producción (GRC1-SAP)", #Op3
+                    "Generación de reporte de comparación Calidad - Producción (GRC1-SAP)", #Op4
                     "Regresar al menú inicial"]
         option,valor = opcion_menu_valida(lista_menu, "Información comercial para comparación de archivos de Certificación, Calidad y Producción")
         menu_comercial_cer_cld_prd(option,valor)
@@ -909,6 +913,12 @@ def menu_tecnico(option,valor):
         #print("Reporte a generar:",seleccionar_reporte)
 
 # * -------------------------------------------------------------------------------------------------------
+# *                                             Menú de Cumplimiento de Reportes Regulatorios
+# * -------------------------------------------------------------------------------------------------------
+def menu_cumplimientos_reportes(option, valor):
+    pass
+
+# * -------------------------------------------------------------------------------------------------------
 # *                                             Menú general
 # * -------------------------------------------------------------------------------------------------------
 def menu_inicial(lista, nombre):
@@ -932,7 +942,7 @@ def menu_inicial(lista, nombre):
                     "Generar archivos de tipo resumen",
                     "Regresar al menú inicial"]
         option,valor = opcion_menu_valida(lista_menu, "Edición de archivos",False)
-        menu_opciones_archivos(option)
+        menu_opciones_archivos(option,valor)
     elif option == "3":
         lista_menu = ["Información comercial por sector de consumo",
                         "Información comercial para compensaciones",
@@ -958,6 +968,12 @@ def menu_inicial(lista, nombre):
         option,valor = opcion_menu_valida(lista_menu, "Reportes Técnicos", False)
         menu_tecnico(option,valor)
     elif option == "6":
+        lista_menu = ["Porcentaje de Cumplimientos Regulatorios",
+                    "Porcentaje de AEGR",
+                    "Regresar al menú inicial"]
+        option,valor = opcion_menu_valida(lista_menu, "Reportes Técnicos", False)
+        menu_cumplimientos_reportes(option,valor)
+    elif option == "7":
         print("\nCreación de Dashboard en proceso...\n")
     return True
 
@@ -1281,6 +1297,7 @@ def iniciar_menu():
                         "Actividades con Reportes Comerciales",
                         "Actividades con Reportes Tarifarios",
                         "Actividades con Reportes Técnicos",
+                        "Activides con Cumplimiento de Reportes",
                         "Generar archivos Dashboard",
                         "Salir"]
     centinela = True

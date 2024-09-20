@@ -137,8 +137,9 @@ def elegir_codificacion(archivo):
 def lectura_dataframe_chunk(archivo, valor_chunksize=chunksize,separador=","):
     lista_codificaciones = []
     lista_codificaciones.append(elegir_codificacion(archivo))
-    lista_codificaciones.extend(['utf-8-sig','utf-8','iso-8859-1','latin-1','utf-16','utf-16-be','utf-32','ascii','windows-1252','iso-8859-2','iso-8859-5','koi8-r','big5','gb2312',
-                                    'shift-jis','euc-jp','mac_roman','utf-7','cp437','cp850','ibm866','tis-620'])
+    lista_codificaciones.extend(['utf-8-sig','utf-8','iso-8859-1','latin-1','utf-16','utf-16-be','utf-32','ascii',
+                                'windows-1252','iso-8859-2','iso-8859-5','koi8-r','big5','gb2312',
+                                'shift-jis','euc-jp','mac_roman','utf-7','cp437','cp850','ibm866','tis-620'])
     for elemento in lista_codificaciones:
         try:
             lista_df = []
@@ -151,7 +152,29 @@ def lectura_dataframe_chunk(archivo, valor_chunksize=chunksize,separador=","):
             pass
         except UnicodeError:
             pass
+        except ValueError:
+            pass
     return None
+
+def lectura_dataframe_chunk_prueba(archivo, valor_chunksize=40000,separador=","):
+    lista_codificaciones = [elegir_codificacion(archivo)]
+    lista_codificaciones.extend(['utf-8-sig','utf-8','iso-8859-1','latin-1','utf-16','utf-16-be','utf-32','ascii',
+                                'windows-1252','iso-8859-2','iso-8859-5','koi8-r','big5','gb2312',
+                                'shift-jis','euc-jp','mac_roman','utf-7','cp437','cp850','ibm866','tis-620'])
+    for elemento in lista_codificaciones:
+        try:
+            for i, chunk in enumerate(pd.read_csv(archivo, chunksize=valor_chunksize, encoding=elemento, sep=separador,low_memory=False)):
+                df_prueba = chunk.reset_index(drop=True).copy()
+                return True
+        except pd.errors.ParserError:
+            pass
+        except UnicodeDecodeError:
+            pass
+        except UnicodeError:
+            pass
+        except ValueError:
+            pass
+    return False
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Información horaria
@@ -324,14 +347,16 @@ def cambio_archivo(ruta, ext_original, ext_final):
             df = pd.concat(lista_df, ignore_index=True)
             df.to_csv(ruta.replace(ext_original,ext_final), index=False, sep=',', encoding="utf-8-sig")
             return ruta.replace(ext_original,ext_final)
-        return None
+        else:
+            return None
     else:
         lista_df = lectura_dataframe_chunk(ruta, separador=",")
         if lista_df:
             df = pd.concat(lista_df, ignore_index=True)
             df.to_csv(ruta.replace(ext_original,ext_final), index=False, sep=',', encoding="utf-8-sig")
             return ruta.replace(ext_original,ext_final)
-        return None
+        else:
+            return None
 
 def eliminar_archivos(lista):
     for elemento in lista:
@@ -352,20 +377,24 @@ def buscar_formato(archivo):
     else:
         return False
 
-def conversion_archivos_lista(lista_archivos, ext_original, ext_final, separador,informar=False):
+def conversion_archivos_lista(lista_archivos, ext_original, ext_final, informar=False, lista_fallidos=[]):
     for archivo in lista_archivos:
-        op = conversion_archivos(archivo, ext_original, ext_final, separador)
-        if op and informar:
-            informar_archivo_creado(archivo.replace(ext_original, ext_final), informar)
+        op = conversion_archivos(archivo, ext_original, ext_final)
+        if op == True:
+            if informar:
+                informar_archivo_creado(archivo.replace(ext_original, ext_final), informar)
+        elif op == False:
+            lista_fallidos.append(archivo)
+    return lista_fallidos
 
-def conversion_archivos(archivo, ext_original, ext_final, separador):
+def conversion_archivos(archivo, ext_original, ext_final):
     if ext_original in archivo:
         archivo = cambio_archivo(archivo, ext_original, ext_final)
         if archivo:
             return True
         else:
             return False
-    return False
+    return None
 
 def cambiar_formato_dataframe(df, dic_reporte):
     df.columns = list(dic_reporte["generales"].keys())
@@ -375,7 +404,9 @@ def acortar_nombre(nombre):
     lista_nombre = nombre.split("\\")
     largo = len(lista_nombre)
     if largo > 6:
-        texto = "...\\"+lista_a_texto(lista_nombre[largo-6:], "\\", False)
+        texto = ("...\\"+lista_a_texto(lista_nombre[largo-6:], "\\", False)).replace("\\\\","\\")
+    else: 
+        texto = texto.replace("\\\\","\\")
     return texto
 
 def informar_archivo_creado(nombre,valor):
@@ -386,7 +417,7 @@ def informar_archivo_creado(nombre,valor):
 def estandarizacion_archivos(lista_archivos, informar):
     dic_reporte = None
     for archivo in lista_archivos:
-        conversion_archivos(archivo, ".csv", ".csv", ",")
+        conversion_archivos(archivo, ".csv", ".csv")
         dic_reporte = buscar_reporte(archivo)
         if dic_reporte:
             lista_df = lectura_dataframe_chunk(archivo)
@@ -454,18 +485,74 @@ def encontrar_nueva_ubi_archivo(ubi, ext_archivo):
         lista_carpetas.clear()
     return ubi
 
+def evaluar_archivos_prueba(lista_archivos, lista_fallidos):
+    for archivo in lista_archivos:
+        op = lectura_dataframe_chunk_prueba(archivo)
+        if not op:
+            lista_fallidos.append(archivo)
+    return lista_fallidos
+
+def retirar_archivos_fallidos(lista_archivos, lista_fallidos):
+    lista_archivos_final = []
+    for archivo in lista_archivos:
+        if archivo not in lista_fallidos:
+            lista_archivos_final.append(archivo)
+        else:
+            print(f"\nArchivo {acortar_nombre(archivo)} posee errores en la lectura de información. Revisar el archivo\n")
+    return lista_archivos_final
+
+def cantidad_minima_info_archivo(lista_archivos):
+    lista_archivos_info_min = []
+    for archivo in lista_archivos:
+        lista_archivo = archivo.split("\\")
+        if len(lista_archivo[-1].split("_")) >= 4:
+            lista_archivos_info_min.append(archivo)
+    return lista_archivos_info_min
+
+def comprobar_info_nombre_archivo(ext_archivo):
+    for i in range(0, 4):
+        if i == 1:
+            if ext_archivo[i] not in lista_filiales:
+                return False
+        elif i == 2:
+            if ext_archivo[i] not in lista_anios:
+                return False
+        elif i == 3:
+            if ext_archivo[i].lower().capitalize() not in lista_meses:
+                return False
+    return True
+
+def archivos_aceptados_constantes(lista_archivos):
+    with open(ruta_constantes+"Aceptados.txt", 'r') as archivo:
+        lineas = archivo.readlines()
+    lista_archivos_aceptados = [linea.strip() for linea in lineas][1:]
+    for archivo in lista_archivos:
+        nombre_archivo = archivo.split("\\")[-1]
+    print(lista_archivos_aceptados)
+
 def almacenar_archivos(ruta_guardar_archivos,informar):
+    lista_archivos = busqueda_archivos_tipo(ruta_guardar_archivos)
     try:
         lista_carpetas = buscar_carpetas(ruta_nuevo_sui)
         ubi = None
         for i in lista_carpetas:
             if dic_carpetas["carpeta_2"][0] in i:
                 ubi = i
-        lista_archivos = busqueda_archivos_tipo(ruta_guardar_archivos)
-        conversion_archivos_lista(lista_archivos,"txt","csv",",",informar=True)
-        lista_archivos = busqueda_archivos_tipo(ruta_guardar_archivos)
+        lista_fallidos = []
+        lista_fallidos = conversion_archivos_CSV(lista_archivos, lista_fallidos=lista_fallidos)
+        lista_fallidos = conversion_archivos_lista(lista_archivos,"TXT","txt",informar=True, lista_fallidos=lista_fallidos)
+        lista_fallidos = conversion_archivos_lista(lista_archivos,"txt","csv",informar=True, lista_fallidos=lista_fallidos)
+        lista_fallidos = conversion_archivos_lista(lista_archivos,"CSV","csv",informar=True, lista_fallidos=lista_fallidos)
+        lista_fallidos = evaluar_archivos_prueba(lista_archivos, lista_fallidos=lista_fallidos)
+        lista_fallidos = list(set(lista_fallidos))
+        lista_archivos = busqueda_archivos_tipo(ruta_guardar_archivos, lista_fallidos=lista_fallidos)
+        lista_archivos = retirar_archivos_fallidos(lista_archivos, lista_fallidos)
+        lista_archivos = cantidad_minima_info_archivo(lista_archivos)
         for archivo in lista_archivos:
             nombre_archivo = archivo.split("\\")[-1]
+            nombre_archivo_lista = nombre_archivo.split(".")
+            nombre_archivo_lista[0] = nombre_archivo_lista[0].upper()
+            nombre_archivo = lista_a_texto(nombre_archivo_lista, ".")
             ext_archivo = nombre_archivo.split("_")
             ext_archivo[-1] = ext_archivo[-1].split(".")[0]
             categoria = encontrar_categoria_reporte(ext_archivo[0])
@@ -473,18 +560,24 @@ def almacenar_archivos(ruta_guardar_archivos,informar):
             ext_archivo.append(categoria)
             if None not in ext_archivo:
                 ubi_1 = encontrar_nueva_ubi_archivo(ubi, ext_archivo)
-                nueva_ubi = ubi_1+"\\"+nombre_archivo
-                shutil.move(archivo, nueva_ubi)
-                if informar:
-                    informar_archivo_creado(nueva_ubi, informar)
+                if comprobar_info_nombre_archivo(ext_archivo):
+                    nueva_ubi = ubi_1+"\\"+nombre_archivo
+                    shutil.move(archivo, nueva_ubi)
+                    if informar:
+                        informar_archivo_creado(nueva_ubi, informar)
     except FileNotFoundError:
         pass
     except PermissionError:
         pass
 
-def conversion_archivos_CSV(lista_archivos):
+def conversion_archivos_CSV(lista_archivos, lista_fallidos=[]):
     for archivo in lista_archivos:
-        os.rename(archivo, archivo.replace(".CSV",".csv"))
+        if ".CSV" in archivo:
+            try:
+                os.rename(archivo, archivo.replace(".CSV",".csv"))
+            except OSError:
+                lista_fallidos.append(archivo)
+    return lista_fallidos
 
 def regenerar_archivos_necesarios(lista_archivos, evitar):
     lista_regenerar = []
@@ -512,7 +605,7 @@ def comprimir_archivos(lista_archivos, informar=True):
     diccionario_archivos = {}
     for archivo in lista_archivos:
         lista_archivo = archivo.split("\\")
-        nombre_carpeta = lista_a_texto(lista_archivo[-1].replace(".txt","").replace(".csv","").split("_")[:4],"_")+".zip"
+        nombre_carpeta = lista_a_texto(lista_archivo[-1].replace(".txt","").replace(".csv","").replace(".txt".upper(),"").replace(".csv".upper(),"").split("_")[:4],"_")+".zip"
         lista_archivo[-1] = nombre_carpeta
         ubi_carpeta_zip = lista_a_texto(lista_archivo, "\\")
         if nombre_carpeta not in diccionario_archivos:
@@ -998,10 +1091,13 @@ def reporte_comercial_sector_consumo(lista_archivos, seleccionar_reporte, codigo
         return None, None
 
 def apoyo_reporte_comparacion_prd_cld_cer(lista_archivos, informar, filial):
-    lista_GRTT2 = []
+    dic_GRTT2 = {}
     dic_SAP_CLD = {}
     dic_SAP_PRD = {}
     dic_GRC1 = {}
+    proceso_CLD = False
+    proceso_PRD = False
+    proceso_GRTT2 = False
     lista_df_porcentaje = []
     for archivo in lista_archivos:
         if "SAP" not in archivo and "GRC1" in archivo:
@@ -1010,9 +1106,12 @@ def apoyo_reporte_comparacion_prd_cld_cer(lista_archivos, informar, filial):
                     "Lectura_estimada":0,
                     "Consumo":0,
                     "Valor total facturado":0}
+        dic_NIU_unico = {"Lectura_real":{},
+                        "Lectura_estimada":{}}
         lista_df = lectura_dataframe_chunk(archivo)
         if lista_df:
-            df1 = lista_df[0][["Anio_reportado","Mes_reportado"]]
+            anio_reportado = lista_df[0]["Anio_reportado"][0]
+            mes_reportado = lista_df[0]["Mes_reportado"][0]
             for df in lista_df:
                 if "GRTT2" not in archivo:
                     df_R = df[df["Tipo_lectura"]=="R"]
@@ -1025,29 +1124,71 @@ def apoyo_reporte_comparacion_prd_cld_cer(lista_archivos, informar, filial):
                     df_E = df[df["Tipo_lectura"]==2]
                     dic_conteo["Lectura_real"] += len(df_R)
                     dic_conteo["Lectura_estimada"] += len(df_E)
-                    if "SAP_CLD" in archivo:
+                    if "_CLD" in archivo:
                         for pos in range(len(df)):
                             elemento = df["NIU"][pos]
                             factura = df["ID_factura"][pos]
                             lectura = df["Tipo_lectura"][pos]
                             if elemento not in dic_SAP_CLD:
                                 dic_SAP_CLD[elemento] = [factura, lectura]
-                    elif "SAP_PRD" in archivo:
+                            try:
+                                lectura_str = str(lectura)
+                                if lectura_str == "R" or lectura_str == "1":
+                                    if elemento not in dic_NIU_unico["Lectura_real"]:
+                                        dic_NIU_unico["Lectura_real"][elemento] = True
+                                if lectura_str == "E" or lectura_str == "2":
+                                    if elemento not in dic_NIU_unico["Lectura_estimada"]:
+                                        dic_NIU_unico["Lectura_estimada"][elemento] = True
+                            except ValueError:
+                                pass
+                            except TypeError:
+                                pass
+                        proceso_CLD = True
+                    elif "_PRD" in archivo:
                         for pos in range(len(df)):
                             elemento = df["NIU"][pos]
                             factura = df["ID_factura"][pos]
                             lectura = df["Tipo_lectura"][pos]
                             if elemento not in dic_SAP_PRD:
                                 dic_SAP_PRD[elemento] = [factura, lectura]
-                    elif "SAP_PRD" not in archivo and "SAP_CLD" not in archivo:
+                            try:
+                                lectura_str = str(lectura)
+                                if lectura_str == "R" or lectura_str == "1":
+                                    if elemento not in dic_NIU_unico["Lectura_real"]:
+                                        dic_NIU_unico["Lectura_real"][elemento] = True
+                                if lectura_str == "E" or lectura_str == "2":
+                                    if elemento not in dic_NIU_unico["Lectura_estimada"]:
+                                        dic_NIU_unico["Lectura_estimada"][elemento] = True
+                            except ValueError:
+                                pass
+                            except TypeError:
+                                pass
+                        proceso_PRD =True
+                    elif "_PRD" not in archivo and "_CLD" not in archivo:
                         for pos in range(len(df)):
                             elemento = df["NIU"][pos]
                             factura = df["ID_factura"][pos]
                             lectura = df["Tipo_lectura"][pos]
                             if elemento not in dic_GRC1:
                                 dic_GRC1[elemento] = [factura, lectura]
+                            try:
+                                lectura_str = str(lectura)
+                                if lectura_str == "R" or lectura_str == "1":
+                                    if elemento not in dic_NIU_unico["Lectura_real"]:
+                                        dic_NIU_unico["Lectura_real"][elemento] = True
+                                if lectura_str == "E" or lectura_str == "2":
+                                    if elemento not in dic_NIU_unico["Lectura_estimada"]:
+                                        dic_NIU_unico["Lectura_estimada"][elemento] = True
+                            except ValueError:
+                                pass
+                            except TypeError:
+                                pass
                 else:
-                    lista_GRTT2.extend(list(df["NIU"].unique()))
+                    for pos in range(len(df)):
+                        elemento = df["NIU"][pos]
+                        if elemento not in dic_GRTT2:
+                            dic_GRTT2[elemento] = True
+                    proceso_GRTT2 = True
             if "GRTT2" not in archivo:
                 if dic_conteo["Lectura_real"]+dic_conteo["Lectura_estimada"] == 0:
                     porcentaje_1 = "0 %"
@@ -1056,88 +1197,104 @@ def apoyo_reporte_comparacion_prd_cld_cer(lista_archivos, informar, filial):
                     porcentaje_1 = str(round((dic_conteo["Lectura_real"]/(dic_conteo["Lectura_real"]+dic_conteo["Lectura_estimada"]))*100,2))+"%"
                     porcentaje_2 = str(round((dic_conteo["Lectura_estimada"]/(dic_conteo["Lectura_real"]+dic_conteo["Lectura_estimada"]))*100,2))+"%"
                 dic_df = {"Tipo de Lectura":["R","E"],
-                            "Totales":[dic_conteo["Lectura_real"], dic_conteo["Lectura_estimada"]],
+                            "Cantidad Lecturas Totales":[dic_conteo["Lectura_real"], dic_conteo["Lectura_estimada"]],
                             "Porcentaje de Lectura":[porcentaje_1, porcentaje_2],
                             "Consumo m3":[dic_conteo["Consumo"], dic_conteo["Consumo"]],
-                            "Valor total facturado":[dic_conteo["Valor total facturado"], dic_conteo["Valor total facturado"]]}
+                            "Valor total facturado":[dic_conteo["Valor total facturado"], dic_conteo["Valor total facturado"]],
+                            "Usuarios NIU Unicos":[len(dic_NIU_unico["Lectura_real"]),len(dic_NIU_unico["Lectura_estimada"])]}
                 df_conteo = pd.DataFrame(dic_df)
-                df_conteo["Anio_reportado"] = df1["Anio_reportado"][0]
-                df_conteo["Mes_reportado"] = df1["Mes_reportado"][0]
                 df_conteo["Filial"] = dic_filiales[filial]
-                if "SAP_CLD" in archivo:
+                if "_CLD" in archivo:
                     df_conteo["Archivo"] = "GRC1_SAP_CLD"
-                elif "SAP_PRD" in archivo:
+                elif "_PRD" in archivo:
                     df_conteo["Archivo"] = "GRC1_SAP_PRD"
                 else:
                     df_conteo["Archivo"] = "GRC1"
                 lista_df_porcentaje.append(df_conteo)
         else:
             return None
+    if not (proceso_CLD or proceso_PRD):
+        print("\nNo es posible generar el reporte sin el archivo GRC1_PRD o GRC1_CLD\n")
+        return None
     df_porcentaje = pd.concat(lista_df_porcentaje, ignore_index=True)
+    df_porcentaje["Diff. Porcentual Valor Total Facturado"] = "0 %"
+    df_porcentaje["Diff. Porcentual Consumo m3"] = "0 %"
+    df_porcentaje["Nuevos NIU"] = 0
     df_GRC1 = df_porcentaje[df_porcentaje["Archivo"] == "GRC1"].reset_index(drop=True)
     if len(df_GRC1) > 0:
-        valor_consumo_GRC1 = df_GRC1["Consumo m3"][0]
-        valor_facturado_GRC1 = df_GRC1["Valor total facturado"][0]
+        valor_consumo_GRC1 = df_GRC1["Consumo m3"].sum()
+        valor_facturado_GRC1 = df_GRC1["Valor total facturado"].sum()
     else:
         valor_consumo_GRC1 = 0
         valor_facturado_GRC1 = 0
-    df_GRC1_CLD = df_porcentaje[df_porcentaje["Archivo"] == "GRC1_SAP_CLD"].reset_index(drop=True)
-    if len(df_GRC1_CLD) > 0:
-        valor_consumo_GRC1_CLD = df_GRC1_CLD["Consumo m3"][0]
-        valor_facturado_GRC1_CLD = df_GRC1_CLD["Valor total facturado"][0]
-    else:
-        valor_consumo_GRC1_CLD = 0
-        valor_facturado_GRC1_CLD = 0
-    df_GRC1_PRD = df_porcentaje[df_porcentaje["Archivo"] == "GRC1_SAP_PRD"].reset_index(drop=True)
-    if len(df_GRC1_PRD) > 0:
-        valor_consumo_GRC1_PRD = df_GRC1_PRD["Consumo m3"][0]
-        valor_facturado_GRC1_PRD = df_GRC1_PRD["Valor total facturado"][0]
-    else:
-        valor_consumo_GRC1_PRD = 0
-        valor_facturado_GRC1_PRD = 0
-    if valor_consumo_GRC1 == 0:
-        porcentaje_consumo_GRC1_CLD = "0 %"
-        porcentaje_consumo_GRC1_PRD = "0 %"
-    else:
-
-        porcentaje_consumo_GRC1_CLD = str(round((abs(valor_consumo_GRC1_CLD-valor_consumo_GRC1)/valor_consumo_GRC1)*100,2))+" %"
-        porcentaje_consumo_GRC1_PRD = str(round((abs(valor_consumo_GRC1_PRD-valor_consumo_GRC1)/valor_consumo_GRC1)*100,2))+" %"
-    if valor_facturado_GRC1 == 0:
-        porcentaje_facturado_GRC1_CLD = "0 %"
-        porcentaje_facturado_GRC1_PRD = "0 %"
-    else:
-        porcentaje_facturado_GRC1_CLD = str(round((abs(valor_facturado_GRC1_CLD-valor_facturado_GRC1)/valor_facturado_GRC1)*100,2))+" %"
-        porcentaje_facturado_GRC1_PRD = str(round((abs(valor_facturado_GRC1_PRD-valor_facturado_GRC1)/valor_facturado_GRC1)*100,2))+" %"
-    df_porcentaje["Diff. Porcentual Consumo m3"] = "0 %"
-    df_porcentaje["Diff. Porcentual Valor total facturado"] = "0 %"
-    df_porcentaje.loc[df_porcentaje['Archivo'] == 'GRC1_SAP_CLD', 'Diff. Porcentual Consumo m3'] = porcentaje_consumo_GRC1_CLD
-    df_porcentaje.loc[df_porcentaje['Archivo'] == 'GRC1_SAP_PRD', 'Diff. Porcentual Consumo m3'] = porcentaje_consumo_GRC1_PRD
-    df_porcentaje.loc[df_porcentaje['Archivo'] == 'GRC1_SAP_CLD', "Diff. Porcentual Valor total facturado"] = porcentaje_facturado_GRC1_CLD
-    df_porcentaje.loc[df_porcentaje['Archivo'] == 'GRC1_SAP_PRD', "Diff. Porcentual Valor total facturado"] = porcentaje_facturado_GRC1_PRD
-    df_porcentaje = df_porcentaje[["Archivo","Filial","Anio_reportado","Mes_reportado","Tipo de Lectura","Totales","Porcentaje de Lectura","Consumo m3",
-                                    "Valor total facturado",'Diff. Porcentual Consumo m3','Diff. Porcentual Valor total facturado']]
-    nombre = nombre_final.replace("_resumen", "_porcentaje")
-    df_porcentaje.to_csv(nombre, index=False)
-    if informar:
-        informar_archivo_creado(nombre, True)
-    nombre = nombre.replace(".csv",".xlsx")
-    almacenar = mod_5.almacenar_csv_en_excel(df_porcentaje, nombre,"Datos")
-    if almacenar and informar:
-        informar_archivo_creado(nombre, True)
+    if proceso_CLD:
+        df_GRC1_CLD = df_porcentaje[df_porcentaje["Archivo"] == "GRC1_SAP_CLD"].reset_index(drop=True)
+        if len(df_GRC1_CLD) > 0:
+            valor_consumo_GRC1_CLD = df_GRC1_CLD["Consumo m3"].sum()
+            valor_facturado_GRC1_CLD = df_GRC1_CLD["Valor total facturado"].sum()
+        else:
+            valor_consumo_GRC1_CLD = 0
+            valor_facturado_GRC1_CLD = 0
+    if proceso_PRD:
+        df_GRC1_PRD = df_porcentaje[df_porcentaje["Archivo"] == "GRC1_SAP_PRD"].reset_index(drop=True)
+        if len(df_GRC1_PRD) > 0:
+            valor_consumo_GRC1_PRD = df_GRC1_PRD["Consumo m3"].sum()
+            valor_facturado_GRC1_PRD = df_GRC1_PRD["Valor total facturado"].sum()
+        else:
+            valor_consumo_GRC1_PRD = 0
+            valor_facturado_GRC1_PRD = 0
+    porcentaje_consumo_GRC1_CLD = "0 %"
+    porcentaje_consumo_GRC1_PRD = "0 %"
+    porcentaje_facturado_GRC1_CLD = "0 %"
+    porcentaje_facturado_GRC1_PRD = "0 %"
+    suma_NIU_GRC1 = df_porcentaje[df_porcentaje["Archivo"] == "GRC1"]["Usuarios NIU Unicos"].sum()
+    if proceso_CLD:
+        df_porcentaje.loc[df_porcentaje['Archivo'] == 'GRC1_SAP_CLD', 'Nuevos NIU'] = suma_NIU_GRC1-df_porcentaje[df_porcentaje["Archivo"] == "GRC1_SAP_CLD"]["Usuarios NIU Unicos"].sum()
+    if proceso_PRD:
+        df_porcentaje.loc[df_porcentaje['Archivo'] == 'GRC1_SAP_PRD', 'Nuevos NIU'] = suma_NIU_GRC1-df_porcentaje[df_porcentaje["Archivo"] == "GRC1_SAP_PRD"]["Usuarios NIU Unicos"].sum()
+    if valor_consumo_GRC1 > 0:
+        if proceso_CLD:
+            porcentaje_consumo_GRC1_CLD = str(round((abs(valor_consumo_GRC1_CLD-valor_consumo_GRC1)/valor_consumo_GRC1)*100,2))+" %"
+        if proceso_PRD:
+            porcentaje_consumo_GRC1_PRD = str(round((abs(valor_consumo_GRC1_PRD-valor_consumo_GRC1)/valor_consumo_GRC1)*100,2))+" %"
+    if valor_facturado_GRC1 > 0:
+        if proceso_CLD:
+            porcentaje_facturado_GRC1_CLD = str(round((abs(valor_facturado_GRC1_CLD-valor_facturado_GRC1)/valor_facturado_GRC1)*100,2))+" %"
+            df_porcentaje.loc[df_porcentaje['Archivo'] == 'GRC1_SAP_CLD', 'Diff. Porcentual Consumo m3'] = porcentaje_consumo_GRC1_CLD
+            df_porcentaje.loc[df_porcentaje['Archivo'] == 'GRC1_SAP_CLD', "Diff. Porcentual Valor Total Facturado"] = porcentaje_facturado_GRC1_CLD
+        if proceso_PRD:
+            porcentaje_facturado_GRC1_PRD = str(round((abs(valor_facturado_GRC1_PRD-valor_facturado_GRC1)/valor_facturado_GRC1)*100,2))+" %"
+            df_porcentaje.loc[df_porcentaje['Archivo'] == 'GRC1_SAP_PRD', 'Diff. Porcentual Consumo m3'] = porcentaje_consumo_GRC1_PRD
+            df_porcentaje.loc[df_porcentaje['Archivo'] == 'GRC1_SAP_PRD', "Diff. Porcentual Valor Total Facturado"] = porcentaje_facturado_GRC1_PRD
+    df_porcentaje["Anio_reportado"] = anio_reportado
+    df_porcentaje["Mes_reportado"] = mes_reportado
+    df_porcentaje = df_porcentaje[["Archivo","Filial","Anio_reportado","Mes_reportado","Tipo de Lectura","Cantidad Lecturas Totales","Usuarios NIU Unicos","Porcentaje de Lectura","Consumo m3",
+                                    "Valor total facturado",'Diff. Porcentual Consumo m3','Diff. Porcentual Valor Total Facturado',"Nuevos NIU"]]
+    nombre = nombre_final.replace("_resumen", "_porcentaje_comparacion_SAP")
+    almacenar_df_csv_y_excel(df_porcentaje, nombre)
     dic_total = {"NIU":[],
-                "Tipo de lectura GRC1 CLD":[],
-                "Tipo de lectura GRC1 PRD":[],
                 "Tipo de lectura GRC1":[],
-                "Factura GRC1":[],
-                "Factura GRC1 CLD":[],
-                "Factura GRC1 PRD":[],
-                "Existe GRTT2":[]}
-    if len(dic_SAP_CLD) > cantidad_datos_excel:
-        lista_llaves = list(dic_SAP_CLD.keys())[:cantidad_datos_excel]
-        lista_valores = list(dic_SAP_CLD.values())[:cantidad_datos_excel]
-    else:
-        lista_llaves = list(dic_SAP_CLD.keys())
-        lista_valores = list(dic_SAP_CLD.values())
+                "Factura GRC1":[]}
+    if proceso_GRTT2:
+        dic_total["Existe GRTT2"] = []
+    if proceso_CLD:
+        dic_total["Tipo de lectura GRC1 CLD"] = []
+        dic_total["Factura GRC1 CLD"] = []
+        if len(dic_SAP_CLD) > cantidad_datos_excel:
+            lista_llaves = list(dic_SAP_CLD.keys())[:cantidad_datos_excel]
+            lista_valores = list(dic_SAP_CLD.values())[:cantidad_datos_excel]
+        else:
+            lista_llaves = list(dic_SAP_CLD.keys())
+            lista_valores = list(dic_SAP_CLD.values())
+    if proceso_PRD:
+        dic_total["Tipo de lectura GRC1 PRD"] = []
+        dic_total["Factura GRC1 PRD"] = []
+        if len(dic_SAP_PRD) > cantidad_datos_excel:
+            lista_llaves = list(dic_SAP_PRD.keys())[:cantidad_datos_excel]
+            lista_valores = list(dic_SAP_PRD.values())[:cantidad_datos_excel]
+        else:
+            lista_llaves = list(dic_SAP_PRD.keys())
+            lista_valores = list(dic_SAP_PRD.values())
     for i in range(len(lista_llaves)):
         llave = lista_llaves[i]
         valor = lista_valores[i]
@@ -1145,33 +1302,36 @@ def apoyo_reporte_comparacion_prd_cld_cer(lista_archivos, informar, filial):
         valor_2 = None
         try:
             valor_1 = dic_GRC1[llave]
-            valor_2 = dic_SAP_PRD[llave]
+            if proceso_PRD:
+                valor_2 = dic_SAP_PRD[llave]
+            elif proceso_CLD:
+                valor_2 = dic_SAP_CLD[llave]
             if valor_1 and valor_2:
                 dic_total["Tipo de lectura GRC1"].append(valor_1[1])
                 dic_total["Factura GRC1"].append(valor_1[0])
-                dic_total["Tipo de lectura GRC1 PRD"].append(valor_2[1])
-                dic_total["Factura GRC1 PRD"].append(valor_2[0])
                 dic_total["NIU"].append(llave)
-                dic_total["Tipo de lectura GRC1 CLD"].append(valor[1])
-                dic_total["Factura GRC1 CLD"].append(valor[0])
-                if llave in lista_GRTT2:
-                    dic_total["Existe GRTT2"].append(1)
-                else:
-                    dic_total["Existe GRTT2"].append(2)
+                if proceso_PRD:
+                    dic_total["Tipo de lectura GRC1 PRD"].append(valor_2[1])
+                    dic_total["Factura GRC1 PRD"].append(valor_2[0])
+                if proceso_CLD:
+                    dic_total["Tipo de lectura GRC1 CLD"].append(valor[1])
+                    dic_total["Factura GRC1 CLD"].append(valor[0])
+                if proceso_GRTT2:
+                    if llave in dic_GRTT2:
+                        dic_total["Existe GRTT2"].append(1)
+                    else:
+                        dic_total["Existe GRTT2"].append(2)
         except KeyError:
             pass
-    df_total = pd.DataFrame(dic_total)
-    nombre_final = nombre_final.replace("_resumen", "_total")
-    df_total["Anio_reportado"] = df1["Anio_reportado"][0]
-    df_total["Mes_reportado"] = df1["Mes_reportado"][0]
-    df_total["Filial"] = dic_filiales[filial]
-    df_total.to_csv(nombre_final, index=False)
-    if informar:
-        informar_archivo_creado(nombre_final, True)
-    nombre_final = nombre_final.replace(".csv",".xlsx")
-    almacenar = mod_5.almacenar_csv_en_excel(df_total, nombre_final,"Datos")
-    if informar and almacenar:
-        informar_archivo_creado(nombre_final, True)
+    try:
+        df_total = pd.DataFrame(dic_total)
+        nombre_final = nombre_final.replace("_resumen", "_total_comparacion_SAP")
+        df_total["Anio_reportado"] = anio_reportado
+        df_total["Mes_reportado"] = mes_reportado
+        df_total["Filial"] = dic_filiales[filial]
+        almacenar_df_csv_y_excel(df_total, nombre_final)
+    except ValueError:
+        pass
 
 def reporte_comparacion_prd_cld_cer(lista_archivos, seleccionar_reporte, informar):
     for filial in seleccionar_reporte["filial"]:
@@ -1225,7 +1385,9 @@ def listas_diferentes(lista_1, lista_2, llave):
         else:
             return True, dic_diferencias, conteo
 
-def apoyo_reporte_comparacion_cld(lista_archivos, informar, filial,cantidad_filas):
+def apoyo_reporte_comparacion_p1_p2(lista_archivos, informar, cantidad_filas, p1, p2):
+    proceso_1 = True
+    proceso_2 = True
     lista_1 = ["NIU",
         "ID_factura",
         "Tipo_factura",
@@ -1249,7 +1411,7 @@ def apoyo_reporte_comparacion_cld(lista_archivos, informar, filial,cantidad_fila
         "Valor_refacturacion_subsidio_contribucion",
         "Valor_total_facturado"]
     for archivo in lista_archivos:
-        if "_CLD" not in archivo:
+        if p1 in archivo and p2 not in archivo:
             nombre_archivo = archivo
             dic_dataframe = {}
             lista_archivo = archivo.split("\\")
@@ -1267,7 +1429,10 @@ def apoyo_reporte_comparacion_cld(lista_archivos, informar, filial,cantidad_fila
                         df1 = df1[lista_1]
                         for i in range(len(df1)):
                             dic_dataframe[df1["ID_factura"][i]] = df1.iloc[i].tolist()
-        else:
+                else:
+                    return None
+            proceso_1 = True
+        if p2 in archivo:
             lista_df = lectura_dataframe_chunk(archivo)
             dic_dataframe_CLD = {}
             if lista_df:
@@ -1275,184 +1440,71 @@ def apoyo_reporte_comparacion_cld(lista_archivos, informar, filial,cantidad_fila
                     df1 = df[lista_1]
                     for i in range(len(df1)):
                         dic_dataframe_CLD[df1["ID_factura"][i]] = df1.iloc[i].tolist()
-    lista_iguales = []
-    lista_diferentes = []
-    for llave in dic_dataframe:
-        try:
-            diferentes,valor,conteo = listas_diferentes(dic_dataframe[llave], dic_dataframe_CLD[llave],llave)
-            if diferentes:
-                lista_diferentes.append(valor)
             else:
-                lista_iguales.append(valor)
-        except KeyError:
-            pass
-    largo = len(lista_1)
-    print(f"Para {len(lista_iguales)+len(lista_diferentes)} filas evaluadas: {len(lista_iguales)} filas iguales, {len(lista_diferentes)} filas diferentes")
-    lista_df_iguales = [[] for _ in range(largo)]
-    lista_df_diferentes = [[] for _ in range(largo)]
-    lista_df_diferentes_excel = [[] for _ in range(largo)]
-    for dic in lista_iguales:
-        for lista in dic.values():
-            for i in range(len(lista)):
-                lista_df_iguales[i].append(lista[i][0])
-    dic_df_iguales = {}
-    for i in range(largo):
-        dic_df_iguales[lista_1[i]] = lista_df_iguales[i]
-    df_iguales = pd.DataFrame(dic_df_iguales)
-    df_iguales.to_csv(nombre_archivo.replace("_resumen", "_comparacion_iguales"), index=False, encoding="utf-8-sig")
-    if informar:
-        informar_archivo_creado(nombre_archivo.replace("_resumen", "_comparacion_iguales"),True)
-    nombre_final = nombre_archivo.replace("_resumen", "_comparacion_iguales").replace(".csv",".xlsx")
-    almacenar = mod_5.almacenar_csv_en_excel(df_iguales, nombre_final,"Datos")
-    if informar and almacenar:
-        informar_archivo_creado(nombre_final, True)
-    for dic in lista_diferentes:
-        for lista in dic.values():
-            for i in range(len(lista)):
-                lista_df_diferentes[i].append((lista[i][0],lista[i][1]))
-    dic_df_diferentes = {}
-    for i in range(largo):
-        dic_df_diferentes[lista_1[i]] = lista_df_diferentes[i]
-    df_diferentes = pd.DataFrame(dic_df_diferentes)
-    df_diferentes.to_csv(nombre_archivo.replace("_resumen", "_comparacion_diferentes"), index=False, encoding="utf-8-sig")
-    if informar:
-        informar_archivo_creado(nombre_archivo.replace("_resumen", "_comparacion_diferentes"),True)
-    for dic in lista_diferentes:
-        for lista in dic.values():
-            for i in range(len(lista)):
-                lista_df_diferentes_excel[i].append(lista[i])
-    dic_df_diferentes_excel = {}
-    for i in range(largo):
-        dic_df_diferentes_excel[lista_1[i]] = lista_df_diferentes_excel[i]
-    df_diferentes_excel = pd.DataFrame(dic_df_diferentes_excel)
-    nombre_final = nombre_archivo.replace("_resumen", "_comparacion_diferentes").replace(".csv",".xlsx")
-    almacenar = mod_5.almacenar_csv_en_excel_patrones(df_diferentes_excel, nombre_final,"Datos")
-    if informar and almacenar:
-        informar_archivo_creado(nombre_final, True)
+                return None
+            proceso_2 = True
+    if proceso_1 and proceso_2:
+        if p1 == "GRC1_":
+            p1 = "_CER"
+        lista_iguales = []
+        lista_diferentes = []
+        for llave in dic_dataframe:
+            try:
+                diferentes,valor,conteo = listas_diferentes(dic_dataframe[llave], dic_dataframe_CLD[llave],llave)
+                if diferentes:
+                    lista_diferentes.append(valor)
+                else:
+                    lista_iguales.append(valor)
+            except KeyError:
+                pass
+        largo = len(lista_1)
+        print(f"Para {len(lista_iguales)+len(lista_diferentes)} filas evaluadas: {len(lista_iguales)} filas iguales, {len(lista_diferentes)} filas diferentes")
+        lista_df_iguales = [[] for _ in range(largo)]
+        lista_df_diferentes = [[] for _ in range(largo)]
+        lista_df_diferentes_excel = [[] for _ in range(largo)]
+        for dic in lista_iguales:
+            for lista in dic.values():
+                for i in range(len(lista)):
+                    lista_df_iguales[i].append(lista[i][0])
+        dic_df_iguales = {}
+        for i in range(largo):
+            dic_df_iguales[lista_1[i]] = lista_df_iguales[i]
+        df_iguales = pd.DataFrame(dic_df_iguales)
+        nombre = nombre_archivo.replace("_resumen", f"_comparacion_iguales{p1}{p2}")
+        almacenar_df_csv_y_excel(df_iguales, nombre)
+        for dic in lista_diferentes:
+            for lista in dic.values():
+                for i in range(len(lista)):
+                    lista_df_diferentes[i].append((lista[i][0],lista[i][1]))
+        dic_df_diferentes = {}
+        for i in range(largo):
+            dic_df_diferentes[lista_1[i]] = lista_df_diferentes[i]
+        df_diferentes = pd.DataFrame(dic_df_diferentes)
+        nombre = nombre_archivo.replace("_resumen", f"_comparacion_diferentes{p1}{p2}")
+        almacenar_df_csv_y_excel(df_diferentes, nombre, almacenar_excel=False)
+        for dic in lista_diferentes:
+            for lista in dic.values():
+                for i in range(len(lista)):
+                    lista_df_diferentes_excel[i].append(lista[i])
+        dic_df_diferentes_excel = {}
+        for i in range(largo):
+            dic_df_diferentes_excel[lista_1[i]] = lista_df_diferentes_excel[i]
+        df_diferentes_excel = pd.DataFrame(dic_df_diferentes_excel)
+        nombre = nombre_archivo.replace("_resumen", f"_comparacion_diferentes{p1}{p2}").replace(".csv",".xlsx")
+        almacenar = mod_5.almacenar_csv_en_excel_patrones(df_diferentes_excel, nombre,"Datos")
+        if informar and almacenar:
+            informar_archivo_creado(nombre, True)
+    else:
+        print(f"\nDeben existir los archivos {p1} y {p2} para el proceso de comparacion\n")
 
-def reporte_comparacion_cld(lista_archivos, seleccionar_reporte, informar, cantidad_filas):
+def reporte_comparacion_SAP(lista_archivos, seleccionar_reporte, informar, cantidad_filas, p1, p2):
     for filial in seleccionar_reporte["filial"]:
         lista_archivos_filial = []
         for archivo in lista_archivos:
             if filial in archivo:
                 lista_archivos_filial.append(archivo)
         if len(lista_archivos_filial) > 0:
-            apoyo_reporte_comparacion_cld(lista_archivos_filial, informar, filial,cantidad_filas)
-
-
-def apoyo_reporte_comparacion_prd_cld(lista_archivos, informar, filial,cantidad_filas):
-    lista_1 = ["NIU",
-        "ID_factura",
-        "Tipo_factura",
-        "Tipo_lectura",
-        "Factor_poder_calorfico_fpc",
-        "Lectura_anterior",
-        "Lectura_actual",
-        "Factor_correccion_utilizado",
-        "Consumo",
-        "Cuv_cargo_aplicado_consumo",
-        "Facturacion_consumo",
-        "Facturacion_cargo_fijo",
-        "Valor_subsidio_contribucion",
-        "Porcentaje_subsidio_contribucion_aplicado",
-        "Valor_cuota_conexion",
-        "Suspension_reconexion",
-        "Corte_reinstalacion",
-        "Valor_otros_conceptos",
-        "Refacturacion_consumos",
-        "Valor_refacturacion",
-        "Valor_refacturacion_subsidio_contribucion",
-        "Valor_total_facturado"]
-    for archivo in lista_archivos:
-        if "_CLD" in archivo:
-            lista_df = lectura_dataframe_chunk(archivo)
-            dic_dataframe_CLD = {}
-            if lista_df:
-                for df in lista_df:
-                    df1 = df[lista_1]
-                    for i in range(len(df1)):
-                        dic_dataframe_CLD[df1["ID_factura"][i]] = df1.iloc[i].tolist()
-        elif "_PRD" in archivo:
-            nombre_archivo = archivo
-            dic_dataframe_PRD = {}
-            lista_archivo = archivo.split("\\")
-            for reporte in lista_reportes_totales:
-                if reporte in lista_archivo[-1]:
-                    dic_reporte = leer_archivos_json(ruta_constantes+f"/{reporte.upper()}.json")
-            if dic_reporte:
-                lista_df = lectura_dataframe_chunk(archivo,15000)
-                if lista_df:
-                    nueva_lista_df = configurar_cantidad_filas_dataframe(lista_df, cantidad_filas)
-                    if len(nueva_lista_df) == 1 and len(nueva_lista_df[0]) > cantidad_filas:
-                        nueva_lista_df[0] = nueva_lista_df[0].iloc[:cantidad_filas]
-                    for df in nueva_lista_df:
-                        df1 = df.copy().reset_index(drop=True)
-                        df1 = df1[lista_1]
-                        for i in range(len(df1)):
-                            dic_dataframe_PRD[df1["ID_factura"][i]] = df1.iloc[i].tolist()
-    lista_iguales = []
-    lista_diferentes = []
-    for llave in dic_dataframe_CLD:
-        try:
-            diferentes,valor,conteo = listas_diferentes(dic_dataframe_PRD[llave], dic_dataframe_CLD[llave],llave)
-            if diferentes:
-                lista_diferentes.append(valor)
-            else:
-                lista_iguales.append(valor)
-        except KeyError:
-            pass
-    largo = len(lista_1)
-    print(f"Para {len(lista_iguales)+len(lista_diferentes)} filas evaluadas: {len(lista_iguales)} filas iguales, {len(lista_diferentes)} filas diferentes")
-    lista_df_iguales = [[] for _ in range(largo)]
-    lista_df_diferentes = [[] for _ in range(largo)]
-    lista_df_diferentes_excel = [[] for _ in range(largo)]
-    for dic in lista_iguales:
-        for lista in dic.values():
-            for i in range(len(lista)):
-                lista_df_iguales[i].append(lista[i][0])
-    dic_df_iguales = {}
-    for i in range(largo):
-        dic_df_iguales[lista_1[i]] = lista_df_iguales[i]
-    df_iguales = pd.DataFrame(dic_df_iguales)
-    df_iguales.to_csv(nombre_archivo.replace("_resumen", "_comparacion_iguales_prd_cld"), index=False, encoding="utf-8-sig")
-    if informar:
-        informar_archivo_creado(nombre_archivo.replace("_resumen", "_comparacion_iguales_prd_cld"),True)
-    nombre_final = nombre_archivo.replace("_resumen", "_comparacion_iguales_prd_cld").replace(".csv",".xlsx")
-    almacenar = mod_5.almacenar_csv_en_excel(df_iguales, nombre_final,"Datos")
-    if informar and almacenar:
-        informar_archivo_creado(nombre_final, True)
-    for dic in lista_diferentes:
-        for lista in dic.values():
-            for i in range(len(lista)):
-                lista_df_diferentes[i].append((lista[i][0],lista[i][1]))
-    dic_df_diferentes = {}
-    for i in range(largo):
-        dic_df_diferentes[lista_1[i]] = lista_df_diferentes[i]
-    df_diferentes = pd.DataFrame(dic_df_diferentes)
-    df_diferentes.to_csv(nombre_archivo.replace("_resumen", "_comparacion_diferentes_prd_cld"), index=False, encoding="utf-8-sig")
-    if informar:
-        informar_archivo_creado(nombre_archivo.replace("_resumen", "_comparacion_diferentes_prd_cld"),True)
-    for dic in lista_diferentes:
-        for lista in dic.values():
-            for i in range(len(lista)):
-                lista_df_diferentes_excel[i].append(lista[i])
-    dic_df_diferentes_excel = {}
-    for i in range(largo):
-        dic_df_diferentes_excel[lista_1[i]] = lista_df_diferentes_excel[i]
-    df_diferentes_excel = pd.DataFrame(dic_df_diferentes_excel)
-    nombre_final = nombre_archivo.replace("_resumen", "_comparacion_diferentes_prd_cld").replace(".csv",".xlsx")
-    almacenar = mod_5.almacenar_csv_en_excel_patrones(df_diferentes_excel, nombre_final,"Datos")
-    if informar and almacenar:
-        informar_archivo_creado(nombre_final, True)
-
-def reporte_comparacion_prd_cld(lista_archivos, seleccionar_reporte, informar, cantidad_filas):
-    for filial in seleccionar_reporte["filial"]:
-        lista_archivos_filial = []
-        for archivo in lista_archivos:
-            if filial in archivo:
-                lista_archivos_filial.append(archivo)
-        if len(lista_archivos_filial) > 0:
-            apoyo_reporte_comparacion_prd_cld(lista_archivos_filial, informar, filial,cantidad_filas)
+            apoyo_reporte_comparacion_p1_p2(lista_archivos_filial, informar, cantidad_filas, p1, p2) #Colocar SIEMPRE primero GRC1, PRD / GRC1, PRD / PRD, CLD
 
 def generar_sumatoria_df(df):
     columnas = list(df.columns)
@@ -2186,6 +2238,32 @@ def diferencia_minutos_fechas(df, lista_dia_1, lista_hora_1, lista_dia_2, lista_
     df["Cantidad_minutos"] = lista_dif_minutos
     return df
 
+def porcentaje_tipo_evento_minutos(df, lista_eventos):
+    lista_valores = []
+    for evento in lista_eventos:
+        df_filtro = df[df["Tipo_evento"] == evento].reset_index(drop=True)
+        suma_evento = df_filtro["Cantidad_eventos"].sum()
+        for clasif in list(df_filtro["Clasificacion"].unique()):
+            valor = df_filtro[df_filtro["Clasificacion"] == clasif]["Cantidad_eventos"].sum()
+            if suma_evento > 0:
+                lista_valores.append(str(round((valor/suma_evento)*100,2))+" %")
+            else:
+                lista_valores.append("0 %")
+    df["Porcentaje_cantidad_eventos"] = lista_valores
+    return df
+
+def porcentaje_tipo_evento(df):
+    lista_valores = []
+    suma = df["Cantidad_eventos"].sum()
+    for evento in list(df["Tipo_evento"].unique()):
+        if suma > 0:
+            valor = df[df["Tipo_evento"] == evento]["Cantidad_eventos"].sum()
+            lista_valores.append(str(round((valor/suma)*100,2))+" %")
+        else:
+            lista_valores.append("0 %")
+    df["Porcentaje_cantidad_eventos"] = lista_valores
+    return df
+
 def apoyo_generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos, filial, informar=True, almacenar_excel=True):
     for archivo in lista_archivos:
         df = leer_dataframe_utf_8(archivo)
@@ -2196,14 +2274,25 @@ def apoyo_generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos, fili
         dic_df_evento = {"Tipo_evento":[],
                         "Cantidad_eventos":[],
                         "Tiempo_promedio_llegada (min)":[]}
-        dic_minutos_evento = {}
-        for evento in lista_eventos:
-            df_filtro = df[df["Observaciones"] == evento].reset_index(drop=True)
-            dic_minutos_evento[evento] = {"0 - 15 min":((0,15),[]),
+        dic_minutos_evento_no_contr = {"0 - 15 min":((0,15),[]),
                                             "15 - 30 min":((15,30),[]),
                                             "30 - 45 min":((30,45),[]),
                                             "45 - 60 min":((45,60),[]),
-                                            " > 60 min":((60,float("inf")),[])}
+                                            "> 1 hora":((60,float("inf")),[])}
+        dic_minutos_evento_contr = {"0 - 15 min":((0,15),[]),
+                                            "15 - 30 min":((15,30),[]),
+                                            "30 - 45 min":((30,45),[]),
+                                            "45 - 60 min":((45,60),[]),
+                                            "1 hora - 4 horas":((60,240),[]),
+                                            "4 hora - 8 horas":((240,480),[]),
+                                            "> 8 horas":((480,float("inf")),[]),}
+        dic_minutos_evento = {}
+        for evento in lista_eventos:
+            df_filtro = df[df["Observaciones"] == evento].reset_index(drop=True)
+            if "NO CONTROL" in evento:
+                dic_minutos_evento[evento] = dic_minutos_evento_no_contr.copy()
+            else:
+                dic_minutos_evento[evento] = dic_minutos_evento_contr.copy()
             for i in range(len(df_filtro)):
                 for llave, tupla in dic_minutos_evento[evento].items():
                     if tupla[0][0] < df_filtro["Cantidad_minutos"][i] <= tupla[0][1]:
@@ -2222,12 +2311,14 @@ def apoyo_generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos, fili
                 dic_df_evento_minutos["Clasificacion"].append(llave)
                 dic_df_evento_minutos["Cantidad_eventos"].append(len(valor[1]))
         df2 = pd.DataFrame(dic_df_evento_minutos)
+        df2 = porcentaje_tipo_evento_minutos(df2, lista_eventos)
         df2["Filial"] = dic_filiales[filial]
         df2["NIT"] = dic_nit[dic_filiales[filial]]
         df2["Anio_reportado"] = anio_archivo
         df2["Mes_reportado"] = mes_archivo
         almacenar_df_csv_y_excel(df2, nombre_1, informar, almacenar_excel)
         df1 = pd.DataFrame(dic_df_evento)
+        df1 = porcentaje_tipo_evento(df1)
         df1["Filial"] = dic_filiales[filial]
         df1["NIT"] = dic_nit[dic_filiales[filial]]
         df1["Anio_reportado"] = anio_archivo
@@ -2454,7 +2545,7 @@ def unir_listas_anio_mes(lista_anios, lista_meses):
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Búsqueda archivos
 # * -------------------------------------------------------------------------------------------------------
-def busqueda_archivos_tipo(ubi_archivo,tipo=None):
+def busqueda_archivos_tipo(ubi_archivo,tipo=None, lista_fallidos=[]):
     if tipo:
         archivos_tipo = glob.glob(os.path.join(ubi_archivo, "*"+tipo))
     else:

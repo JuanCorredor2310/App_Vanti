@@ -38,9 +38,9 @@ def almacenar_csv_en_excel_patrones(df, archivo_xlsx, nombre_hoja):
         generar_borde_simple(sheet)
         generar_borde_grueso(sheet)
         ajustar_ancho_columna(sheet)
+        definir_tipo_texto(sheet)
         centrar_informacion(sheet)
         cambio_columnas(sheet)
-        definir_tipo_texto(sheet)
         book.save(archivo_xlsx)
         return True
     except PermissionError:
@@ -59,7 +59,7 @@ def cambio_columnas(sheet):
     for fila in sheet.iter_rows(min_row=2, max_row=sheet.max_row):
         for celda in fila:
             valor = celda.value
-            valor = valor.replace("(","").replace(")","").replace("\'","")
+            valor = valor.replace("(","").replace(")","").replace("\'","").replace("np.int64","").replace("np.float64","")
             lista_valor = valor.split(",")
             if str(lista_valor[2].strip()) == "False":
                 valor_1 = lista_valor[0]
@@ -67,7 +67,7 @@ def cambio_columnas(sheet):
                 celda.fill = red_fill
                 celda.value = str((valor_1,valor_2)).replace("\'","")
             else:
-                celda.value = lista_valor[0].replace("\'","")
+                celda.value = str(lista_valor[0].replace("\'",""))
 
 def definir_tipo_texto(sheet):
     for fila in sheet.iter_rows(min_row=2, max_row=sheet.max_row):
@@ -75,19 +75,19 @@ def definir_tipo_texto(sheet):
             valor = celda.value
             try:
                 if isinstance(valor, int):
-                    valor = int(valor)
-                    celda.value = valor
+                    celda.value = str(int(celda.value)).replace("np.int64","").replace("np.float64","")
                     celda.number_format = "0"
                 elif isinstance(valor, float):
-                    valor = float(valor)
-                    celda.value = valor
+                    celda.value = str(float(celda.value)).replace("np.int64","").replace("np.float64","")
                     celda.number_format = "0.00"
                 else:
-                    valor = str(valor)
+                    valor = str(valor).replace("np.int64","").replace("np.float64","")
                     celda.value = valor
+                    celda.number_format = "General"
             except ValueError:
-                valor = str(valor)
+                valor = str(valor).replace("np.int64","").replace("np.float64","")
                 celda.value = valor
+                celda.number_format = "General"
 
 def ajustar_ancho_columna(sheet):
     for column in sheet.columns:
