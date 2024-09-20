@@ -1,6 +1,7 @@
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Border, Side, Alignment, NamedStyle
 global color_ele
+import pandas as pd
 color_ele = "56affe"
 
 # * -------------------------------------------------------------------------------------------------------
@@ -132,3 +133,12 @@ def generar_borde_simple(sheet):
     for row in sheet.iter_rows(min_row=min_row, max_row=max_row, min_col=min_col, max_col=max_col):
         for cell in row:
             cell.border = border_simple
+
+def lectura_hoja_xlsx(archivo, hoja):
+    try:
+        df = pd.read_excel(archivo, sheet_name=hoja).reset_index(drop=True)
+        return df, True
+    except FileNotFoundError:
+        return None, None
+    except PermissionError:
+        return None, None

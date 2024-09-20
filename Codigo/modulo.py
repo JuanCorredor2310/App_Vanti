@@ -69,9 +69,6 @@ def crear_lista_reportes_totales():
 lista_reportes_totales = crear_lista_reportes_totales()
 fecha_actual = datetime.now()
 
-# * Importar librerías
-
-
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Uso de librería Geopy
 # * -------------------------------------------------------------------------------------------------------
@@ -522,33 +519,49 @@ def comprobar_info_nombre_archivo(ext_archivo):
                 return False
     return True
 
-def archivos_aceptados_constantes(lista_archivos):
-    with open(ruta_constantes+"Aceptados.txt", 'r') as archivo:
-        lineas = archivo.readlines()
-    lista_archivos_aceptados = [linea.strip() for linea in lineas][1:]
-    for archivo in lista_archivos:
-        nombre_archivo = archivo.split("\\")[-1]
-    print(lista_archivos_aceptados)
+def archivos_aceptados_constantes(lista_archivos, informar=True):
+    try:
+        with open(ruta_constantes+"Aceptados.txt", 'r') as archivo:
+            lineas = archivo.readlines()
+        proceso = True
+    except FileNotFoundError:
+        pass
+    except PermissionError:
+        pass
+    if proceso:
+        lista_archivos_aceptados = [linea.strip() for linea in lineas][1:]
+        for archivo in lista_archivos:
+            nombre_archivo = archivo.split("\\")[-1]
+            if nombre_archivo in lista_archivos_aceptados:
+                try:
+                    shutil.move(archivo, ruta_constantes+"\\"+nombre_archivo)
+                    if informar:
+                        informar_archivo_creado(ruta_constantes+"\\"+nombre_archivo, informar)
+                except FileNotFoundError:
+                    pass
+                except PermissionError:
+                    pass
 
 def almacenar_archivos(ruta_guardar_archivos,informar):
     lista_archivos = busqueda_archivos_tipo(ruta_guardar_archivos)
-    try:
-        lista_carpetas = buscar_carpetas(ruta_nuevo_sui)
-        ubi = None
-        for i in lista_carpetas:
-            if dic_carpetas["carpeta_2"][0] in i:
-                ubi = i
-        lista_fallidos = []
-        lista_fallidos = conversion_archivos_CSV(lista_archivos, lista_fallidos=lista_fallidos)
-        lista_fallidos = conversion_archivos_lista(lista_archivos,"TXT","txt",informar=True, lista_fallidos=lista_fallidos)
-        lista_fallidos = conversion_archivos_lista(lista_archivos,"txt","csv",informar=True, lista_fallidos=lista_fallidos)
-        lista_fallidos = conversion_archivos_lista(lista_archivos,"CSV","csv",informar=True, lista_fallidos=lista_fallidos)
-        lista_fallidos = evaluar_archivos_prueba(lista_archivos, lista_fallidos=lista_fallidos)
-        lista_fallidos = list(set(lista_fallidos))
-        lista_archivos = busqueda_archivos_tipo(ruta_guardar_archivos, lista_fallidos=lista_fallidos)
-        lista_archivos = retirar_archivos_fallidos(lista_archivos, lista_fallidos)
-        lista_archivos = cantidad_minima_info_archivo(lista_archivos)
-        for archivo in lista_archivos:
+    archivos_aceptados_constantes(lista_archivos)
+    lista_carpetas = buscar_carpetas(ruta_nuevo_sui)
+    ubi = None
+    for i in lista_carpetas:
+        if dic_carpetas["carpeta_2"][0] in i:
+            ubi = i
+    lista_fallidos = []
+    lista_fallidos = conversion_archivos_CSV(lista_archivos, lista_fallidos=lista_fallidos)
+    lista_fallidos = conversion_archivos_lista(lista_archivos,"TXT","txt",informar=True, lista_fallidos=lista_fallidos)
+    lista_fallidos = conversion_archivos_lista(lista_archivos,"txt","csv",informar=True, lista_fallidos=lista_fallidos)
+    lista_fallidos = conversion_archivos_lista(lista_archivos,"CSV","csv",informar=True, lista_fallidos=lista_fallidos)
+    lista_fallidos = evaluar_archivos_prueba(lista_archivos, lista_fallidos=lista_fallidos)
+    lista_fallidos = list(set(lista_fallidos))
+    lista_archivos = busqueda_archivos_tipo(ruta_guardar_archivos, lista_fallidos=lista_fallidos)
+    lista_archivos = retirar_archivos_fallidos(lista_archivos, lista_fallidos)
+    lista_archivos = cantidad_minima_info_archivo(lista_archivos)
+    for archivo in lista_archivos:
+        try:
             nombre_archivo = archivo.split("\\")[-1]
             nombre_archivo_lista = nombre_archivo.split(".")
             nombre_archivo_lista[0] = nombre_archivo_lista[0].upper()
@@ -565,10 +578,10 @@ def almacenar_archivos(ruta_guardar_archivos,informar):
                     shutil.move(archivo, nueva_ubi)
                     if informar:
                         informar_archivo_creado(nueva_ubi, informar)
-    except FileNotFoundError:
-        pass
-    except PermissionError:
-        pass
+        except FileNotFoundError:
+            pass
+        except PermissionError:
+            pass
 
 def conversion_archivos_CSV(lista_archivos, lista_fallidos=[]):
     for archivo in lista_archivos:
@@ -2461,6 +2474,58 @@ def generar_reporte_suspension_mensual(lista_archivos, seleccionar_reporte, info
             if informar and almacenar:
                 informar_archivo_creado(nuevo_nombre.replace(".csv",".xlsx"), True)
         return df_total,nuevo_nombre
+
+# * -------------------------------------------------------------------------------------------------------
+# *                                             Menú de Cumplimiento de Reportes Regulatorios
+# * -------------------------------------------------------------------------------------------------------
+def encontrar_ubi_archivo(lista, nombre):
+    ruta_actual = lista[0]
+    for ruta in lista[1:]:
+        carpetas = buscar_carpetas(ruta_actual)
+        for carpeta in carpetas:
+            if ruta in carpeta:
+                ruta_actual = carpeta
+    return ruta_actual+"\\"+nombre+".csv"
+
+def generar_porcentaje_cumplimientos_regulatorios():
+    nombre = "Reporte SUI"
+    archivo = ruta_constantes+"\\"+f"{nombre}.xlsx"
+    if os.path.exists(archivo):
+        df, proceso = mod_5.lectura_hoja_xlsx(archivo, nombre)
+        if proceso:
+            anio_actual = fecha_actual.year
+            df['Fecha_establecida'] = pd.to_datetime(df['Fecha establecida'], errors='coerce')
+            df = df.loc[df['Fecha_establecida'].dt.year == int(anio_actual)]
+            lista_estado = list(df["Estado Certificado"].unique())
+            lista_filiales = list(df["Empresa"].unique())
+            largo = len(df)
+            dic_df = {"Filial":[],
+                        "Estado":[],
+                        "Cantidad_reportes":[],
+                        "Porcentaje_cumplimiento":[]}
+            for filial in lista_filiales:
+                df_filial = df[df["Empresa"]==filial]
+                for estado in lista_estado:
+                    df_estado = df_filial[df_filial["Estado Certificado"]==estado]
+                    dic_df["Filial"].append(filial)
+                    dic_df["Estado"].append(estado)
+                    dic_df["Cantidad_reportes"].append(len(df_estado))
+                    dic_df["Porcentaje_cumplimiento"].append(str(round((len(df_estado)/len(df_filial))*100,2))+" %")
+            for estado in lista_estado:
+                df_estado = df[df["Estado Certificado"]==estado]
+                dic_df["Filial"].append(grupo_vanti)
+                dic_df["Estado"].append(estado)
+                dic_df["Cantidad_reportes"].append(len(df_estado))
+                dic_df["Porcentaje_cumplimiento"].append(str(round((len(df_estado)/largo)*100,2))+" %")
+            df_porcentaje = pd.DataFrame(dic_df)
+            df_porcentaje["Anio"] = anio_actual
+            lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", str(anio_actual), "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Cumplimientos_Regulatorios"]
+            nuevo_nombre = encontrar_ubi_archivo(lista_ubi, "porcentaje_cumplimientos_regulatorios")
+            almacenar_df_csv_y_excel(df_porcentaje,nuevo_nombre)
+        else:
+            print(f"No es posible acceder al archivo {archivo}.")
+    else:
+        print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Uso de listas (arreglos)

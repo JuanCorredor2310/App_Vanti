@@ -1,3 +1,4 @@
 Aceptados
 mercado_relevante.csv
 Reporte SUI.xlsx
+info_trimestral.xlsx

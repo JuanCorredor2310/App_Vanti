@@ -27,11 +27,13 @@ lista_filiales = list(mod_2.leer_archivos_json(ruta_constantes+"tabla_empresa.js
 dic_reportes = mod_2.leer_archivos_json(ruta_constantes+"carpetas.json")["carpeta_6"]
 lista_reportes_generales = mod_2.leer_archivos_json(ruta_constantes+"carpetas_1.json")["carpeta_2"]
 reportes_generados = mod_2.leer_archivos_json(ruta_constantes+"carpetas_1.json")["carpeta_4"]
-lista_reportes_generados = ["_resumen","_form_estandar",
-                            "_indicador_tecnico",
-                            "_reporte_consumo","_CLD","_PRD","_porcentaje_comparacion_SAP","_total_comparacion_SAP","_comparacion_iguales",
-                            "_comparacion_diferentes","_subdio","_info_comercial","_reporte_tarifario",
-                            "_reporte_suspension","_inventario_suscriptores","_reporte_compensacion"]
+lista_reportes_generados = ["_resumen","_form_estandar", #formatos generales
+                            "_reporte_consumo","_CLD","_PRD","_porcentaje_comparacion_SAP","_total_comparacion_SAP",
+                            "_comparacion_iguales""_comparacion_diferentes","_subsidio","_info_comercial","_reporte_compensacion", #formatos comerciales
+                            "_reporte_tarifario", #formatos tarifarios
+                            "_indicador_tecnico","_reporte_suspension", #formatos tecnicos
+                            "_inventario_suscriptores","_usuarios_unicos" #calidad de la información
+                            "porcentaje_cumplimientos_regulatorios"] #formatos regulatorios
 cantidad_datos_estilo_excel = 80000
 
 def crear_lista_reportes_totales():
@@ -601,6 +603,12 @@ def menu_comercial_compensaciones(option,valor):
                 t_f = time.time()
                 mod_1.mostrar_tiempo(t_f, t_i)"""
 
+def menu_comercial_trimestral(option,valor):
+    if option == "1":
+        print(f"\nInicio de procesamiento para: {valor}\n\n")
+    if option == "2":
+        print(f"\nInicio de procesamiento para: {valor}\n\n")
+
 def menu_comercial_analisis_previo(option,valor):
     #? Generación de información para el inventrario de suscriptores mensual
     if option == "1":
@@ -718,8 +726,15 @@ def menu_comercial(option,valor):
                     "Regresar al menú inicial"]
         option,valor = opcion_menu_valida(lista_menu, "Información comercial para compensaciones")
         menu_comercial_compensaciones(option,valor)
-    #? Análisis previo para comprobar la calidad de la información
+    #? Información comercial para reportes trimestrales
     elif option == "3":
+        lista_menu = ["Generación de información para el comportamiento patrimonial",
+                    "Generación de información de relación reclamos facturación (10.000)",
+                    "Regresar al menú inicial"]
+        option,valor = opcion_menu_valida(lista_menu, "Información comercial para información de usuarios únicos")
+        menu_comercial_trimestral(option,valor)
+    #? Análisis previo para comprobar la calidad de la información
+    elif option == "4":
         lista_menu = ["Generación de información para el inventrario de suscriptores mensual",
                     "Generación de información para el inventrario de suscriptores anual",
                     "Generación de reportes de usuarios con factura mensual",
@@ -730,7 +745,7 @@ def menu_comercial(option,valor):
         option,valor = opcion_menu_valida(lista_menu, "Información comercial para información de usuarios únicos")
         menu_comercial_analisis_previo(option,valor)
     #? "Análisis previo para comprobar la calidad de la información
-    elif option == "4":
+    elif option == "5":
         lista_menu = ["Generación de reporte de comparación Certificación - Calidad - Producción (GRC1-SAP)", #Op1
                     "Generación de reporte de comparación Certificación - Calidad (GRC1-SAP)", #Op2
                     "Generación de reporte de comparación Certificación - Producción (GRC1-SAP)", #Op3
@@ -916,7 +931,12 @@ def menu_tecnico(option,valor):
 # *                                             Menú de Cumplimiento de Reportes Regulatorios
 # * -------------------------------------------------------------------------------------------------------
 def menu_cumplimientos_reportes(option, valor):
-    pass
+    #? Porcentaje de Cumplimientos Regulatorios
+    if option == "1":
+        mod_1.generar_porcentaje_cumplimientos_regulatorios()
+    #? Porcentaje de AEGR
+    elif option == "2":
+        print(valor)
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Menú general
@@ -946,6 +966,7 @@ def menu_inicial(lista, nombre):
     elif option == "3":
         lista_menu = ["Información comercial por sector de consumo",
                         "Información comercial para compensaciones",
+                        "Información comercial para reportes trimestrales",
                         "Análisis previo para comprobar la calidad de la información",
                         "Comparación entre archivos de certificación, calidad (CLD) y/o producción (PRD)",
                         "Regresar al menú inicial"]
@@ -1307,7 +1328,7 @@ def iniciar_menu():
 def mostrar_inicio_app():
     mod_1.mostrar_titulo(f"Bienvenid@ al aplicativo de VANTI versión {version}", True, None)
     mod_1.mostrar_titulo("Vicepresidencia de Estrategia y Finanzas", None, "up")
-    mod_1.mostrar_titulo("Regulación de Márgenes y Tarifas", None, "down")
+    mod_1.mostrar_titulo("Regulación, Márgenes y Tarifas", None, "down")
     iniciar_menu()
 
 mostrar_inicio_app()

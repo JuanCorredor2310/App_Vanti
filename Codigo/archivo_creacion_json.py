@@ -92,7 +92,7 @@ def creacion_directorio_carpetas_principales():
                                 "Octubre",
                                 "Noviembre",
                                 "Diciembre"], # Separación por meses
-                        "carpeta_7":["Comercial","Tarifario","Tecnico"]} # Tipos de reporte
+                        "carpeta_7":["Comercial","Tarifario","Tecnico","Cumplimientos_Regulatorios"]} # Tipos de reporte
         almacenar_json(carpetas_2, ruta_constantes+"carpetas_2.json")
 
 def cambiar_diccionario(anio):
