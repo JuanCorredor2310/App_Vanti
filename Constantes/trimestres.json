@@ -1,0 +1,9 @@
+{
+    "descripcion": "Trimestres",
+    "datos": {
+        "1": "TRIM_1",
+        "2": "TRIM_2",
+        "3": "TRIM_3",
+        "4": "TRIM_4"
+    }
+}

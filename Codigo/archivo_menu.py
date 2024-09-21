@@ -23,6 +23,7 @@ global version, lista_meses, lista_empresas,lista_anios,dic_reportes,lista_repor
 version = "1.0"
 lista_anios = list(mod_2.leer_archivos_json(ruta_constantes+"anios.json")["datos"].values())
 lista_meses = list(mod_2.leer_archivos_json(ruta_constantes+"tabla_18.json")["datos"].values())
+lista_trimestres = list(mod_2.leer_archivos_json(ruta_constantes+"trimestres.json")["datos"].values())
 lista_filiales = list(mod_2.leer_archivos_json(ruta_constantes+"tabla_empresa.json")["datos"].keys())
 dic_reportes = mod_2.leer_archivos_json(ruta_constantes+"carpetas.json")["carpeta_6"]
 lista_reportes_generales = mod_2.leer_archivos_json(ruta_constantes+"carpetas_1.json")["carpeta_2"]
@@ -32,7 +33,7 @@ lista_reportes_generados = ["_resumen","_form_estandar", #formatos generales
                             "_comparacion_iguales""_comparacion_diferentes","_subsidio","_info_comercial","_reporte_compensacion", #formatos comerciales
                             "_reporte_tarifario", #formatos tarifarios
                             "_indicador_tecnico","_reporte_suspension", #formatos tecnicos
-                            "_inventario_suscriptores","_usuarios_unicos" #calidad de la información
+                            "_inventario_suscriptores","_usuarios_unicos","_reporte_facturacion",#calidad de la información
                             "porcentaje_cumplimientos_regulatorios"] #formatos regulatorios
 cantidad_datos_estilo_excel = 80000
 
@@ -266,16 +267,18 @@ def especificar_lista_reportes_generados(lista_1):
 # *                                             Menú de configuración inicial
 # * -------------------------------------------------------------------------------------------------------
 
-def menu_configuracion_inicial(option):
+def menu_configuracion_inicial(option,valor):
     #? Creación de espacio de trabajo (Carpetas)
     if option == "1":
         lista_menu_1 = ["Sí","No"]
         option_1,valor_1 = confirmacion_seleccion(lista_menu_1)
         if option_1 == "1":
-            mod_3.configuracion_inicial()
-            print("\n")
-            mod_1.mostrar_texto("Configuración inicial completa.","texto")
-            print("\n")
+            t_i = time.time()
+            print(f"\nInicio de procesamiento para: {valor}\n\n")
+            #mod_3.configuracion_inicial()
+            mod_1.mostrar_texto("Configuración inicial completa.")
+            t_f = time.time()
+            mod_1.mostrar_tiempo(t_f, t_i)
     #? Agregar un nuevo año
     elif option == "2":
         centinela = True
@@ -294,8 +297,23 @@ def menu_configuracion_inicial(option):
         lista_menu_1 = ["Sí","No"]
         option_1,valor_1 = confirmacion_seleccion(lista_menu_1, f"¿Desea ingresar el año {valor} a las carpetas de archivos?")
         if option_1 == "1":
+            t_i = time.time()
+            print(f"\nInicio de procesamiento para: {valor}\n\n")
             mod_2.cambiar_diccionario(str(valor))
             mod_3.configuracion_inicial()
+            t_f = time.time()
+            mod_1.mostrar_tiempo(t_f, t_i)
+    #? Editar un reporte existente
+    elif option == "3":
+        t_i = time.time()
+        print(f"\nInicio de procesamiento para: {valor}\n\n")
+        t_f = time.time()
+        mod_1.mostrar_tiempo(t_f, t_i)
+    #? Agregar un nuevo tipo de reporte
+        t_i = time.time()
+        print(f"\nInicio de procesamiento para: {valor}\n\n")
+        t_f = time.time()
+        mod_1.mostrar_tiempo(t_f, t_i)
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Menú de edición de archivos
@@ -313,8 +331,7 @@ def menu_opciones_archivos(option, valor):
         elif option_1 == "2":
             eliminar = True
         opciones_adicionales = anadir_opciones(False, False)
-        if opciones_adicionales[0]:
-            t_i = time.time()
+        t_i = time.time()
         lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, [])
         lista_archivos.extend(mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo.upper(), []))
         if len(lista_archivos) == 0:
@@ -325,9 +342,8 @@ def menu_opciones_archivos(option, valor):
             if eliminar:
                 mod_1.eliminar_archivos(lista_archivos)
                 print(f"\nArchivos con formato {tipo} eliminados\n")
-            if opciones_adicionales[0]:
-                t_f = time.time()
-                mod_1.mostrar_tiempo(t_f, t_i)
+            t_f = time.time()
+            mod_1.mostrar_tiempo(t_f, t_i)
     #? Almacenar archivos
     elif option == "2":
         t_i = time.time()
@@ -339,8 +355,7 @@ def menu_opciones_archivos(option, valor):
     elif option == "3":
         seleccionar_reporte = funcion_seleccionar_reportes("reporte_vanti")
         opciones_adicionales = anadir_opciones()
-        if opciones_adicionales[0]:
-            t_i = time.time()
+        t_i = time.time()
         tipo = ".CSV"
         lista_evitar = especificar_lista_reportes_generados(["_CLD","_PRD"])
         lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
@@ -353,24 +368,28 @@ def menu_opciones_archivos(option, valor):
         else:
             print(f"\nInicio de procesamiento para: {valor}\n\n")
             mod_1.estandarizacion_archivos(lista_archivos, True)
-            if opciones_adicionales[0]:
-                t_f = time.time()
-                mod_1.mostrar_tiempo(t_f, t_i)
+            t_f = time.time()
+            mod_1.mostrar_tiempo(t_f, t_i)
     #? Generar archivos de tipo resumen
     elif option == "4":
         seleccionar_reporte = funcion_seleccionar_reportes("reporte_vanti")
         opciones_adicionales = anadir_opciones(True)
-        if opciones_adicionales[0]:
-            t_i = time.time()
+        t_i = time.time()
         tipo = ".CSV"
         lista_evitar = especificar_lista_reportes_generados(["_CLD","_PRD"])
         lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
         print(f"\nInicio de procesamiento para: {valor}\n\n")
         mod_1.conversion_archivos_CSV(lista_archivos)
         proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1],["_CLD","_PRD"])
-        if proceso and opciones_adicionales[0]:
-            t_f = time.time()
-            mod_1.mostrar_tiempo(t_f, t_i)
+        t_f = time.time()
+        mod_1.mostrar_tiempo(t_f, t_i)
+    #? Revisión de archivos existentes
+    elif option == "5":
+        t_i = time.time()
+        print(f"\nInicio de procesamiento para: {valor}\n\n")
+        t_f = time.time()
+        mod_1.mostrar_tiempo(t_f, t_i)
+
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Activación de menú
@@ -580,84 +599,88 @@ def menu_comercial_compensaciones(option,valor):
     if option == "1":
         seleccionar_reporte = funcion_seleccionar_reportes("reportes_compensacion_mensual")
         opciones_adicionales = anadir_opciones(True)
-        if opciones_adicionales[0]:
-            t_i = time.time()
+        t_i = time.time()
         proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1])
         if proceso:
             print(f"\nInicio de procesamiento para: {valor}\n\n")
             mod_1.generar_reporte_compensacion_mensual(lista_archivos, seleccionar_reporte, True)
-            if opciones_adicionales[0]:
-                t_f = time.time()
-                mod_1.mostrar_tiempo(t_f, t_i)
+            t_f = time.time()
+            mod_1.mostrar_tiempo(t_f, t_i)
     #? Generación de reportes de compensaciones anual
     elif option == "2":
-        print("Generación de reportes de compensaciones anual")
-        """seleccionar_reporte = funcion_seleccionar_reportes("reportes_compensacion_anual")
+        seleccionar_reporte = funcion_seleccionar_reportes("reportes_compensacion_anual")
         opciones_adicionales = anadir_opciones(True)
-        if opciones_adicionales[0]:
-            t_i = time.time()
+        t_i = time.time()
         proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1])
         if proceso:
-            mod_1.generar_reporte_compensacion_mensual(lista_archivos, seleccionar_reporte, True)
-            if opciones_adicionales[0]:
-                t_f = time.time()
-                mod_1.mostrar_tiempo(t_f, t_i)"""
+            print(f"\nInicio de procesamiento para: {valor}\n\n")
+            #mod_1.generar_reporte_compensacion_mensual(lista_archivos, seleccionar_reporte, True)
+            t_f = time.time()
+            mod_1.mostrar_tiempo(t_f, t_i)
 
 def menu_comercial_trimestral(option,valor):
+    #? Generación de información para el comportamiento patrimonial
     if option == "1":
+        t_i = time.time()
+        fi,ff,listas_unidas = eleccion_rango_trimestral()
         print(f"\nInicio de procesamiento para: {valor}\n\n")
-    if option == "2":
+        mod_1.reporte_comportamiento_patrimonial(fi,ff,listas_unidas)
+        t_f = time.time()
+        mod_1.mostrar_tiempo(t_f, t_i)
+    #? Generación de información de relación reclamos facturación (10.000)
+    elif option == "2":
+        t_i = time.time()
+        fi,ff,listas_unidas = eleccion_rango_trimestral()
         print(f"\nInicio de procesamiento para: {valor}\n\n")
+        mod_1.reporte_info_reclamos(fi,ff,listas_unidas)
+        t_f = time.time()
+        mod_1.mostrar_tiempo(t_f, t_i)
 
 def menu_comercial_analisis_previo(option,valor):
     #? Generación de información para el inventrario de suscriptores mensual
     if option == "1":
         seleccionar_reporte = funcion_seleccionar_reportes("inventario_suscriptores_mensual")
         opciones_adicionales = anadir_opciones(regenerar=True)
-        if opciones_adicionales[0]:
-            t_i = time.time()
+        t_i = time.time()
         proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1])
         if proceso:
             print(f"\nInicio de procesamiento para: {valor}\n\n")
             mod_1.reporte_usuarios_filial(lista_archivos, True, seleccionar_reporte)
-            if opciones_adicionales[0]:
-                t_f = time.time()
-                mod_1.mostrar_tiempo(t_f, t_i)
+            t_f = time.time()
+            mod_1.mostrar_tiempo(t_f, t_i)
     #? Generación de información para el inventrario de suscriptores anual
     elif option == "2":
-        print("Generación de información para el inventrario de suscriptores anual")
-    #? Generación de reportes de usuarios con factura mensual
-    elif option == "3":
-        seleccionar_reporte = funcion_seleccionar_reportes("usuarios_unicos_mensual")
+        seleccionar_reporte = funcion_seleccionar_reportes("inventario_suscriptores_anual")
         opciones_adicionales = anadir_opciones(regenerar=True)
-        if opciones_adicionales[0]:
-            t_i = time.time()
+        t_i = time.time()
         proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1])
         if proceso:
             print(f"\nInicio de procesamiento para: {valor}\n\n")
-            mod_1.reporte_usuarios_unicos_mensual(lista_archivos, True, seleccionar_reporte,incluir_factura=True)
-            if opciones_adicionales[0]:
-                t_f = time.time()
-                mod_1.mostrar_tiempo(t_f, t_i)
-    #? Generación de reportes de usuarios con factura anual
-    elif option == "4":
-        print("Generación de reportes de usuarios con factura anual")
-    #? Generación de reportes de usuarios general mensual
-    elif option == "5":
+            #mod_1.reporte_usuarios_filial(lista_archivos, True, seleccionar_reporte)
+            t_f = time.time()
+            mod_1.mostrar_tiempo(t_f, t_i)
+    #? Generación de información para usuarios regulados / no regulados mensual
+    elif option == "3":
         seleccionar_reporte = funcion_seleccionar_reportes("usuarios_unicos_mensual")
         opciones_adicionales = anadir_opciones(regenerar=True)
-        if opciones_adicionales[0]:
-            t_i = time.time()
+        t_i = time.time()
         proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1])
         if proceso:
             print(f"\nInicio de procesamiento para: {valor}\n\n")
             mod_1.reporte_usuarios_unicos_mensual(lista_archivos, True, seleccionar_reporte)
-            if opciones_adicionales[0]:
-                t_f = time.time()
-                mod_1.mostrar_tiempo(t_f, t_i)
-    #? Generación de reportes de usuarios general anual
-    elif option == "6":
-        print("Generación de reportes de usuarios general anual")
+            t_f = time.time()
+            mod_1.mostrar_tiempo(t_f, t_i)
+    #? Generación de información para usuarios regulados / no regulados anual
+    elif option == "4":
+        seleccionar_reporte = funcion_seleccionar_reportes("usuarios_unicos_anual")
+        opciones_adicionales = anadir_opciones(regenerar=True)
+        t_i = time.time()
+        proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1])
+        if proceso:
+            print(f"\nInicio de procesamiento para: {valor}\n\n")
+            #mod_1.reporte_usuarios_unicos_mensual(lista_archivos, True, seleccionar_reporte,incluir_factura=True)
+            t_f = time.time()
+            mod_1.mostrar_tiempo(t_f, t_i)
 
 def menu_comercial_cer_cld_prd(option,valor):
     #? Generación de reporte de comparación Producción - Calidad (GRC1-SAP)
@@ -737,10 +760,8 @@ def menu_comercial(option,valor):
     elif option == "4":
         lista_menu = ["Generación de información para el inventrario de suscriptores mensual",
                     "Generación de información para el inventrario de suscriptores anual",
-                    "Generación de reportes de usuarios con factura mensual",
-                    "Generación de reportes de usuarios con factura anual",
-                    "Generación de reportes de usuarios general mensual",
-                    "Generación de reportes de usuarios general anual",
+                    "Generación de información para usuarios regulados / no regulados mensual",
+                    "Generación de información para usuarios regulados / no regulados anual",
                     "Regresar al menú inicial"]
         option,valor = opcion_menu_valida(lista_menu, "Información comercial para información de usuarios únicos")
         menu_comercial_analisis_previo(option,valor)
@@ -847,15 +868,13 @@ def menu_tecnico(option,valor):
     if option == "1":
         seleccionar_reporte = funcion_seleccionar_reportes("reportes_indicadores_tecnicos_mensual")
         opciones_adicionales = anadir_opciones(True)
-        if opciones_adicionales[0]:
-            t_i = time.time()
+        t_i = time.time()
         proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1])
         if proceso:
             print(f"\nInicio de procesamiento para: {valor}\n\n")
             mod_1.generar_reporte_indicadores_tecnicos_mensual(lista_archivos, seleccionar_reporte, True)
-            if opciones_adicionales[0]:
-                t_f = time.time()
-                mod_1.mostrar_tiempo(t_f, t_i)
+            t_f = time.time()
+            mod_1.mostrar_tiempo(t_f, t_i)
     #? Generación de consolidación de indicadores técnicos (IPLI,IO,IRST-EG) anual
     elif option == "2":
         print(valor)
@@ -895,15 +914,13 @@ def menu_tecnico(option,valor):
     elif option == "3":
         seleccionar_reporte = funcion_seleccionar_reportes("reportes_suspension_mensual")
         opciones_adicionales = anadir_opciones(True)
-        if opciones_adicionales[0]:
-            t_i = time.time()
+        t_i = time.time()
         proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1])
         if proceso:
             print(f"\nInicio de procesamiento para: {valor}\n\n")
             mod_1.generar_reporte_suspension_mensual(lista_archivos, seleccionar_reporte, True)
-            if opciones_adicionales[0]:
-                t_f = time.time()
-                mod_1.mostrar_tiempo(t_f, t_i)
+            t_f = time.time()
+            mod_1.mostrar_tiempo(t_f, t_i)
     #? Generación de reporte de suspensiones anual
     elif option == "4":
         seleccionar_reporte = funcion_seleccionar_reportes("reportes_suspension_anual")
@@ -912,15 +929,13 @@ def menu_tecnico(option,valor):
     elif option == "5":
         seleccionar_reporte = funcion_seleccionar_reportes("reportes_indicadores_tecnicos_IRST_mensual")
         opciones_adicionales = anadir_opciones(True)
-        if opciones_adicionales[0]:
-            t_i = time.time()
+        t_i = time.time()
         proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1])
         if proceso:
             print(f"\nInicio de procesamiento para: {valor}\n\n")
             mod_1.generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos, seleccionar_reporte)
-            if opciones_adicionales[0]:
-                t_f = time.time()
-                mod_1.mostrar_tiempo(t_f, t_i)
+            t_f = time.time()
+            mod_1.mostrar_tiempo(t_f, t_i)
     #? Generación de reporte de información de respuesta a servicio técnico (IRST) anual
     elif option == "6":
         print(valor)
@@ -933,10 +948,18 @@ def menu_tecnico(option,valor):
 def menu_cumplimientos_reportes(option, valor):
     #? Porcentaje de Cumplimientos Regulatorios
     if option == "1":
+        t_i = time.time()
+        print(f"\nInicio de procesamiento para: {valor}\n\n")
         mod_1.generar_porcentaje_cumplimientos_regulatorios()
+        t_f = time.time()
+        mod_1.mostrar_tiempo(t_f, t_i)
     #? Porcentaje de AEGR
     elif option == "2":
-        print(valor)
+        t_i = time.time()
+        print(f"\nInicio de procesamiento para: {valor}\n\n")
+        #LL=llamado función
+        t_f = time.time()
+        mod_1.mostrar_tiempo(t_f, t_i)
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Menú general
@@ -952,14 +975,17 @@ def menu_inicial(lista, nombre):
     elif option == "1":
         lista_menu = ["Creación de espacio de trabajo (Carpetas)",
                         "Agregar un nuevo año",
+                        "Editar un reporte existente",
+                        "Agregar un nuevo tipo de reporte",
                         "Regresar al menú inicial"]
         option,valor = opcion_menu_valida(lista_menu, "Menú de configuración inicial",False)
-        menu_configuracion_inicial(option)
+        menu_configuracion_inicial(option,valor)
     elif option == "2":
         lista_menu = ["Conversión de archivos txt a csv",
                     "Almacenar archivos",
                     "Estandarización de archivos",
                     "Generar archivos de tipo resumen",
+                    "Revisión de archivos existentes",
                     "Regresar al menú inicial"]
         option,valor = opcion_menu_valida(lista_menu, "Edición de archivos",False)
         menu_opciones_archivos(option,valor)
@@ -1078,7 +1104,7 @@ def funcion_seleccionar_reportes(tipo):
     elif tipo == "usuarios_unicos_mensual":
         seleccionar_reportes["ubicacion"] = ["Reportes Nuevo SUI"]
         seleccionar_reportes["tipo"] = ["Comercial"]
-        seleccionar_reportes["clasificacion"] = ["GRC1","GRC2"]
+        seleccionar_reportes["clasificacion"] = ["GRC1","GRC2","GRTT2"]
         seleccionar_reportes = eleccion_fecha_personalizada(seleccionar_reportes, True)
         seleccionar_reportes = eleccion_elemento(seleccionar_reportes, lista_filiales.copy(), "Seleccionar todas las filiales", "Elección filial", "filial", False)
         return seleccionar_reportes
@@ -1265,6 +1291,46 @@ def eleccion_rango_anual(seleccionar_reportes):
         print(f"\nRango anual seleccionado: {fi[0]}/{fi[1]} - {ff[0]}/{ff[1]}\n")
     return seleccionar_reportes
 
+def fecha_final_rango_tri(anio_inicial, tri_inicial):
+    ubi_tri = lista_trimestres.index(tri_inicial)
+    if ubi_tri == 0:
+        return (anio_inicial, lista_trimestres[-1])
+    else:
+        anio_final = str(int(anio_inicial)+1)
+        tri_final = lista_trimestres[ubi_tri-1]
+        return (anio_final, tri_final)
+
+def fecha_inicial_rango_tri(anio_final, tri_final):
+    ubi_tri = lista_trimestres.index(tri_final)
+    if ubi_tri == len(lista_trimestres)-1:
+        return (anio_final, lista_trimestres[0])
+    else:
+        anio_incial = str(int(anio_final)-1)
+        tri_inicial = lista_trimestres[ubi_tri+1]
+        return (anio_incial, tri_inicial)
+
+def eleccion_rango_trimestral():
+    option_1,valor_1 = opcion_menu_valida(["Inicio del rango anual","Fin del rango anual"], "Elección tipos de rangos", False)
+    listas_unidas = mod_1.unir_listas_anio_tri(lista_anios, lista_trimestres)
+    if option_1 == "1":
+        if len(lista_anios) > 4:
+            salto = True
+        else:
+            salto = False
+        option_2,valor_2 = opcion_menu_valida(listas_unidas, "Elección de trimestre-año inicial para el rango anual", salto)
+        fecha = valor_2.split(" - ")
+        fi = (fecha[0],fecha[1])
+        ff = fecha_final_rango_tri(fecha[0],fecha[1])
+        print(f"\nRango anual seleccionado: {fi[0]}/{fi[1]} - {ff[0]}/{ff[1]}\n")
+        return fi,ff,listas_unidas
+    elif option_1 == "2":
+        option_2,valor_2 = opcion_menu_valida(listas_unidas, "Elección de trimestre-año final para el rango anual", False)
+        fecha = valor_2.split(" - ")
+        ff = (fecha[0],fecha[1])
+        fi = fecha_inicial_rango_tri(fecha[0],fecha[1])
+        print(f"\nRango anual seleccionado: {fi[0]}/{fi[1]} - {ff[0]}/{ff[1]}\n")
+        return fi,ff,listas_unidas
+
 def eleccion_fecha(seleccionar_reportes, lista_evaluar, opcion_extra, nombre, separacion, personalizado):
     lista = []
     lista = lista_evaluar.copy()
@@ -1337,13 +1403,10 @@ mostrar_inicio_app()
 # TODO Pendientes:
     #Descargar archivos
     # Archivos anuales
-    #Cambiar a compilado 00.
     #Revisar llamado de todas las funciones
     # Crear carpeta comercial,tarifario,tecnico en cada reporte anual
     # Generar la opción de un nuevo formato
     # Generar la opción de cambiar un formato actual
-    #Incluir las suspenciones por hora
-    #Incluir los porcentajes del AEGR
     #Encontrar los reportes mensuales generados y faltantes para los reportes anuales
     #Archivos necesarios para el Dashboard (cambiar la función de archivos esperados)
 

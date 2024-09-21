@@ -41,11 +41,12 @@ def leer_archivos_json(archivo):
 # *                                             Constantes globales
 # * -------------------------------------------------------------------------------------------------------
 
-global lista_meses, lista_empresas, lista_anios, dic_reportes, lista_reportes_generales, reportes_generados, lista_reportes_totales,chunksize,llaves_dic_reporte, dic_carpetas, dic_filiales,antidad_datos_excel, dic_nit, cantidad_datos_estilo_excel,grupo_vanti,mercado_relevante,mercado_relevante_resumen,tabla_3,tabla_11,fecha_actual
+global lista_meses, lista_empresas, lista_anios, dic_reportes, lista_reportes_generales, reportes_generados, lista_reportes_totales,chunksize,llaves_dic_reporte, dic_carpetas, dic_filiales,antidad_datos_excel, dic_nit, cantidad_datos_estilo_excel,grupo_vanti,mercado_relevante,mercado_relevante_resumen,tabla_3,tabla_11,fecha_actual,lista_trimestres
 grupo_vanti = "Grupo Vanti"
 dic_carpetas = leer_archivos_json(ruta_constantes+"carpetas.json")
 lista_anios = list(leer_archivos_json(ruta_constantes+"anios.json")["datos"].values())
 lista_meses = list(leer_archivos_json(ruta_constantes+"tabla_18.json")["datos"].values())
+lista_trimestres = list(leer_archivos_json(ruta_constantes+"trimestres.json")["datos"].values())
 dic_filiales = leer_archivos_json(ruta_constantes+"tabla_empresa.json")["datos"]
 dic_nit = leer_archivos_json(ruta_constantes+"tabla_nit.json")["datos"]
 lista_filiales = list(dic_filiales.keys())
@@ -542,9 +543,17 @@ def archivos_aceptados_constantes(lista_archivos, informar=True):
                 except PermissionError:
                     pass
 
+def archivos_tipo_csv_txt(lista_archivos):
+    lista_nueva = []
+    for archivo in lista_archivos:
+        if archivo.endswith((".csv", ".txt",".TXT",".CSV")):
+            lista_nueva.append(archivo)
+    return lista_nueva
+
 def almacenar_archivos(ruta_guardar_archivos,informar):
+    archivos_aceptados_constantes(busqueda_archivos_tipo(ruta_guardar_archivos))
     lista_archivos = busqueda_archivos_tipo(ruta_guardar_archivos)
-    archivos_aceptados_constantes(lista_archivos)
+    lista_archivos = archivos_tipo_csv_txt(lista_archivos)
     lista_carpetas = buscar_carpetas(ruta_nuevo_sui)
     ubi = None
     for i in lista_carpetas:
@@ -637,8 +646,8 @@ def almacenar_df_csv_y_excel(df, nombre, informar=True, almacenar_excel=True):
     df.to_csv(nombre, index=False, encoding="utf-8-sig")
     if informar:
         informar_archivo_creado(nombre, True)
-    df = leer_dataframe_utf_8(nombre)
     if almacenar_excel:
+        df = leer_dataframe_utf_8(nombre)
         almacenar = mod_5.almacenar_csv_en_excel(df, nombre.replace(".csv",".xlsx"),"Datos")
         if informar and almacenar:
             informar_archivo_creado(nombre.replace(".csv",".xlsx"), True)
@@ -1933,9 +1942,12 @@ def generar_reporte_compensacion_mensual(lista_archivos, seleccionar_reporte, in
                 informar_archivo_creado(nuevo_nombre.replace(".csv",".xlsx"), True)
         return df1, nuevo_nombre
 
-def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, almacenar_excel=True, incluir_factura=False):
+def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, almacenar_excel=True):
     proceso_GRC1 = False
     proceso_GRC2 = False
+    proceso_GRTT2 = False
+    nombre_1 = None
+    nombre_2 = None
     lista_archivos_exitosos = []
     for archivo in lista_archivos:
         if "GRC1" in archivo:
@@ -1946,109 +1958,188 @@ def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, alma
                 mes_reportado = lista_df[0]["Mes_reportado"][0]
                 anio_reportado = lista_df[0]["Anio_reportado"][0]
                 dic_reg = {}
-                lista_reg = [0,0] #m3, Valor_total_facturado
-                if incluir_factura:
-                    dic_reg_factura = {}
+                lista_reg = [0,0,0] #m3, Valor_total_facturado, Valor_consumo_facturado
+                dic_reg_factura = {}
                 for df in lista_df:
                     for i in range(len(df)):
-                        if incluir_factura:
-                            factura = str(df["ID_factura"][i]).upper().strip()
-                            if factura[0] == "F":
-                                try:
-                                    valor_1 = float(df["Consumo"][i])
-                                    valor_2 = float(df["Valor_total_facturado"][i])
-                                    if not math.isnan(valor_1) and valor_1 > 0:
-                                        lista_reg[0] += valor_1
-                                    if not math.isnan(valor_2) and valor_2 > 0:
-                                        lista_reg[1] += valor_2
-                                except ValueError:
-                                    pass
-                                except TypeError:
-                                    pass
-                                valor = df["NIU"][i]
-                                if valor not in dic_reg:
-                                    dic_reg[valor] = True
-                                if factura not in dic_reg_factura:
-                                    dic_reg_factura[factura] = True
-                        else:
-                            try:
-                                valor_1 = float(df["Consumo"][i])
-                                valor_2 = float(df["Valor_total_facturado"][i])
-                                if not math.isnan(valor_1) and valor_1 > 0:
-                                    lista_reg[0] += valor_1
-                                if not math.isnan(valor_2) and valor_2 > 0:
-                                    lista_reg[1] += valor_2
-                            except ValueError:
-                                pass
-                            except TypeError:
-                                pass
-                            valor = df["NIU"][i]
-                            if valor not in dic_reg:
-                                dic_reg[valor] = True
+                        valor = df["NIU"][i]
+                        factura = str(df["ID_factura"][i]).upper().strip()
+                        if factura[0] == "F":
+                            if factura not in dic_reg_factura:
+                                dic_reg_factura[factura] = True
+                            dic_reg[valor][1] += 1
+                        if valor not in dic_reg:
+                            dic_reg[valor] = [valor,0,0,0,0,None,None] #NIU,Cantidad_facturas,Consumo,Valor_consumo_facturado,Valor_total_facturado,Codigo_DANE,Sector_consumo
+                        try:
+                            valor_1 = float(df["Consumo"][i])
+                            if not math.isnan(valor_1) and valor_1 > 0:
+                                lista_reg[0] += valor_1
+                                dic_reg[valor][2] += valor_1
+                        except ValueError:
+                            pass
+                        except TypeError:
+                            pass
+                        try:
+                            valor_1 = float(df["Valor_total_facturado"][i])
+                            if not math.isnan(valor_1) and valor_1 > 0:
+                                lista_reg[1] += valor_1
+                                dic_reg[valor][4] += valor_1
+                        except ValueError:
+                            pass
+                        except TypeError:
+                            pass
+                        try:
+                            valor_1 = float(df["Facturacion_consumo"][i])
+                            if not math.isnan(valor_1) and valor_1 > 0:
+                                lista_reg[2] += valor_1
+                                dic_reg[valor][3] += valor_1
+                        except ValueError:
+                            pass
+                        except TypeError:
+                            pass
         elif "GRC2" in archivo:
             lista_df = lectura_dataframe_chunk(archivo)
             if lista_df:
                 proceso_GRC2 = True
+                mes_reportado = lista_df[0]["Mes_reportado"][0]
+                anio_reportado = lista_df[0]["Anio_reportado"][0]
                 lista_archivos_exitosos.append(archivo)
                 dic_no_reg = {}
-                lista_no_reg = [0,0] #m3, Valor_total_facturado
-                if incluir_factura:
-                    dic_no_reg_factura = {}
+                lista_no_reg = [0,0,0] #m3, Valor_total_facturado, Valor_consumo_facturado
+                dic_no_reg_factura = {}
                 for df in lista_df:
                     for i in range(len(df)):
-                        if incluir_factura:
-                            factura = str(df["ID_Factura"][i]).upper().strip()
-                            if factura[0] == "F":
-                                try:
-                                    valor_1 = float(df["Volumen"][i])
-                                    valor_2 = float(df["Valor_total_facturado"][i])
-                                    if not math.isnan(valor_1) and valor_1 > 0:
-                                        lista_no_reg[0] += valor_1
-                                    if not math.isnan(valor_2) and valor_2 > 0:
-                                        lista_no_reg[1] += valor_2
-                                except ValueError:
-                                    pass
-                                except TypeError:
-                                    pass
-                                valor = df["NIU"][i]
-                                if valor not in dic_no_reg:
-                                    dic_no_reg[valor] = True
-                                if factura not in dic_no_reg_factura:
-                                    dic_no_reg_factura[factura] = True
-                        else:
+                        valor = df["NIU"][i]
+                        if valor not in dic_no_reg:
+                            dic_no_reg[valor] = [valor,0,0,0,0,None,None] #NIU,Cantidad_facturas,Consumo,Valor_consumo_facturado,Valor_total_facturado,Codigo_DANE,Sector_consumo
+                        dic_no_reg[valor][5] = df["Codigo_DANE"][i]
+                        try:
+                            valor_1 = int(df["Sector_consumo"][i])
                             try:
-                                valor_1 = float(df["Volumen"][i])
-                                valor_2 = float(df["Valor_total_facturado"][i])
-                                if not math.isnan(valor_1) and valor_1 > 0:
-                                    lista_no_reg[0] += valor_1
-                                if not math.isnan(valor_2) and valor_2 > 0:
-                                    lista_no_reg[1] += valor_2
-                            except ValueError:
-                                pass
-                            except TypeError:
-                                pass
-                            valor = df["NIU"][i]
-                            if valor not in dic_no_reg:
-                                dic_no_reg[valor] = True
+                                    valor_1 = tabla_11["datos"][str(valor_1)]
+                                    dic_no_reg[valor][6] =valor_1
+                            except KeyError:
+                                dic_no_reg[valor][6] = ""
+                        except ValueError:
+                            dic_no_reg[valor][6] = ""
+                        except TypeError:
+                            dic_no_reg[valor][6] = ""
+                        factura = str(df["ID_Factura"][i]).upper().strip()
+                        if factura[0] == "F":
+                            if factura not in dic_no_reg_factura:
+                                dic_no_reg_factura[factura] = True
+                            dic_no_reg[valor][1] += 1
+                        try:
+                            valor_1 = float(df["Volumen"][i])
+                            if not math.isnan(valor_1) and valor_1 > 0:
+                                lista_no_reg[0] += valor_1
+                                dic_no_reg[valor][2] += valor_1
+                        except ValueError:
+                            pass
+                        except TypeError:
+                            pass
+                        try:
+                            valor_1 = float(df["Valor_total_facturado"][i])
+                            if not math.isnan(valor_1) and valor_1 > 0:
+                                lista_no_reg[1] += valor_1
+                                dic_no_reg[valor][4] += valor_1
+                        except ValueError:
+                            pass
+                        except TypeError:
+                            pass
+                        try:
+                            valor_1 = float(df["Facturacion_por_demanda_volumen"][i])
+                            if not math.isnan(valor_1) and valor_1 > 0:
+                                lista_no_reg[2] += valor_1
+                                dic_no_reg[valor][3] += valor_1
+                        except ValueError:
+                            pass
+                        except TypeError:
+                            pass
+        elif "GRTT2" in archivo:
+            lista_df = lectura_dataframe_chunk(archivo)
+            if lista_df:
+                dic_GRTT2 = {}
+                for df in lista_df:
+                    for i in range(len(df)):
+                        valor = df["NIU"][i]
+                        if valor not in dic_GRTT2:
+                            dic_GRTT2[valor] = [df["Codigo_DANE"][i],
+                                                df["Estrato"][i]]
+                proceso_GRTT2 = True
+    dic_NIU_factura = {"Clasificacion_usuario":[],
+                    "NIU":[],
+                    "Consumo_m3":[],
+                    "Cantidad_facturas_emitidas":[],
+                    "Valor_consumo_facturado":[],
+                    "Valor_total_facturado":[],
+                    "Codigo_DANE":[],
+                    "Estrato":[]}
+    if proceso_GRTT2 and proceso_GRC1:
+        for v_NIU in dic_reg:
+            if v_NIU in dic_GRTT2:
+                dic_reg[v_NIU][5] = dic_GRTT2[v_NIU][0]
+                try:
+                    valor_1 = int(dic_GRTT2[v_NIU][1])
+                    try:
+                        valor_1 = tabla_3["datos"][str(valor_1)]
+                        dic_no_reg[valor][6] = valor_1
+                    except KeyError:
+                        dic_no_reg[valor][6] = ""
+                except ValueError:
+                    dic_no_reg[valor][6] = ""
+                except TypeError:
+                    dic_no_reg[valor][6] = ""
+            else:
+                dic_reg[v_NIU][5] = ""
+                dic_reg[v_NIU][6] = ""
+        for lista_NIU in dic_reg:
+            dic_NIU_factura["Clasificacion_usuario"].append("Regulado")
+            dic_NIU_factura["NIU"].append(lista_NIU[0])
+            dic_NIU_factura["Consumo_m3"].append(lista_NIU[1])
+            dic_NIU_factura["Cantidad_facturas_emitidas"].append(lista_NIU[2])
+            dic_NIU_factura["Valor_consumo_facturado"].append(lista_NIU[3])
+            dic_NIU_factura["Valor_total_facturado"].append(lista_NIU[4])
+            dic_NIU_factura["Codigo_DANE"].append(lista_NIU[5])
+            dic_NIU_factura["Estrato"].append(lista_NIU[6])
+    if proceso_GRC2:
+        for lista_NIU in dic_no_reg:
+            dic_NIU_factura["Clasificacion_usuario"].append("Regulado")
+            dic_NIU_factura["NIU"].append(lista_NIU[0])
+            dic_NIU_factura["Consumo_m3"].append(lista_NIU[1])
+            dic_NIU_factura["Cantidad_facturas_emitidas"].append(lista_NIU[2])
+            dic_NIU_factura["Valor_consumo_facturado"].append(lista_NIU[3])
+            dic_NIU_factura["Valor_total_facturado"].append(lista_NIU[4])
+            dic_NIU_factura["Codigo_DANE"].append(lista_NIU[5])
+            dic_NIU_factura["Estrato"].append(lista_NIU[6])
+    df1 = pd.DataFrame(dic_NIU_factura)
+    if len(df1):
+        
+
+        lista_nombre = archivo.split("\\")
+        lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
+        nombre_1 = lista_a_texto(lista_nombre,"\\",False).replace("_resumen","_usuarios_unicos_facturacion")
+        almacenar_df_csv_y_excel(df, nombre_1, almacenar_excel=False)
+    # _reporte_facturacion
     dic_df = {"Clasificacion_usuarios":[],
                 "Cantidad_usuarios_unicos":[],
                 "Consumo_m3":[],
+                "Cantidad_facturas_emitidas":[],
+                "Valor_consumo_facturado":[],
                 "Valor_total_facturado":[]}
-    if incluir_factura:
-        dic_df["Cantidad_facturas_emitidas"] = []
     if proceso_GRC1:
         dic_df["Clasificacion_usuarios"].append("Regulados")
         dic_df["Cantidad_usuarios_unicos"].append(len(dic_reg))
-        if incluir_factura:
-            dic_df["Cantidad_facturas_emitidas"].append(len(dic_reg_factura))
+        dic_df["Cantidad_facturas_emitidas"].append(len(dic_reg_factura))
         dic_df["Consumo_m3"].append(lista_reg[0])
+        dic_df["Valor_consumo_facturado"].append(lista_reg[1])
         dic_df["Valor_total_facturado"].append(lista_reg[1])
     if proceso_GRC2:
         dic_df["Clasificacion_usuarios"].append("No Regulados")
         dic_df["Cantidad_usuarios_unicos"].append(len(dic_no_reg))
-        if incluir_factura:
-            dic_df["Cantidad_facturas_emitidas"].append(len(dic_no_reg_factura))
+        dic_df["Cantidad_facturas_emitidas"].append(len(dic_no_reg_factura))
         dic_df["Consumo_m3"].append(lista_no_reg[0])
+        dic_df["Valor_consumo_facturado"].append(lista_no_reg[1])
         dic_df["Valor_total_facturado"].append(lista_no_reg[1])
     df = pd.DataFrame(dic_df)
     if len(df) > 0:
@@ -2056,28 +2147,16 @@ def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, alma
         df["NIT"] = dic_nit[dic_filiales[filial]]
         df["Mes_reportado"] = mes_reportado
         df["Anio_reportado"] = anio_reportado
-        if incluir_factura:
-            df = df[["Filial","NIT","Anio_reportado","Mes_reportado","Clasificacion_usuarios","Cantidad_usuarios_unicos","Cantidad_facturas_emitidas","Consumo_m3","Valor_total_facturado"]]
-        else:
-            df = df[["Filial","NIT","Anio_reportado","Mes_reportado","Clasificacion_usuarios","Cantidad_usuarios_unicos","Consumo_m3","Valor_total_facturado"]]
+        df = df[["Filial","NIT","Anio_reportado","Mes_reportado","Clasificacion_usuarios","Cantidad_usuarios_unicos",
+                "Cantidad_facturas_emitidas","Consumo_m3","Valor_consumo_facturado","Valor_total_facturado"]]
         for archivo in lista_archivos_exitosos:
             lista_nombre = archivo.split("\\")
             lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
-            if incluir_factura:
-                nombre = lista_a_texto(lista_nombre,"\\",False).replace("_resumen","_usuarios_unicos_factura")
-            else:
-                nombre = lista_a_texto(lista_nombre,"\\",False).replace("_resumen","_usuarios_unicos")
-            df.to_csv(nombre, index=False, encoding="utf-8-sig")
-            if informar:
-                informar_archivo_creado(nombre, True)
-            df1 = leer_dataframe_utf_8(nombre)
-            if almacenar_excel:
-                almacenar = mod_5.almacenar_csv_en_excel(df1,nombre.replace(".csv",".xlsx"),"Datos")
-                if informar and almacenar:
-                    informar_archivo_creado(nombre.replace(".csv",".xlsx"), True)
-    return df, nombre
+            nombre_2 = lista_a_texto(lista_nombre,"\\",False).replace("_resumen","_usuarios_unicos")
+            almacenar_df_csv_y_excel(df, nombre_2)
+    return df, nombre_2, df2, nombre_1
 
-def reporte_usuarios_unicos_mensual(lista_archivos, informar, seleccionar_reporte, almacenar_excel=True, incluir_factura=False):
+def reporte_usuarios_unicos_mensual(lista_archivos, informar, seleccionar_reporte, almacenar_excel=True):
     lista_df_filiales = []
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for filial in lista_filiales_archivo:
@@ -2086,7 +2165,7 @@ def reporte_usuarios_unicos_mensual(lista_archivos, informar, seleccionar_report
             if filial in archivo:
                 lista_archivos_filial.append(archivo)
         if len(lista_archivos_filial) > 0:
-            df,nombre = apoyo_reporte_usuarios_unicos_mensual(lista_archivos_filial,informar,filial, almacenar_excel, incluir_factura)
+            df,nombre = apoyo_reporte_usuarios_unicos_mensual(lista_archivos_filial,informar,filial, almacenar_excel)
             if nombre:
                 lista_df_filiales.append(df)
     if len(lista_archivos_filial) > 0 and len(lista_filiales_archivo) == 4:
@@ -2096,15 +2175,85 @@ def reporte_usuarios_unicos_mensual(lista_archivos, informar, seleccionar_report
         lista_nombre.pop(-2)
         lista_nombre[-4] = "05. REPORTES_GENERADOS_APLICATIVO"
         nuevo_nombre = lista_a_texto(lista_nombre,"\\")
-        df_total.to_csv(nuevo_nombre, index=False, encoding="utf-8-sig")
-        if informar:
-            informar_archivo_creado(nuevo_nombre, True)
-        df1 = leer_dataframe_utf_8(nuevo_nombre)
-        if almacenar_excel:
-            almacenar = mod_5.almacenar_csv_en_excel(df1,nuevo_nombre.replace(".csv",".xlsx"),"Datos")
-            if informar and almacenar:
-                informar_archivo_creado(nuevo_nombre.replace(".csv",".xlsx"), True)
-        return df1, nuevo_nombre
+        almacenar_df_csv_y_excel(df_total, nuevo_nombre)
+        return df_total, nuevo_nombre
+
+def reporte_comportamiento_patrimonial(fi,ff,listas_unidas):
+    nombre = "info_trimestral"
+    hoja = "comportamiento_patrimonial"
+    archivo = ruta_constantes+"\\"+f"{nombre}.xlsx"
+    if os.path.exists(archivo):
+        df, proceso = mod_5.lectura_hoja_xlsx(archivo, hoja)
+        if proceso:
+            lista_df = []
+            try:
+                ubi_1 = listas_unidas.index(f"{fi[0]} - {fi[1]}")
+            except ValueError:
+                ubi_1 = 0
+            try:
+                ubi_2 = listas_unidas.index(f"{ff[0]} - {ff[1]}")
+            except ValueError:
+                ubi_2 = len(listas_unidas)
+            f_inicial = listas_unidas[ubi_1].split(" - ")
+            f_final = listas_unidas[ubi_2].split(" - ")
+            for i in listas_unidas[ubi_1:ubi_2]:
+                fecha = i.split(" - ")
+                df_filtro = df[(df['Anio_reportado'] == int(fecha[0])) & (df['Periodo_reportado'] == fecha[1])].copy()
+                lista_fila = [grupo_vanti, fecha[1], int(fecha[0]), df_filtro['Saldo_patrimonio_neto'].sum(), df_filtro['Saldo_capital_emitido'].sum()]
+                df_filtro.loc[len(df_filtro)] = lista_fila
+                df_filtro = df_filtro.reset_index(drop=True)
+                lista_porcentaje = []
+                for j in range(len(df_filtro)):
+                    lista_porcentaje.append(str(round((df_filtro['Saldo_capital_emitido'][j]/df_filtro['Saldo_patrimonio_neto'][j])*100,2))+" %")
+                df_filtro["Porcentaje_patrimonial"] = lista_porcentaje
+                lista_df.append(df_filtro)
+            df_total = pd.concat(lista_df, ignore_index=True)
+            lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Comercial"]
+            nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"porcentaje_patrimonial_{f_inicial[0]}_{f_inicial[1]}_{f_inicial[0]}_{f_inicial[1]}")
+            almacenar_df_csv_y_excel(df_total,nuevo_nombre)
+
+        else:
+            print(f"No es posible acceder al archivo {archivo}.")
+    else:
+        print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
+
+def reporte_info_reclamos(fi,ff,listas_unidas):
+    nombre = "info_trimestral"
+    hoja = "relacion_reclamos_facturacion"
+    archivo = ruta_constantes+"\\"+f"{nombre}.xlsx"
+    if os.path.exists(archivo):
+        df, proceso = mod_5.lectura_hoja_xlsx(archivo, hoja)
+        if proceso:
+            lista_df = []
+            try:
+                ubi_1 = listas_unidas.index(f"{fi[0]} - {fi[1]}")
+            except ValueError:
+                ubi_1 = 0
+            try:
+                ubi_2 = listas_unidas.index(f"{ff[0]} - {ff[1]}")
+            except ValueError:
+                ubi_2 = len(listas_unidas)-1
+            f_inicial = listas_unidas[ubi_1].split(" - ")
+            f_final = listas_unidas[ubi_2].split(" - ")
+            for i in listas_unidas[ubi_1:ubi_2+1]:
+                fecha = i.split(" - ")
+                df_filtro = df[(df['Anio_reportado'] == int(fecha[0])) & (df['Periodo_reportado'] == fecha[1])].copy()
+                lista_fila = [grupo_vanti, fecha[1], int(fecha[0]), df_filtro['Numero_Facturas_Expedidas'].sum(), df_filtro['Numero_Reclamos_Facturacion'].sum()]
+                df_filtro.loc[len(df_filtro)] = lista_fila
+                df_filtro = df_filtro.reset_index(drop=True)
+                lista_porcentaje = []
+                for j in range(len(df_filtro)):
+                    lista_porcentaje.append(str(round((df_filtro['Numero_Facturas_Expedidas'][j]/df_filtro['Numero_Reclamos_Facturacion'][j])*10000,2))+" %")
+                df_filtro["Porcentaje_reclamos_fact_10000"] = lista_porcentaje
+                lista_df.append(df_filtro)
+            df_total = pd.concat(lista_df, ignore_index=True)
+            lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Comercial"]
+            nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"porcentaje_reclamos_facturacion_10000_{f_inicial[0]}_{f_inicial[1]}_{f_final[0]}_{f_final[1]}")
+            almacenar_df_csv_y_excel(df_total,nuevo_nombre)
+        else:
+            print(f"No es posible acceder al archivo {archivo}.")
+    else:
+        print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Reportes Tarifarios
@@ -2483,7 +2632,7 @@ def encontrar_ubi_archivo(lista, nombre):
     for ruta in lista[1:]:
         carpetas = buscar_carpetas(ruta_actual)
         for carpeta in carpetas:
-            if ruta in carpeta:
+            if carpeta.endswith((ruta)):
                 ruta_actual = carpeta
     return ruta_actual+"\\"+nombre+".csv"
 
@@ -2607,6 +2756,13 @@ def unir_listas_anio_mes(lista_anios, lista_meses):
             lista_anio_mes.append(f"{j} - {i}")
     return lista_anio_mes
 
+def unir_listas_anio_tri(lista_anios, lista_tri):
+    lista_anio_tri = []
+    for j in lista_anios:
+        for i in lista_tri:
+            lista_anio_tri.append(f"{j} - {i}")
+    return lista_anio_tri
+
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Búsqueda archivos
 # * -------------------------------------------------------------------------------------------------------
@@ -2618,7 +2774,7 @@ def busqueda_archivos_tipo(ubi_archivo,tipo=None, lista_fallidos=[]):
     return archivos_tipo
 
 
-def mostrar_texto(texto, tipo):
+def mostrar_texto(texto, tipo="texto"):
     linea = 160
     if tipo == "salto":
         print("\n")
@@ -2626,7 +2782,7 @@ def mostrar_texto(texto, tipo):
         print("-"*linea)
     elif tipo == "texto":
         n = (linea-len(texto))//2
-        print(" "*n+" "+texto+" "+" "*n)
+        print("\n"+" "*n+" "+texto+" "+" "*n+"\n")
 
 def mostrar_titulo(texto, principal, tipo):
     if tipo == "up":

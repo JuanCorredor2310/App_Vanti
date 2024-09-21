@@ -686,6 +686,15 @@ def variables_reportes(reporte):
                 datos = {"descripcion":desc,
                         "datos":data}
                 guardar_diccionario_ruta(datos, n_archivo)
+        elif reporte == "trimestres":
+                desc = "Trimestres"
+                data = {"1":"TRIM_1",
+                        "2":"TRIM_2",
+                        "3":"TRIM_3",
+                        "4":"TRIM_4"}
+                datos = {"descripcion":desc,
+                        "datos":data}
+                guardar_diccionario_ruta(datos, n_archivo)
 
 def crear_archivos_json_principales():
         variables_reportes("GRT1")
@@ -722,5 +731,6 @@ def crear_archivos_json_principales():
         variables_reportes("tabla_17")
         variables_reportes("tabla_18")
         variables_reportes("anios")
+        variables_reportes("trimestres")
         creacion_directorio_carpetas_principales()
 
