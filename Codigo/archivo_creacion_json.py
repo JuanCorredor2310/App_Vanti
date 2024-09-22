@@ -675,6 +675,23 @@ def variables_reportes(reporte):
                 datos = {"descripcion":desc,
                         "datos":data}
                 guardar_diccionario_ruta(datos, n_archivo)
+        elif reporte == "meses_abre":
+                desc = "Mes"
+                data = {"ENE":"Enero",
+                        "FEB":"Febrero",
+                        "MAR":"Marzo",
+                        "ABR":"Abril",
+                        "MAY":"Mayo",
+                        "JUN":"Junio",
+                        "JUL":"Julio",
+                        "AGO":"Agosto",
+                        "SEP":"Septiembre",
+                        "OCT":"Octubre",
+                        "NOV":"Noviembre",
+                        "DIC":"Diciembre"}
+                datos = {"descripcion":desc,
+                        "datos":data}
+                guardar_diccionario_ruta(datos, n_archivo)
         elif reporte == "anios":
                 with open(ruta_constantes+"Anios.txt", 'r') as archivo:
                         lineas = archivo.readlines()
@@ -732,5 +749,6 @@ def crear_archivos_json_principales():
         variables_reportes("tabla_18")
         variables_reportes("anios")
         variables_reportes("trimestres")
+        variables_reportes("meses_abre")
         creacion_directorio_carpetas_principales()
 

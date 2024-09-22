@@ -275,7 +275,7 @@ def menu_configuracion_inicial(option,valor):
         if option_1 == "1":
             t_i = time.time()
             print(f"\nInicio de procesamiento para: {valor}\n\n")
-            #mod_3.configuracion_inicial()
+            mod_3.configuracion_inicial()
             mod_1.mostrar_texto("Configuración inicial completa.")
             t_f = time.time()
             mod_1.mostrar_tiempo(t_f, t_i)
@@ -760,8 +760,8 @@ def menu_comercial(option,valor):
     elif option == "4":
         lista_menu = ["Generación de información para el inventrario de suscriptores mensual",
                     "Generación de información para el inventrario de suscriptores anual",
-                    "Generación de información para usuarios regulados / no regulados mensual",
-                    "Generación de información para usuarios regulados / no regulados anual",
+                    "Generación de información de facturación para usuarios regulados / no regulados mensual",
+                    "Generación de información de facturación para usuarios regulados / no regulados anual",
                     "Regresar al menú inicial"]
         option,valor = opcion_menu_valida(lista_menu, "Información comercial para información de usuarios únicos")
         menu_comercial_analisis_previo(option,valor)
@@ -1405,10 +1405,9 @@ mostrar_inicio_app()
     # Archivos anuales
     #Revisar llamado de todas las funciones
     # Crear carpeta comercial,tarifario,tecnico en cada reporte anual
-    # Generar la opción de un nuevo formato
-    # Generar la opción de cambiar un formato actual
     #Encontrar los reportes mensuales generados y faltantes para los reportes anuales
     #Archivos necesarios para el Dashboard (cambiar la función de archivos esperados)
 
 # TODO Aplicativo:
     # Generación de gráficas
+    # Incluir tiempo estimado promedio por mes para la documentación de explicación
