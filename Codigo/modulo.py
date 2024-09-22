@@ -180,7 +180,7 @@ def generar_suma_df_filiales(df, lista_total, lista_suma):
     lista_df = []
     lista_filiales = list(df["Filial"].unique())
     for filial in lista_filiales:
-        df_filial = df[df["Filial"]==filial].reset_index(drop=True)
+        df_filial = df[df["Filial"]==filial].reset_index(drop=True).copy()
         lista_fila = []
         for columna in columnas:
             if columna in lista_total:
@@ -201,10 +201,10 @@ def generar_suma_df_filiales(df, lista_total, lista_suma):
         elif columna in lista_total:
             lista_fila.append("Total")
         elif columna in lista_suma:
-            lista_fila.append(df_filial[columna].sum())
+            lista_fila.append(df_final[columna].sum())
         else:
-            lista_fila.append(df_filial[columna][0])
-    df_final.loc[len(df_filial)] = lista_fila
+            lista_fila.append(df_final[columna][0])
+    df_final.loc[len(df_final)] = lista_fila
     return df_final
 
 # * -------------------------------------------------------------------------------------------------------
@@ -2162,7 +2162,7 @@ def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, alma
             dic_NIU_factura["Sector_consumo"].append(lista_NIU[6])
     df1 = pd.DataFrame(dic_NIU_factura)
     if len(df1):
-        lista_nombre = archivo.split("\\")
+        lista_nombre = lista_archivos_exitosos[0].split("\\")
         lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
         nombre = lista_a_texto(lista_nombre,"\\",False).replace("_resumen","_usuarios_unicos_facturacion")
         almacenar_df_csv_y_excel(df1, nombre, almacenar_excel=False)
@@ -2197,7 +2197,7 @@ def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, alma
             lista_nombre = archivo.split("\\")
             lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
             nombre_2 = lista_a_texto(lista_nombre,"\\",False).replace("_resumen","_reporte_facturacion")
-            almacenar_df_csv_y_excel(df, nombre_2)
+            almacenar_df_csv_y_excel(df2, nombre_2)
     dic_df = {"Clasificacion_usuarios":[],
                 "Cantidad_usuarios_unicos":[],
                 "Consumo_m3":[],
@@ -2250,6 +2250,7 @@ def reporte_usuarios_unicos_mensual(lista_archivos, informar, seleccionar_report
                 lista_df_filiales_2.append(df2)
     if len(lista_df_filiales_2) > 0 and len(lista_filiales_archivo) == 4:
         df_total = pd.concat(lista_df_filiales_2, ignore_index=True)
+        print(df_total)
         df_total = generar_suma_df_filiales(df_total, ["Clasificacion_usuarios"],["Sector_consumo",
                                                         "Cantidad_facturas_emitidas","Consumo_m3","Valor_consumo_facturado","Valor_total_facturado"])
         lista_nombre = nombre_2.split("\\")
@@ -2260,6 +2261,7 @@ def reporte_usuarios_unicos_mensual(lista_archivos, informar, seleccionar_report
         almacenar_df_csv_y_excel(df_total, nuevo_nombre)
     if len(lista_df_filiales_1) > 0 and len(lista_filiales_archivo) == 4:
         df_total = pd.concat(lista_df_filiales_1, ignore_index=True)
+        print(df_total)
         df_total = generar_suma_df_filiales(df_total,["Clasificacion_usuarios"],["Cantidad_facturas_emitidas",
                                                         "Consumo_m3","Valor_consumo_facturado","Valor_total_facturado"])
         lista_nombre = nombre_1.split("\\")
