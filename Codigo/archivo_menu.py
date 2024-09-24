@@ -30,7 +30,7 @@ lista_reportes_generales = mod_2.leer_archivos_json(ruta_constantes+"carpetas_1.
 reportes_generados = mod_2.leer_archivos_json(ruta_constantes+"carpetas_1.json")["carpeta_4"]
 lista_reportes_generados = ["_resumen","_form_estandar", #formatos generales
                             "_reporte_consumo","_CLD","_PRD","_porcentaje_comparacion_SAP","_total_comparacion_SAP",
-                            "_comparacion_iguales""_comparacion_diferentes","_subsidio","_info_comercial","_reporte_compensacion", #formatos comerciales
+                            "_comparacion_iguales","_comparacion_diferentes","_subsidio","_info_comercial","_reporte_compensacion","_compilado_compensacion", #formatos comerciales
                             "_reporte_tarifario", #formatos tarifarios
                             "_indicador_tecnico","_reporte_suspension", #formatos tecnicos
                             "_inventario_suscriptores","_usuarios_unicos","_reporte_facturacion",#calidad de la información
@@ -188,10 +188,21 @@ def elegir_tiempo():
     else:
         return False
 
-def elegir_regenerar_archivos():
+def elegir_regenerar_archivos(texto):
     lista = ["Sí","No"]
     lista.append("Regresar al menú inicial")
-    option,valor = opcion_menu_valida(lista, "Regenerar archivos necesarios", False)
+    option,valor = opcion_menu_valida(lista, f"Regenerar archivos necesarios ({texto})", False)
+    if option == str(len(lista)):
+        iniciar_menu()
+    elif option == "1":
+        return True
+    else:
+        return False
+
+def elegir_regenerar_archivos_mensuales(texto):
+    lista = ["Sí","No"]
+    lista.append("Regresar al menú inicial")
+    option,valor = opcion_menu_valida(lista, f"Regenerar reportes necesarios mensuales ({texto})", False)
     if option == str(len(lista)):
         iniciar_menu()
     elif option == "1":
@@ -241,9 +252,21 @@ def elegir_cantidad_filas():
     else:
         return cantidad_datos_estilo_excel
 
-def anadir_opciones(regenerar=False, codigo_DANE=False, valor_facturado=False, cantidad_filas=False, mostrar_archivos=False, calcular_tiempo=True):
+def elegir_inventario():
+    lista = ["Sí","No"]
+    lista.append("Regresar al menú inicial")
+    option,valor = opcion_menu_valida(lista, f"Incluir información del inventario de suscriptores", False)
+    if option == str(len(lista)):
+        iniciar_menu()
+    elif option == "1":
+        return True
+    else:
+        return False
+
+def anadir_opciones(regenerar=False, codigo_DANE=False, valor_facturado=False, cantidad_filas=False, mostrar_archivos=False, inventario=False,
+                    calcular_tiempo=True, reportes_mensuales=False, texto_regenerar = "_form_estandar, _resumen", texto_regenerar_mensuales=""):
     if regenerar:
-        regenerar = elegir_regenerar_archivos()
+        regenerar = elegir_regenerar_archivos(texto_regenerar)
     if codigo_DANE:
         codigo_DANE = elegir_codigo_DANE()
     if valor_facturado:
@@ -252,15 +275,20 @@ def anadir_opciones(regenerar=False, codigo_DANE=False, valor_facturado=False, c
         cantidad_filas = elegir_cantidad_filas()
     if mostrar_archivos and regenerar:
         mostrar_archivos = elegir_mostrar_archivos()
-    return (calcular_tiempo, regenerar, codigo_DANE, valor_facturado, cantidad_filas, mostrar_archivos)
+    if not regenerar and reportes_mensuales:
+        reportes_mensuales = elegir_regenerar_archivos_mensuales(texto_regenerar_mensuales)
+    if (reportes_mensuales and inventario) or (reportes_mensuales == None and inventario):
+        inventario = elegir_inventario()
+    return (calcular_tiempo, regenerar, codigo_DANE, valor_facturado, cantidad_filas, mostrar_archivos, reportes_mensuales, inventario)
 
 def especificar_lista_reportes_generados(lista_1):
     lista = lista_reportes_generados.copy()
-    for i in lista_1:
-        try:
-            lista.remove(i)
-        except ValueError:
-            pass
+    if len(lista_1):
+        for i in lista_1:
+            try:
+                lista.remove(i)
+            except ValueError:
+                pass
     return lista
 
 # * -------------------------------------------------------------------------------------------------------
@@ -380,16 +408,17 @@ def menu_opciones_archivos(option, valor):
         lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
         print(f"\nInicio de procesamiento para: {valor}\n\n")
         mod_1.conversion_archivos_CSV(lista_archivos)
-        proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1],["_CLD","_PRD"])
+        proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1],evitar_extra=["_CLD","_PRD"],solo_crear_arc=True)
         t_f = time.time()
         mod_1.mostrar_tiempo(t_f, t_i)
     #? Revisión de archivos existentes
     elif option == "5":
         t_i = time.time()
+        seleccionar_reporte = funcion_seleccionar_reportes("reporte_vanti")
         print(f"\nInicio de procesamiento para: {valor}\n\n")
+        busqueda_archivos_general(seleccionar_reporte)
         t_f = time.time()
         mod_1.mostrar_tiempo(t_f, t_i)
-
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Activación de menú
@@ -412,34 +441,46 @@ def comprimir_archivos(seleccionar_reporte, evitar_extra=["_CLD","_PRD"]):
     if len(lista_archivos_comprimir):
         mod_1.comprimir_archivos(lista_archivos_comprimir)
 
-def generar_archivos_extra(seleccionar_reporte, regenerar=False, evitar_extra=[]):
+def generar_archivos_extra(seleccionar_reporte, regenerar=False, evitar_extra=[], continuar=False, informar=True, ext="_resumen.csv", solo_crear_arc=False, mostrar_dic=False):
     if regenerar:
         tipo = ".csv"
-        proceso, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte,evitar_extra)
+        proceso, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte,evitar_extra, informar=informar)
         if proceso:
             mod_1.estandarizacion_archivos(lista_archivos,True)
             tipo = "_form_estandar.csv"
-            proceso, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte,evitar_extra)
+            proceso, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte,evitar_extra, informar=informar)
             if proceso:
                 mod_1.archivos_resumen(lista_archivos,True)
                 tipo = "_resumen.csv"
-                proceso, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte,evitar_extra)
+                proceso, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte,evitar_extra, informar=informar)
                 comprimir_archivos(seleccionar_reporte, evitar_extra)
-                return proceso, lista_archivos
+    if not solo_crear_arc:
+        tipo = ext
+        proceso_resumen, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte, evitar_extra, informar=True)
+        if proceso_resumen:
+            proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+            if mostrar_dic:
+                mostrar_dic_archivos_agrupados(proceso_agrupar, dic_archivos_mostrar)
+            if continuar:
+                option = "1"
             else:
-                return False, []
-        else:
-            return False,[]
+                lista_menu = ["Sí","No"]
+                option,valor = opcion_menu_valida(lista_menu, "¿Desea generar el reporte con los archivos disponibles?")
+            if option == "1":
+                dic_archivos_reporte = mod_4.agrupar_dic_archivos(dic_archivos)
+                return True, dic_archivos_reporte
+            else:
+                return False, False
+        return False, False
     else:
-        tipo = "_resumen.csv"
-        proceso, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte, evitar_extra)
-        return proceso, lista_archivos
+        return None, None
 
 def busqueda_archivos_tipo(tipo, seleccionar_reporte, evitar_extra=[], txt=False, informar=True):
-    l1 = [tipo.replace(".txt","").replace(".txt".upper(),"").replace(".csv","").replace(".csv".upper(),"")]
-    if len(evitar_extra) > 0:
-        l1.extend(evitar_extra)
-    lista_evitar = especificar_lista_reportes_generados(l1)
+    tipo_evitar = tipo.replace(".csv","").replace(".CSV","").replace(".TXT","").replace(".txt","")
+    lista_evitar_extra_copia = evitar_extra.copy()
+    if len(tipo_evitar):
+        lista_evitar_extra_copia.append(tipo_evitar)
+    lista_evitar = especificar_lista_reportes_generados(lista_evitar_extra_copia)
     lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
     if len(lista_archivos) == 0:
         if informar:
@@ -447,6 +488,84 @@ def busqueda_archivos_tipo(tipo, seleccionar_reporte, evitar_extra=[], txt=False
         return False,lista_archivos
     else:
         return True,lista_archivos
+
+def generar_archivos_extra_anual(seleccionar_reporte, tipo, evitar_extra=[], continuar=False, informar=True, mostrar_dic=True):
+    list_of_tuples = list(seleccionar_reporte.items())
+    list_of_tuples.insert(3, ('carpeta', ["REPORTES_GENERADOS_APLICATIVO"]))
+    seleccionar_reporte_1 = dict(list_of_tuples)
+    del seleccionar_reporte_1["clasificacion"]
+    del seleccionar_reporte_1["filial"]
+    proceso, lista_archivos = busqueda_archivos_tipo_anual(tipo, seleccionar_reporte_1, evitar_extra, informar)
+    if proceso:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos_anual(seleccionar_reporte, lista_archivos)
+        if mostrar_dic:
+            mostrar_dic_archivos_agrupados_anual(proceso_agrupar, dic_archivos_mostrar)
+        if continuar:
+            option = "1"
+        else:
+            lista_menu = ["Sí","No"]
+            option,valor = opcion_menu_valida(lista_menu, "¿Desea generar el reporte con los archivos disponibles?")
+        if option == "1":
+            return True, dic_archivos
+        else:
+            return False, False
+    return False, False
+
+
+def busqueda_archivos_tipo_anual(tipo, seleccionar_reporte, evitar_extra=[], txt=False, informar=True):
+    tipo_evitar = tipo.replace(".csv","").replace(".CSV","").replace(".TXT","").replace(".txt","")
+    lista_evitar_extra_copia = evitar_extra.copy()
+    if len(tipo_evitar):
+        lista_evitar_extra_copia.append(tipo_evitar)
+    lista_evitar = especificar_lista_reportes_generados(lista_evitar_extra_copia)
+    lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte_anual(seleccionar_reporte, tipo, lista_evitar)
+    if len(lista_archivos) == 0:
+        if informar:
+            print(f"\nNo se encontraron archivos con la extensión {tipo}\n")
+        return False,lista_archivos
+    else:
+        return True,lista_archivos
+
+
+def busqueda_archivos_general(seleccionar_reporte, tipo=None, evitar_extra=[],informar=True):
+    lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, evitar_extra)
+    if len(lista_archivos) == 0:
+        if informar:
+            print(f"\nNo se encontraron archivos en la ubicación seleccionada\n")
+    else:
+        lista_archivos_formato = []
+        for archivo in lista_archivos:
+            if archivo.endswith((".csv",".zip",".json",".xlsx")):
+                lista_archivos_formato.append(archivo)
+        proceso, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos_formato)
+        mostrar_dic_archivos_agrupados(proceso, dic_archivos_mostrar)
+
+def mostrar_dic_archivos_agrupados(proceso, dic_archivos):
+    if proceso:
+        print("\nArchivos disponibles para la selección realizada: \n")
+        for llave, valor in dic_archivos.items():
+            print(f"Fecha: {llave}")
+            for filial, lista_archivos_filial in valor.items():
+                if len(lista_archivos_filial):
+                    print(f"Filial: {filial}")
+                    for texto in lista_archivos_filial:
+                        print(texto)
+            print("\n")
+    else:
+        print("\n¡No existen archivos disponibles!\n")
+
+def mostrar_dic_archivos_agrupados_anual(proceso, dic_archivos):
+    if proceso:
+        print("\nArchivos disponibles para la selección realizada: \n")
+        for llave, valor in dic_archivos.items():
+            print(f"Fecha: {llave}")
+            for i in valor:
+                print(i)
+            print("\n")
+    else:
+        print("\n¡No existen archivos disponibles!\n")
+
+
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Menú de reportes comerciales
@@ -598,25 +717,39 @@ def menu_comercial_compensaciones(option,valor):
     #? Generación de reportes de compensaciones mensual
     if option == "1":
         seleccionar_reporte = funcion_seleccionar_reportes("reportes_compensacion_mensual")
-        opciones_adicionales = anadir_opciones(True)
+        op_add = anadir_opciones(regenerar=True, inventario=True, reportes_mensuales=None)
+        regenerar = op_add[1]
+        inventario = op_add[7]
         t_i = time.time()
-        proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1])
+        print(f"\nInicio de procesamiento para: {valor}\n\n")
+        if regenerar:
+            proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False)
+        proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, False, continuar=False, mostrar_dic=True)
         if proceso:
-            print(f"\nInicio de procesamiento para: {valor}\n\n")
-            mod_1.generar_reporte_compensacion_mensual(lista_archivos, seleccionar_reporte, True)
+            mod_1.generar_reporte_compensacion_mensual(dic_archivos, seleccionar_reporte, True, inventario)
             t_f = time.time()
             mod_1.mostrar_tiempo(t_f, t_i)
     #? Generación de reportes de compensaciones anual
     elif option == "2":
         seleccionar_reporte = funcion_seleccionar_reportes("reportes_compensacion_anual")
-        opciones_adicionales = anadir_opciones(True)
+        reporte = "_compilado_compensacion.csv"
+        op_add = anadir_opciones(True, reportes_mensuales=True,texto_regenerar_mensuales=reporte, inventario=True)
         t_i = time.time()
-        proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1])
+        regenerar = op_add[1]
+        regenerar_reportes_mensuales = op_add[6]
+        inventario = op_add[7]
+        print(f"\nInicio de procesamiento para: {valor}\n\n")
+        if regenerar:
+            proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False)
+        if regenerar_reportes_mensuales:
+            proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, False, continuar=True, mostrar_dic=True)
+            if proceso:
+                mod_1.generar_reporte_compensacion_mensual(dic_archivos, seleccionar_reporte, True, inventario)
+        proceso,dic_archivos_anual = generar_archivos_extra_anual(seleccionar_reporte, reporte)
         if proceso:
-            print(f"\nInicio de procesamiento para: {valor}\n\n")
-            #mod_1.generar_reporte_compensacion_mensual(lista_archivos, seleccionar_reporte, True)
-            t_f = time.time()
-            mod_1.mostrar_tiempo(t_f, t_i)
+            mod_1.generar_reporte_compensacion_anual(dic_archivos_anual, seleccionar_reporte, True, inventario)
+        t_f = time.time()
+        mod_1.mostrar_tiempo(t_f, t_i)
 
 def menu_comercial_trimestral(option,valor):
     #? Generación de información para el comportamiento patrimonial

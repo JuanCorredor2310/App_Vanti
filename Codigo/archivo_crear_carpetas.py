@@ -52,6 +52,7 @@ def iniciar_funcion_crear_carpetas():
     funcion_creacion_carpetas("carpetas")
     funcion_creacion_carpetas("carpetas_1")
     funcion_creacion_carpetas("carpetas_2")
+    funcion_creacion_carpetas("carpetas_3")
     df = mod_1.leer_dataframe(ruta_constantes+"mercado_relevante.csv")
     dic_DANE = {}
     for i in range(len(df)):

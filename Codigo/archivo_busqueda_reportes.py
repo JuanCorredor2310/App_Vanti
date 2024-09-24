@@ -24,6 +24,41 @@ def busqueda_archivos_lista_ubicaciones(lista_archivos, lista_busqueda, tipo):
         lista_archivos.extend(mod_1.busqueda_archivos_tipo(carpeta,tipo))
     return lista_archivos
 
+def lista_a_texto(lista, separador, salto=False):
+    lista = [str(elemento) for elemento in lista]
+    texto = separador.join(lista)
+    if salto:
+        texto += "\n"
+    return texto
+
+def tamanio_archivos(archivo):
+    try:
+        file_size_bytes = os.path.getsize(archivo)
+        suma_B = float(round(file_size_bytes,2))
+        suma_KB = float(round(suma_B/1024,2))
+        suma_MB = float(round(suma_KB/1024,2))
+        suma_GB = float(round(suma_MB/1024,2))
+        if suma_GB > 1:
+            texto = f" ({round(suma_GB,2)}) GB"
+        elif suma_KB < 0.1:
+            texto = f" ({round(suma_B,2)}) B"
+        elif suma_MB < 0.1:
+            texto = f" ({round(suma_KB,2)}) KB"
+        else:
+            texto = f" ({round(suma_MB,2)}) MB"
+        return texto
+    except FileNotFoundError:
+        return ""
+    except PermissionError:
+        return ""
+
+
+def formato_nombre(nombre):
+    nombre = nombre.replace("\\\\","\\")
+    lista_nombre = nombre.split("\\")[-1]
+    texto = f"{lista_nombre}{tamanio_archivos(nombre)}"
+    return texto
+
 def encontrar_meses(tipo, mes_1, mes_2):
     ubi_mes = lista_meses.index(mes_1)
     if tipo == "inicio":
@@ -80,6 +115,97 @@ def aplicar_evitar(lista_archivos, evitar):
     else:
         return lista_archivos
 
+def agrupar_dic_archivos(dic_archivos):
+    dic_archivos_agrupados = {}
+    for llave, valor in dic_archivos.items():
+        dic_archivos_agrupados[llave] = []
+        for filial, lista_archivos_filial in valor.items():
+            dic_archivos_agrupados[llave].extend(lista_archivos_filial)
+    return dic_archivos_agrupados
+
+def agrupar_archivos(seleccionar_reporte, lista_archivos):
+    dic_archivos = {}
+    dic_archivos_tamanio = {}
+    dic_archivos_3 = {}
+    if seleccionar_reporte["fecha_personalizada"]:
+        lista_fechas, lista_fechas_anios = cambiar_formato_fecha_seleccionar_reporte(seleccionar_reporte)
+        for elemento in lista_fechas:
+            anio = elemento[0]
+            mes = elemento[1]
+            fecha = anio+" - "+mes
+            dic_archivos[fecha] = {}
+            dic_archivos_tamanio[fecha] = {}
+            for llave in seleccionar_reporte:
+                if llave not in ["ubicacion","anios","meses"]:
+                    if llave == "filial":
+                        for filial in seleccionar_reporte["filial"]:
+                            dic_archivos[fecha][filial] = []
+                            dic_archivos_tamanio[fecha][filial] = []
+                            for archivo in lista_archivos:
+                                if anio in archivo and mes in archivo and filial in archivo:
+                                    dic_archivos[fecha][filial].append(archivo)
+                                    dic_archivos_tamanio[fecha][filial].append(formato_nombre(archivo))
+    else:
+        anio = seleccionar_reporte["anios"][0]
+        mes = seleccionar_reporte["meses"][0]
+        fecha = anio+" - "+mes
+        dic_archivos[fecha] = {}
+        dic_archivos_tamanio[fecha] = {}
+        for llave in seleccionar_reporte:
+            if llave not in ["ubicacion","anios","meses"]:
+                if llave == "filial":
+                    for filial in seleccionar_reporte["filial"]:
+                        dic_archivos[fecha][filial] = []
+                        dic_archivos_tamanio[fecha][filial] = []
+                        for archivo in lista_archivos:
+                            if anio in archivo and mes in archivo and filial in archivo:
+                                dic_archivos[fecha][filial].append(archivo)
+                                dic_archivos_tamanio[fecha][filial].append(formato_nombre(archivo))
+    if len(dic_archivos) > 0:
+        for llave, valor in dic_archivos_tamanio.items():
+            dic_archivos_3[llave] = {}
+            for filial, lista_archivos_filial in valor.items():
+                dic_archivos_3[llave][filial] = []
+                for i in range(0, len(lista_archivos_filial), 2):
+                    elementos = lista_archivos_filial[i:i+2]
+                    largo = 70-len(elementos[0])
+                    if largo > 0:
+                        dic_archivos_3[llave][filial].append(lista_a_texto(elementos,","+" "*largo))
+                    else:
+                        dic_archivos_3[llave][filial].append(lista_a_texto(elementos,","+" "))
+        return True, dic_archivos,dic_archivos_3
+    else:
+        return False, False, False
+
+def agrupar_archivos_anual(seleccionar_reporte, lista_archivos):
+    dic_archivos = {}
+    dic_archivos_tamanio = {}
+    dic_archivos_3 = {}
+    lista_fechas, lista_fechas_anios = cambiar_formato_fecha_seleccionar_reporte(seleccionar_reporte)
+    for elemento in lista_fechas:
+        anio = elemento[0]
+        mes = elemento[1]
+        fecha = anio+" - "+mes
+        dic_archivos[fecha] = []
+        dic_archivos_tamanio[fecha] = []
+        for archivo in lista_archivos:
+            if anio in archivo and mes in archivo:
+                dic_archivos[fecha].append(archivo)
+                dic_archivos_tamanio[fecha].append(formato_nombre(archivo))
+    if len(dic_archivos) > 0:
+        for llave, valor in dic_archivos_tamanio.items():
+            dic_archivos_3[llave] = []
+            for i in range(0, len(valor), 2):
+                elementos = valor[i:i+2]
+                largo = 70-len(elementos[0])
+                if largo > 0:
+                    dic_archivos_3[llave].append(lista_a_texto(elementos,","+" "*largo))
+                else:
+                    dic_archivos_3[llave].append(lista_a_texto(elementos,","+" "))
+        return True, dic_archivos,dic_archivos_3
+    else:
+        return False, False, False
+
 def encontrar_archivos_seleccionar_reporte(seleccionar_reporte,tipo, evitar):
     lista_archivos = []
     if seleccionar_reporte["fecha_personalizada"]:
@@ -110,6 +236,25 @@ def encontrar_archivos_seleccionar_reporte(seleccionar_reporte,tipo, evitar):
                 lista_archivos = busqueda_archivos_lista_ubicaciones(lista_archivos, lista_ubicaciones, tipo)
         lista_1 = aplicar_evitar(lista_archivos, evitar)
         return lista_1
+
+def encontrar_archivos_seleccionar_reporte_anual(seleccionar_reporte,tipo, evitar):
+    lista_archivos = []
+    lista_fechas, lista_fechas_anios = cambiar_formato_fecha_seleccionar_reporte(seleccionar_reporte)
+    for llave in seleccionar_reporte:
+        if llave != "fecha_personalizada":
+            if llave == "ubicacion":
+                lista_ubicaciones = mod_1.buscar_carpetas_lista_carpetas([ruta_nuevo_sui])
+            else:
+                lista_ubicaciones = mod_1.buscar_carpetas_lista_carpetas(lista_ubicaciones)
+            if llave == "anios":
+                lista_ubicaciones = mod_1.filtrar_carpetas(lista_ubicaciones, lista_fechas_anios)
+            elif llave == "meses":
+                lista_ubicaciones = mod_1.filtrar_carpetas_mes_anio(lista_ubicaciones, lista_fechas)
+            else:
+                lista_ubicaciones = mod_1.filtrar_carpetas(lista_ubicaciones, seleccionar_reporte[llave])
+            lista_archivos = busqueda_archivos_lista_ubicaciones(lista_archivos, lista_ubicaciones, tipo)
+    lista_1 = aplicar_evitar(lista_archivos, evitar)
+    return lista_1
 
 def apoyo_archivos_esperados(lista_ubicaciones,tipo):
     for i in range(len(lista_ubicaciones)):

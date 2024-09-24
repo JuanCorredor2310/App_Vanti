@@ -15,8 +15,7 @@
         "GNCB",
         "GNCR",
         "GOR",
-        "CALIDAD",
-        "REPORTES_GENERADOS_APLICATIVO"
+        "CALIDAD"
     ],
     "carpeta_5": [
         "Compilado",
@@ -32,5 +31,11 @@
         "Octubre",
         "Noviembre",
         "Diciembre"
+    ],
+    "carpeta_7": [
+        "Comercial",
+        "Tarifario",
+        "Tecnico",
+        "Cumplimientos_Regulatorios"
     ]
 }

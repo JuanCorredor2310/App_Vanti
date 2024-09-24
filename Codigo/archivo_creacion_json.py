@@ -91,9 +91,31 @@ def creacion_directorio_carpetas_principales():
                                 "Septiembre",
                                 "Octubre",
                                 "Noviembre",
+                                "Diciembre"]}
+        almacenar_json(carpetas_2, ruta_constantes+"carpetas_2.json")
+        carpetas_3 = {"carpeta_1":["NUEVO SUI"], # Carpeta general
+                        "carpeta_2":["Reportes Nuevo SUI"], # Carpeta principal
+                        "carpeta_3":lista_anios_txt, #Años registrados
+                        "carpeta_4":["VANTI",
+                                "GNCB",
+                                "GNCR",
+                                "GOR",
+                                "CALIDAD"], # Filiales asociadas
+                        "carpeta_5":["Compilado",
+                                "Enero",
+                                "Febrero",
+                                "Marzo",
+                                "Abril",
+                                "Mayo",
+                                "Junio",
+                                "Julio",
+                                "Agosto",
+                                "Septiembre",
+                                "Octubre",
+                                "Noviembre",
                                 "Diciembre"], # Separación por meses
                         "carpeta_7":["Comercial","Tarifario","Tecnico","Cumplimientos_Regulatorios"]} # Tipos de reporte
-        almacenar_json(carpetas_2, ruta_constantes+"carpetas_2.json")
+        almacenar_json(carpetas_3, ruta_constantes+"carpetas_3.json")
 
 def cambiar_diccionario(anio):
         try:

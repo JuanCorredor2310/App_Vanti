@@ -41,18 +41,19 @@ def leer_archivos_json(archivo):
 # *                                             Constantes globales
 # * -------------------------------------------------------------------------------------------------------
 
-global lista_meses, lista_empresas, lista_anios, dic_reportes, lista_reportes_generales, reportes_generados, lista_reportes_totales,chunksize,llaves_dic_reporte, dic_carpetas, dic_filiales,antidad_datos_excel, dic_nit, cantidad_datos_estilo_excel,grupo_vanti,mercado_relevante,mercado_relevante_resumen,tabla_3,tabla_11,fecha_actual,lista_trimestres
+global lista_meses, lista_empresas, lista_anios, dic_reportes, lista_reportes_generales, reportes_generados, lista_reportes_totales,chunksize,llaves_dic_reporte, dic_carpetas, dic_filiales,antidad_datos_excel, dic_nit, cantidad_datos_estilo_excel,grupo_vanti,mercado_relevante,mercado_relevante_resumen,tabla_3,tabla_11,fecha_actual,lista_trimestres, dic_meses_abre,lista_clasi_reportes
 grupo_vanti = "Grupo Vanti"
 dic_carpetas = leer_archivos_json(ruta_constantes+"carpetas.json")
 lista_anios = list(leer_archivos_json(ruta_constantes+"anios.json")["datos"].values())
 lista_meses = list(leer_archivos_json(ruta_constantes+"tabla_18.json")["datos"].values())
+dic_meses_abre = leer_archivos_json(ruta_constantes+"meses_abre.json")["datos"]
 lista_trimestres = list(leer_archivos_json(ruta_constantes+"trimestres.json")["datos"].values())
 dic_filiales = leer_archivos_json(ruta_constantes+"tabla_empresa.json")["datos"]
 dic_nit = leer_archivos_json(ruta_constantes+"tabla_nit.json")["datos"]
+lista_clasi_reportes = leer_archivos_json(ruta_constantes+"carpetas_3.json")["carpeta_7"]
 lista_filiales = list(dic_filiales.keys())
 dic_reportes = dic_carpetas["carpeta_6"]
 lista_reportes_generales = leer_archivos_json(ruta_constantes+"carpetas_1.json")["carpeta_2"]
-reportes_generados = leer_archivos_json(ruta_constantes+"carpetas_1.json")["carpeta_4"]
 mercado_relevante = leer_archivos_json(ruta_constantes+"mercado_relevante.json")
 mercado_relevante_resumen = leer_archivos_json(ruta_constantes+"mercado_relevante_resumen.json")
 chunksize = 60000
@@ -122,7 +123,10 @@ def leer_dataframe(archivo):
     return df
 
 def leer_dataframe_utf_8(archivo):
-    df = pd.read_csv(archivo, encoding="utf-8-sig").reset_index(drop=True)
+    try:
+        df = pd.read_csv(archivo, encoding="utf-8-sig").reset_index(drop=True)
+    except Exception:
+        df = pd.DataFrame()
     return df
 
 def elegir_codificacion(archivo):
@@ -137,40 +141,40 @@ def lectura_dataframe_chunk(archivo, valor_chunksize=chunksize,separador=","):
     lista_codificaciones.append(elegir_codificacion(archivo))
     lista_codificaciones.extend(['utf-8-sig','utf-8','iso-8859-1','latin-1','utf-16','utf-16-be','utf-32','ascii',
                                 'windows-1252','iso-8859-2','iso-8859-5','koi8-r','big5','gb2312',
-                                'shift-jis','euc-jp','mac_roman','utf-7','cp437','cp850','ibm866','tis-620'])
+                                'shift-jis','euc-jp','mac_roman','utf-7','cp437','cp850','ibm866','tis-620',
+                                "utf-8-sig","utf-8","iso-8859-1","latin-1","utf-16","utf-16-be","utf-32","ascii",
+                                "windows-1252","iso-8859-2","iso-8859-5","koi8-r","big5","gb2312","shift-jis","euc-jp",
+                                "mac_roman","utf-7","cp437","cp850","ibm866","tis-620","utf-16-le","utf-32-be","utf-32-le",
+                                "iso-8859-3","iso-8859-4","iso-8859-6","iso-8859-7","iso-8859-8","iso-8859-9","iso-8859-10",
+                                "iso-8859-13","iso-8859-14","iso-8859-15","cp737","cp775","cp852","cp855","cp857","cp858","cp860",
+                                "cp861","cp862","cp863","cp864","cp865","cp866","cp869"])
     for elemento in lista_codificaciones:
         try:
             lista_df = []
             for i, chunk in enumerate(pd.read_csv(archivo, chunksize=valor_chunksize, encoding=elemento, sep=separador,low_memory=False)):
                 lista_df.append(chunk.reset_index(drop=True).copy())
             return lista_df
-        except pd.errors.ParserError:
-            pass
-        except UnicodeDecodeError:
-            pass
-        except UnicodeError:
-            pass
-        except ValueError:
+        except Exception:
             pass
     return None
 
-def lectura_dataframe_chunk_prueba(archivo, valor_chunksize=40000,separador=","):
+def lectura_dataframe_chunk_prueba(archivo, valor_chunksize=80000,separador=","):
     lista_codificaciones = [elegir_codificacion(archivo)]
     lista_codificaciones.extend(['utf-8-sig','utf-8','iso-8859-1','latin-1','utf-16','utf-16-be','utf-32','ascii',
                                 'windows-1252','iso-8859-2','iso-8859-5','koi8-r','big5','gb2312',
-                                'shift-jis','euc-jp','mac_roman','utf-7','cp437','cp850','ibm866','tis-620'])
+                                'shift-jis','euc-jp','mac_roman','utf-7','cp437','cp850','ibm866','tis-620',
+                                "utf-8-sig","utf-8","iso-8859-1","latin-1","utf-16","utf-16-be","utf-32","ascii",
+                                "windows-1252","iso-8859-2","iso-8859-5","koi8-r","big5","gb2312","shift-jis","euc-jp",
+                                "mac_roman","utf-7","cp437","cp850","ibm866","tis-620","utf-16-le","utf-32-be","utf-32-le",
+                                "iso-8859-3","iso-8859-4","iso-8859-6","iso-8859-7","iso-8859-8","iso-8859-9","iso-8859-10",
+                                "iso-8859-13","iso-8859-14","iso-8859-15","cp737","cp775","cp852","cp855","cp857","cp858","cp860",
+                                "cp861","cp862","cp863","cp864","cp865","cp866","cp869"])
     for elemento in lista_codificaciones:
         try:
             for i, chunk in enumerate(pd.read_csv(archivo, chunksize=valor_chunksize, encoding=elemento, sep=separador,low_memory=False)):
                 df_prueba = chunk.reset_index(drop=True).copy()
                 return True
-        except pd.errors.ParserError:
-            pass
-        except UnicodeDecodeError:
-            pass
-        except UnicodeError:
-            pass
-        except ValueError:
+        except Exception:
             pass
     return False
 
@@ -308,6 +312,21 @@ def filtrar_carpetas_mes_anio(lista_carpetas, filtro):
                 lista.append(carpeta)
     return lista
 
+def crear_carpeta_anual(fecha, lista_archivo):
+    lista_archivo = lista_archivo[:-2]
+    lista_archivo.append(fecha)
+    crear_carpeta(lista_a_texto(lista_archivo, "\\"))
+    lista_clasi = []
+    for clasi in union_listas_numeros(lista_clasi_reportes):
+        lista_temp = lista_archivo.copy()
+        lista_temp.append(clasi)
+        lista_clasi.append(lista_temp)
+        crear_carpeta(lista_a_texto(lista_temp, "\\"))
+    for i in lista_clasi:
+        lista_temp = i.copy()
+        lista_temp.append("Imagenes")
+        crear_carpeta(lista_a_texto(lista_temp, "\\"))
+
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Edición de archivos
 # * -------------------------------------------------------------------------------------------------------
@@ -431,11 +450,11 @@ def cambiar_formato_dataframe(df, dic_reporte):
     df.columns = list(dic_reporte["generales"].keys())
     return df
 
-def acortar_nombre(nombre):
+def acortar_nombre(nombre, cantidad=6):
     lista_nombre = nombre.split("\\")
     largo = len(lista_nombre)
-    if largo > 6:
-        texto = ("...\\"+lista_a_texto(lista_nombre[largo-6:], "\\", False)).replace("\\\\","\\")
+    if largo > cantidad:
+        texto = ("...\\"+lista_a_texto(lista_nombre[largo-cantidad:], "\\", False)).replace("\\\\","\\")
     else: 
         texto = texto.replace("\\\\","\\")
     return texto
@@ -447,6 +466,7 @@ def informar_archivo_creado(nombre,valor):
 
 def estandarizacion_archivos(lista_archivos, informar):
     dic_reporte = None
+    exitoso = True
     for archivo in lista_archivos:
         conversion_archivos(archivo, ".csv", ".csv")
         dic_reporte = buscar_reporte(archivo)
@@ -458,22 +478,33 @@ def estandarizacion_archivos(lista_archivos, informar):
                     if len(df.columns) == dic_reporte["cantidad_columnas"]:
                         df = cambiar_formato_dataframe(df, dic_reporte)
                         lista_df[i] = df
+                    else:
+                        exitoso = False
                 df = pd.concat(lista_df, ignore_index=True)
                 nuevo_nombre = archivo.replace(".csv", "_form_estandar.csv")
-                df.to_csv(nuevo_nombre, index=False, encoding="utf-8-sig")
-                if informar:
-                    informar_archivo_creado(nuevo_nombre, informar)
+                if exitoso:
+                    almacenar_df_csv_y_excel(df, nuevo_nombre, almacenar_excel=False)
+                else:
+                    v_nombre_archivo_json_reporte = nombre_archivo_json_reporte(archivo)
+                    print(f"\nEl archivo {acortar_nombre(archivo,3)} no cumple con las columnas del archivo {acortar_nombre(v_nombre_archivo_json_reporte,3)}")
+                    print(f"Revisar el archivo {acortar_nombre(archivo)}\n")
 
 def cambiar_formato_dataframe_resumen(df, dic_reporte):
     df = df[dic_reporte["seleccionados"]]
     return df
 
-def buscar_reporte(archivo):
+def nombre_archivo_json_reporte(archivo):
     lista_archivo = archivo.split("\\")
     for reporte in lista_reportes_totales:
         if reporte in lista_archivo[-1]:
-            dic_reporte = leer_archivos_json(ruta_constantes+f"/{reporte.upper()}.json")
-            return dic_reporte
+            return ruta_constantes+f"/{reporte.upper()}.json"
+    return None
+
+def buscar_reporte(archivo):
+    v_nombre_archivo_json_reporte = nombre_archivo_json_reporte(archivo)
+    if v_nombre_archivo_json_reporte:
+        dic_reporte = leer_archivos_json(v_nombre_archivo_json_reporte)
+        return dic_reporte
     return None
 
 def archivos_resumen(lista_archivos, informar):
@@ -540,6 +571,13 @@ def cantidad_minima_info_archivo(lista_archivos):
             lista_archivos_info_min.append(archivo)
     return lista_archivos_info_min
 
+def anio_abreviado(ext_archivo, i, lista_anios):
+    for anio in lista_anios:
+        if ext_archivo[i] == anio[-2:]:
+            ext_archivo[i] = anio
+            return ext_archivo
+    return ext_archivo
+
 def comprobar_info_nombre_archivo(ext_archivo):
     for i in range(0, 4):
         if i == 1:
@@ -583,6 +621,14 @@ def archivos_tipo_csv_txt(lista_archivos):
             lista_nueva.append(archivo)
     return lista_nueva
 
+def formato_ext_archivo(ext_archivo, texto=False):
+    ext_archivo = anio_abreviado(ext_archivo, 2, lista_anios)
+    if ext_archivo[3].upper() in dic_meses_abre:
+        ext_archivo[3] = dic_meses_abre[ext_archivo[3].upper()].upper()
+    if texto:
+        ext_archivo = lista_a_texto(ext_archivo, "_")
+    return ext_archivo
+
 def almacenar_archivos(ruta_guardar_archivos,informar):
     archivos_aceptados_constantes(busqueda_archivos_tipo(ruta_guardar_archivos))
     lista_archivos = busqueda_archivos_tipo(ruta_guardar_archivos)
@@ -604,18 +650,21 @@ def almacenar_archivos(ruta_guardar_archivos,informar):
     lista_archivos = cantidad_minima_info_archivo(lista_archivos)
     for archivo in lista_archivos:
         try:
-            nombre_archivo = archivo.split("\\")[-1]
+            nombre_archivo = archivo.split("\\")[-1].replace("____","_").replace("___","_").replace("__","_")
             nombre_archivo_lista = nombre_archivo.split(".")
             nombre_archivo_lista[0] = nombre_archivo_lista[0].upper()
+            lista_nombre_aux = nombre_archivo_lista[0].split("_")
+            nombre_archivo_lista[0] = formato_ext_archivo(lista_nombre_aux, texto=True)
             nombre_archivo = lista_a_texto(nombre_archivo_lista, ".")
             ext_archivo = nombre_archivo.split("_")
             ext_archivo[-1] = ext_archivo[-1].split(".")[0]
+            ext_archivo = formato_ext_archivo(ext_archivo)
             categoria = encontrar_categoria_reporte(ext_archivo[0])
             ext_archivo[3] = ext_archivo[3].lower().capitalize()
             ext_archivo.append(categoria)
             if None not in ext_archivo:
-                ubi_1 = encontrar_nueva_ubi_archivo(ubi, ext_archivo)
                 if comprobar_info_nombre_archivo(ext_archivo):
+                    ubi_1 = encontrar_nueva_ubi_archivo(ubi, ext_archivo)
                     nueva_ubi = ubi_1+"\\"+nombre_archivo
                     shutil.move(archivo, nueva_ubi)
                     if informar:
@@ -656,6 +705,16 @@ def tamanio_archivos(lista_archivos):
     texto = f"{round(suma,2)} MB"
     return texto
 
+def almacenar_2_archivos(lista_archivos):
+    conteo = 0
+    for archivo in lista_archivos:
+        if archivo.endswith((".csv")):
+            conteo += 1
+        if conteo >= 2:
+            return True
+    else:
+        return False
+
 def comprimir_archivos(lista_archivos, informar=True):
     diccionario_archivos = {}
     for archivo in lista_archivos:
@@ -668,12 +727,13 @@ def comprimir_archivos(lista_archivos, informar=True):
         diccionario_archivos[nombre_carpeta][0].append(archivo)
     for llave,tupla in diccionario_archivos.items():
         with zipfile.ZipFile(tupla[1], 'w') as zipf:
-            v_tamanio_archivos = tamanio_archivos(tupla[0])
-            for file in tupla[0]:
-                zipf.write(file, os.path.basename(file))
-            if informar:
-                print(f"\nSe recomienda almacenar la carpeta {llave} en un ubicación externa. \nLos archivos de la carpeta comprimida pesan {v_tamanio_archivos}\n")
-            eliminar_archivos(tupla[0])
+            if almacenar_2_archivos(tupla[0]):
+                v_tamanio_archivos = tamanio_archivos(tupla[0])
+                for file in tupla[0]:
+                    zipf.write(file, os.path.basename(file))
+                if informar:
+                    print(f"\nSe recomienda almacenar la carpeta {llave} en un ubicación externa. \nLos archivos de la carpeta comprimida pesan {v_tamanio_archivos}\n")
+                eliminar_archivos(tupla[0])
 
 def almacenar_df_csv_y_excel(df, nombre, informar=True, almacenar_excel=True):
     df.to_csv(nombre, index=False, encoding="utf-8-sig")
@@ -1835,9 +1895,10 @@ def reporte_usuarios_filial(lista_archivos, informar, seleccionar_reporte, almac
                 informar_archivo_creado(nuevo_nombre.replace(".csv",".xlsx"), True)
         return df1, nuevo_nombre
 
-def apoyo_generar_reporte_compensacion_mensual(lista_archivos,informar,filial,almacenar_excel=True):
+def apoyo_generar_reporte_compensacion_mensual(lista_archivos,informar,filial,inventario):
     proceso1 = False
     df1 = pd.DataFrame()
+    nombre = None
     for archivo in lista_archivos:
         if "GRC3" in archivo:
             lista_df = lectura_dataframe_chunk(archivo)
@@ -1846,8 +1907,7 @@ def apoyo_generar_reporte_compensacion_mensual(lista_archivos,informar,filial,al
                 dic_df = {"Mes_compensado":[],"Anio_compensado":[],"CI":[],"Usuarios_compensados":[],"Valor_compensado":[]}
                 mes_reportado = lista_df[0]["Mes_reportado"][0]
                 anio_reportado = lista_df[0]["Anio_reportado"][0]
-                for i in range(len(lista_df)):
-                    df = lista_df[i]
+                for df in lista_df:
                     df_compensacion = df.copy().reset_index(drop=True)
                     lista_meses_compen = list(df["Periodo_compensado"].unique())
                     lista_anios_compen = list(df["Anio"].unique())
@@ -1866,114 +1926,106 @@ def apoyo_generar_reporte_compensacion_mensual(lista_archivos,informar,filial,al
                 df1["Filial"] = dic_filiales[filial]
                 df1["Mes_reportado"] = mes_reportado
                 df1["Anio_reportado"] = anio_reportado
-                df1.to_csv(archivo.replace("_resumen","_reporte_compensacion"), index=False, encoding="utf-8-sig")
-                if informar:
-                    informar_archivo_creado(archivo.replace("_resumen","_reporte_compensacion"), True)
-                df1 = leer_dataframe_utf_8(archivo.replace("_resumen","_reporte_compensacion"))
-                if almacenar_excel:
-                    almacenar = mod_5.almacenar_csv_en_excel(df1,archivo.replace("_resumen","_reporte_compensacion").replace(".csv",".xlsx"),"Datos")
-                    if informar and almacenar:
-                        informar_archivo_creado(archivo.replace("_resumen","_reporte_compensacion").replace(".csv",".xlsx"), True)
+                almacenar_df_csv_y_excel(df1, nombre.replace("_resumen","_compilado_compensacion"))
                 proceso1=True
             else:
                 return None,None
-    if proceso1:
+    if proceso1 and inventario:
         for archivo in lista_archivos:
             if "GRTT2" in archivo:
                 lista_df = lectura_dataframe_chunk(archivo)
-                dic_dataframe = {}
+                dic_GRTT2 = {}
                 if lista_df:
                     columnas = ["NIU","Codigo_DANE","Estrato","Longitud","Latitud","ID_Mercado"]
-                    for i in range(len(lista_df)):
-                        df = lista_df[i]
+                    for df in lista_df:
                         df = df[columnas]
                         df = df[df['Estrato'].apply(lambda x: isinstance(x, int))].reset_index(drop=True)
                         for j in range(len(df)):
                             valor_NIU = df["NIU"][j]
-                            try:
-                                valor_dic = dic_dataframe[valor_NIU]
-                            except KeyError:
-                                dic_dataframe[valor_NIU] = df.iloc[j].tolist()
-                            try:
-                                estrato_texto = tabla_3["datos"][str(df["Estrato"][j])]
-                                dic_dataframe[valor_NIU][2] = estrato_texto
-                            except KeyError:
-                                dic_dataframe[valor_NIU][2] = ""
-                            try:
-                                dic_dataframe[valor_NIU][-1] = int(dic_dataframe[valor_NIU][-1])
-                            except ValueError:
-                                pass
-                            except TypeError:
-                                pass
-                            try:
-                                dic_dataframe[valor_NIU][1] = int(dic_dataframe[valor_NIU][1])
-                            except ValueError:
-                                pass
-                            except TypeError:
-                                pass
-                    lista_nueva = [[] for _ in range(5)]
+                            if valor_NIU not in dic_GRTT2:
+                                dic_GRTT2[valor_NIU] = df.iloc[j].tolist()
+                    columnas_compen = list(df_compensacion.columns)
+                    columnas_df = columnas_compen.copy()
+                    columnas_df.extend(columnas)
+                    dic_dataframe = {col: [] for col in columnas_df}
                     for i in range(len(df_compensacion)):
-                        valor_NIU = df_compensacion["NIU"][i]
-                        try:
-                            lista_valor_NIU = dic_dataframe[valor_NIU]
-                            for j in range(1,len(lista_valor_NIU)):
-                                lista_nueva[j-1].append(lista_valor_NIU[j])
-                        except KeyError:
-                            for j in range(1,len(columnas)):
-                                lista_nueva[j-1].append("")
-                    for i in range(1,len(lista_valor_NIU)):
-                        columna = columnas[i]
-                        df_compensacion[columna] = lista_nueva[i-1]
-                    df_compensacion.to_csv(nombre.replace("_resumen","_reporte_compensacion"), index=False, encoding="utf-8-sig")
-                    if informar:
-                        informar_archivo_creado(nombre.replace("_resumen","_reporte_compensacion"), True)
-                    df_compensacion = leer_dataframe_utf_8(nombre.replace("_resumen","_reporte_compensacion"))
-                    almacenar = mod_5.almacenar_csv_en_excel(df_compensacion, nombre.replace("_resumen","_reporte_compensacion").replace(".csv",".xlsx"),"Datos")
-                    if informar and almacenar and almacenar_excel:
-                        informar_archivo_creado(nombre.replace("_resumen","_reporte_compensacion").replace(".csv",".xlsx"), True)
-        return df1, nombre
-    return None,None
+                        valor = df_compensacion["NIU"][i]
+                        if valor in dic_GRTT2:
+                            lista_GRTT2 = dic_GRTT2[valor]
+                            for j in range(1,len(lista_GRTT2)):
+                                if columnas[j] == "Estrato":
+                                    try:
+                                        estrato_texto = tabla_3["datos"][str(lista_GRTT2[j])]
+                                    except KeyError:
+                                        estrato_texto = ""
+                                    dic_dataframe[columnas[j]].append(estrato_texto)
+                                else:
+                                    dic_dataframe[columnas[j]].append(lista_GRTT2[j])
+                            for col in columnas_compen:
+                                dic_dataframe[col].append(df_compensacion[col][i])
+                    df_compensacion_info = pd.DataFrame(dic_dataframe)
+                    df_compensacion_info = df_compensacion_info.rename(columns={'Estrato': 'Sector_consumo'})
+                    almacenar_df_csv_y_excel(df_compensacion_info, nombre.replace("_resumen","_reporte_compensacion"))
+    return df1, nombre
 
-def generar_reporte_compensacion_mensual(lista_archivos, seleccionar_reporte, informar, almacenar_excel=True):
-    lista_df_filiales = []
+def generar_reporte_compensacion_mensual(dic_archivos, seleccionar_reporte, informar=True, inventario=False):
     lista_filiales_archivo = seleccionar_reporte["filial"]
-    for filial in lista_filiales_archivo:
-        lista_archivos_filial = []
+    for fecha, lista_archivos in dic_archivos.items():
+        lista_df_filiales = []
+        for filial in lista_filiales_archivo:
+            lista_archivos_filial = []
+            for archivo in lista_archivos:
+                if filial in archivo:
+                    lista_archivos_filial.append(archivo)
+            if len(lista_archivos_filial):
+                df1,nombre = apoyo_generar_reporte_compensacion_mensual(lista_archivos_filial,informar,filial,inventario)
+                if nombre:
+                    lista_df_filiales.append(df1)
+        if len(lista_df_filiales) and len(lista_filiales_archivo) == 4:
+            df_total_compilado = pd.concat(lista_df_filiales, ignore_index=True)
+            lista_fila = []
+            df_filtro = df_total_compilado[df_total_compilado["Anio_compensado"]=="Total"].reset_index(drop=True)
+            lista_fila.append("Total")
+            lista_fila.append("Total")
+            lista_fila.append(df_filtro["CI"][0])
+            lista_fila.append(df_filtro["Usuarios_compensados"].sum())
+            lista_fila.append(df_filtro["Valor_compensado"].sum())
+            lista_fila.append(grupo_vanti)
+            lista_fila.append(df_filtro["Mes_reportado"][0])
+            lista_fila.append(df_filtro["Anio_reportado"][0])
+            df_total_compilado.loc[len(df_total_compilado)] = lista_fila
+            df_total_compilado = df_total_compilado[["Filial","Mes_reportado","Anio_reportado","Usuarios_compensados","Valor_compensado","CI","Mes_compensado","Anio_compensado"]]
+            lista_nombre = nombre.split("\\")
+            lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[2:],"_",False)
+            lista_nombre[-5] = "05. REPORTES_GENERADOS_APLICATIVO"
+            lista_nombre.pop(-2)
+            nuevo_nombre = lista_a_texto(lista_nombre,"\\")
+            nuevo_nombre = nuevo_nombre.replace("_resumen","_compilado_compensacion")
+            almacenar_df_csv_y_excel(df_total_compilado,nuevo_nombre, informar)
+
+def generar_reporte_compensacion_anual(dic_archivos, seleccionar_reporte, informar=True, almacenar_excel=True):
+    fecha_nombre = (seleccionar_reporte["fecha_personalizada"][0][0]+"_"+seleccionar_reporte["fecha_personalizada"][0][1].upper()
+                    +"_"+seleccionar_reporte["fecha_personalizada"][1][0]+"_"+seleccionar_reporte["fecha_personalizada"][1][1].upper())
+    lista_anual = []
+    for fecha, lista_archivos in dic_archivos.items():
         for archivo in lista_archivos:
-            if filial in archivo:
-                lista_archivos_filial.append(archivo)
-        if len(lista_archivos_filial) > 0:
-            df1,nombre = apoyo_generar_reporte_compensacion_mensual(lista_archivos_filial,informar,filial)
-            if nombre:
-                lista_df_filiales.append(df1)
-    if len(lista_df_filiales) > 0 and len(lista_filiales_archivo) == 4:
-        df_total_compilado = pd.concat(lista_df_filiales, ignore_index=True)
-        lista_fila = []
-        df_filtro = df_total_compilado[df_total_compilado["Anio_compensado"]=="Total"].reset_index(drop=True)
-        lista_fila.append("Total")
-        lista_fila.append("Total")
-        lista_fila.append(df_filtro["CI"][0])
-        lista_fila.append(df_filtro["Usuarios_compensados"].sum())
-        lista_fila.append(df_filtro["Valor_compensado"].sum())
-        lista_fila.append(grupo_vanti)
-        lista_fila.append(df_filtro["Mes_reportado"][0])
-        lista_fila.append(df_filtro["Anio_reportado"][0])
-        df_total_compilado.loc[len(df_total_compilado)] = lista_fila
-        df_total_compilado = df_total_compilado[["Filial","Mes_reportado","Anio_reportado","Usuarios_compensados","Valor_compensado","CI","Mes_compensado","Anio_compensado"]]
+            df = leer_dataframe_utf_8(archivo)
+            nombre = archivo
+            if len(df):
+                lista_anual.append(df)
+    if len(lista_anual):
         lista_nombre = nombre.split("\\")
-        lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[2:],"_",False)
-        lista_nombre[-5] = "05. REPORTES_GENERADOS_APLICATIVO"
-        nuevo_nombre = lista_a_texto(lista_nombre,"\\",False)
-        nuevo_nombre = nuevo_nombre.replace("_resumen","_reporte_compensacion")
-        df_total_compilado.to_csv(nuevo_nombre, index=False, encoding="utf-8-sig")
-        if informar:
-            informar_archivo_creado(nuevo_nombre, True)
-        df1 = leer_dataframe_utf_8(nuevo_nombre)
-        if almacenar_excel:
-            almacenar = mod_5.almacenar_csv_en_excel(df1,nuevo_nombre.replace(".csv",".xlsx"),"Datos")
-            if informar and almacenar:
-                informar_archivo_creado(nuevo_nombre.replace(".csv",".xlsx"), True)
-        return df1, nuevo_nombre
+        lista_nombre[-5] = "00. Compilado"
+        lista_nombre[-3] = "00. Compilado"
+        ext_nombre = lista_nombre[-1].split("_")
+        ext_nombre.pop(0)
+        ext_nombre[0] = fecha_nombre
+        lista_nombre[-1] = lista_a_texto(ext_nombre, "_")
+        crear_carpeta_anual(fecha_nombre, lista_nombre)
+        lista_nombre.insert(-2, fecha_nombre)
+        nombre = lista_a_texto(lista_nombre, "\\")
+        df_anual = pd.concat(lista_anual)
+        almacenar_df_csv_y_excel(df_anual, nombre, informar, almacenar_excel)
 
 def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, almacenar_excel=True):
     proceso_GRC1 = False
@@ -1987,6 +2039,7 @@ def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, alma
             lista_df = lectura_dataframe_chunk(archivo)
             if lista_df:
                 proceso_GRC1 = True
+                nombre_GRC1 = archivo
                 lista_archivos_exitosos.append(archivo)
                 mes_reportado = lista_df[0]["Mes_reportado"][0]
                 anio_reportado = lista_df[0]["Anio_reportado"][0]
@@ -2039,6 +2092,7 @@ def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, alma
             lista_df = lectura_dataframe_chunk(archivo)
             if lista_df:
                 proceso_GRC2 = True
+                nombre_GRC2 = archivo
                 mes_reportado = lista_df[0]["Mes_reportado"][0]
                 anio_reportado = lista_df[0]["Anio_reportado"][0]
                 lista_archivos_exitosos.append(archivo)
@@ -2161,8 +2215,12 @@ def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, alma
             dic_NIU_factura["Codigo_DANE"].append(lista_NIU[5])
             dic_NIU_factura["Sector_consumo"].append(lista_NIU[6])
     df1 = pd.DataFrame(dic_NIU_factura)
+    if proceso_GRC1:
+        nombre_arc = nombre_GRC1
+    else:
+        nombre_arc = nombre_GRC2
     if len(df1):
-        lista_nombre = lista_archivos_exitosos[0].split("\\")
+        lista_nombre = nombre_arc.split("\\")
         lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
         nombre = lista_a_texto(lista_nombre,"\\",False).replace("_resumen","_usuarios_unicos_facturacion")
         almacenar_df_csv_y_excel(df1, nombre, almacenar_excel=False)
@@ -2193,11 +2251,10 @@ def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, alma
         df2["Anio_reportado"] = anio_reportado
         df2 = df2[["Filial","NIT","Anio_reportado","Mes_reportado","Clasificacion_usuarios","Sector_consumo",
                 "Cantidad_facturas_emitidas","Consumo_m3","Valor_consumo_facturado","Valor_total_facturado"]]
-        for archivo in lista_archivos_exitosos:
-            lista_nombre = archivo.split("\\")
-            lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
-            nombre_2 = lista_a_texto(lista_nombre,"\\",False).replace("_resumen","_reporte_facturacion")
-            almacenar_df_csv_y_excel(df2, nombre_2)
+        lista_nombre = nombre_arc.split("\\")
+        lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
+        nombre_1 = lista_a_texto(lista_nombre,"\\",False).replace("_resumen","_reporte_facturacion")
+        almacenar_df_csv_y_excel(df2, nombre_1)
     dic_df = {"Clasificacion_usuarios":[],
                 "Cantidad_usuarios_unicos":[],
                 "Consumo_m3":[],
@@ -2226,11 +2283,10 @@ def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, alma
         df["Anio_reportado"] = anio_reportado
         df = df[["Filial","NIT","Anio_reportado","Mes_reportado","Clasificacion_usuarios","Cantidad_usuarios_unicos",
                 "Cantidad_facturas_emitidas","Consumo_m3","Valor_consumo_facturado","Valor_total_facturado"]]
-        for archivo in lista_archivos_exitosos:
-            lista_nombre = archivo.split("\\")
-            lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
-            nombre_2 = lista_a_texto(lista_nombre,"\\",False).replace("_resumen","_usuarios_unicos")
-            almacenar_df_csv_y_excel(df, nombre_2)
+        lista_nombre = nombre_arc.split("\\")
+        lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
+        nombre_2 = lista_a_texto(lista_nombre,"\\",False).replace("_resumen","_usuarios_unicos")
+        almacenar_df_csv_y_excel(df, nombre_2)
     return df, nombre_2, df2, nombre_1
 
 def reporte_usuarios_unicos_mensual(lista_archivos, informar, seleccionar_reporte, almacenar_excel=True):
@@ -2250,9 +2306,8 @@ def reporte_usuarios_unicos_mensual(lista_archivos, informar, seleccionar_report
                 lista_df_filiales_2.append(df2)
     if len(lista_df_filiales_2) > 0 and len(lista_filiales_archivo) == 4:
         df_total = pd.concat(lista_df_filiales_2, ignore_index=True)
-        print(df_total)
-        df_total = generar_suma_df_filiales(df_total, ["Clasificacion_usuarios"],["Sector_consumo",
-                                                        "Cantidad_facturas_emitidas","Consumo_m3","Valor_consumo_facturado","Valor_total_facturado"])
+        df_total = generar_suma_df_filiales(df_total, ["Clasificacion_usuarios","Sector_consumo"],["Cantidad_facturas_emitidas","Consumo_m3",
+                                                        "Valor_consumo_facturado","Valor_total_facturado"])
         lista_nombre = nombre_2.split("\\")
         lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
         lista_nombre.pop(-2)
@@ -2261,9 +2316,8 @@ def reporte_usuarios_unicos_mensual(lista_archivos, informar, seleccionar_report
         almacenar_df_csv_y_excel(df_total, nuevo_nombre)
     if len(lista_df_filiales_1) > 0 and len(lista_filiales_archivo) == 4:
         df_total = pd.concat(lista_df_filiales_1, ignore_index=True)
-        print(df_total)
         df_total = generar_suma_df_filiales(df_total,["Clasificacion_usuarios"],["Cantidad_facturas_emitidas",
-                                                        "Consumo_m3","Valor_consumo_facturado","Valor_total_facturado"])
+                                                        "Consumo_m3","Valor_consumo_facturado","Valor_total_facturado", "Cantidad_usuarios_unicos"])
         lista_nombre = nombre_1.split("\\")
         lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
         lista_nombre.pop(-2)
@@ -2866,7 +2920,6 @@ def busqueda_archivos_tipo(ubi_archivo,tipo=None, lista_fallidos=[]):
     else:
         archivos_tipo = glob.glob(os.path.join(ubi_archivo, "*"))
     return archivos_tipo
-
 
 def mostrar_texto(texto, tipo="texto"):
     linea = 160
