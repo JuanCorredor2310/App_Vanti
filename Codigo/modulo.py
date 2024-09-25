@@ -131,7 +131,7 @@ def leer_dataframe_utf_8(archivo):
 
 def elegir_codificacion(archivo):
     with open(archivo, 'rb') as file:
-        raw_data = file.read(400000)
+        raw_data = file.read()
         result = chardet.detect(raw_data)
         encoding_1 = result['encoding']
     return encoding_1
@@ -139,7 +139,7 @@ def elegir_codificacion(archivo):
 def lectura_dataframe_chunk(archivo, valor_chunksize=chunksize,separador=","):
     lista_codificaciones = []
     lista_codificaciones.append(elegir_codificacion(archivo))
-    lista_codificaciones.extend(['utf-8-sig','utf-8','iso-8859-1','latin-1','utf-16','utf-16-be','utf-32','ascii',
+    lista_codificaciones.extend(['utf-8-sig','utf-8','iso-8859-1','latin-1','ansi','utf-16','utf-16-be','utf-32','ascii',
                                 'windows-1252','iso-8859-2','iso-8859-5','koi8-r','big5','gb2312',
                                 'shift-jis','euc-jp','mac_roman','utf-7','cp437','cp850','ibm866','tis-620',
                                 "utf-8-sig","utf-8","iso-8859-1","latin-1","utf-16","utf-16-be","utf-32","ascii",
@@ -148,19 +148,20 @@ def lectura_dataframe_chunk(archivo, valor_chunksize=chunksize,separador=","):
                                 "iso-8859-3","iso-8859-4","iso-8859-6","iso-8859-7","iso-8859-8","iso-8859-9","iso-8859-10",
                                 "iso-8859-13","iso-8859-14","iso-8859-15","cp737","cp775","cp852","cp855","cp857","cp858","cp860",
                                 "cp861","cp862","cp863","cp864","cp865","cp866","cp869"])
-    for elemento in lista_codificaciones:
-        try:
-            lista_df = []
-            for i, chunk in enumerate(pd.read_csv(archivo, chunksize=valor_chunksize, encoding=elemento, sep=separador,low_memory=False)):
-                lista_df.append(chunk.reset_index(drop=True).copy())
-            return lista_df
-        except Exception:
-            pass
+    for sep in [separador, ";"]:
+        for elemento in lista_codificaciones:
+            try:
+                lista_df = []
+                for i, chunk in enumerate(pd.read_csv(archivo, chunksize=valor_chunksize, encoding=elemento, sep=separador,low_memory=False)):
+                    lista_df.append(chunk.reset_index(drop=True).copy())
+                return lista_df
+            except Exception:
+                pass
     return None
 
 def lectura_dataframe_chunk_prueba(archivo, valor_chunksize=80000,separador=","):
     lista_codificaciones = [elegir_codificacion(archivo)]
-    lista_codificaciones.extend(['utf-8-sig','utf-8','iso-8859-1','latin-1','utf-16','utf-16-be','utf-32','ascii',
+    lista_codificaciones.extend(['utf-8-sig','utf-8','iso-8859-1','latin-1','ansi','utf-16','utf-16-be','utf-32','ascii',
                                 'windows-1252','iso-8859-2','iso-8859-5','koi8-r','big5','gb2312',
                                 'shift-jis','euc-jp','mac_roman','utf-7','cp437','cp850','ibm866','tis-620',
                                 "utf-8-sig","utf-8","iso-8859-1","latin-1","utf-16","utf-16-be","utf-32","ascii",
@@ -169,13 +170,14 @@ def lectura_dataframe_chunk_prueba(archivo, valor_chunksize=80000,separador=",")
                                 "iso-8859-3","iso-8859-4","iso-8859-6","iso-8859-7","iso-8859-8","iso-8859-9","iso-8859-10",
                                 "iso-8859-13","iso-8859-14","iso-8859-15","cp737","cp775","cp852","cp855","cp857","cp858","cp860",
                                 "cp861","cp862","cp863","cp864","cp865","cp866","cp869"])
-    for elemento in lista_codificaciones:
-        try:
-            for i, chunk in enumerate(pd.read_csv(archivo, chunksize=valor_chunksize, encoding=elemento, sep=separador,low_memory=False)):
-                df_prueba = chunk.reset_index(drop=True).copy()
-                return True
-        except Exception:
-            pass
+    for v_sep in [separador, ";"]:
+        for elemento in lista_codificaciones:
+            try:
+                for i, chunk in enumerate(pd.read_csv(archivo, chunksize=valor_chunksize, encoding=elemento, sep=v_sep,low_memory=False)):
+                    df_prueba = chunk.reset_index(drop=True).copy()
+                    return True
+            except Exception:
+                pass
     return False
 
 def generar_suma_df_filiales(df, lista_total, lista_suma):
@@ -199,13 +201,14 @@ def generar_suma_df_filiales(df, lista_total, lista_suma):
         return df
     df_final = pd.concat(lista_df, ignore_index=True)
     lista_fila = []
+    df_suma = df_final[df_final[lista_total[0]]=="Total"]
     for columna in columnas:
         if columna in ["Filial","NIT"]:
             lista_fila.append(grupo_vanti)
         elif columna in lista_total:
             lista_fila.append("Total")
         elif columna in lista_suma:
-            lista_fila.append(df_final[columna].sum())
+            lista_fila.append(df_suma[columna].sum())
         else:
             lista_fila.append(df_final[columna][0])
     df_final.loc[len(df_final)] = lista_fila
@@ -466,8 +469,8 @@ def informar_archivo_creado(nombre,valor):
 
 def estandarizacion_archivos(lista_archivos, informar):
     dic_reporte = None
-    exitoso = True
     for archivo in lista_archivos:
+        exitoso = True
         conversion_archivos(archivo, ".csv", ".csv")
         dic_reporte = buscar_reporte(archivo)
         if dic_reporte:
@@ -475,7 +478,7 @@ def estandarizacion_archivos(lista_archivos, informar):
             if lista_df:
                 for i in range(len(lista_df)):
                     df = lista_df[i].copy()
-                    if len(df.columns) == dic_reporte["cantidad_columnas"]:
+                    if len(list(df.columns)) == dic_reporte["cantidad_columnas"]:
                         df = cambiar_formato_dataframe(df, dic_reporte)
                         lista_df[i] = df
                     else:
@@ -566,8 +569,11 @@ def retirar_archivos_fallidos(lista_archivos, lista_fallidos):
 def cantidad_minima_info_archivo(lista_archivos):
     lista_archivos_info_min = []
     for archivo in lista_archivos:
-        lista_archivo = archivo.split("\\")
-        if len(lista_archivo[-1].split("_")) >= 4:
+        elemento = archivo.split("\\")[-1].replace(" ","_")
+        for i in range(9):
+            j = 10-i
+            elemento = elemento.replace("_"*j, "_")
+        if len(elemento.split("_")) >= 4:
             lista_archivos_info_min.append(archivo)
     return lista_archivos_info_min
 
@@ -650,7 +656,10 @@ def almacenar_archivos(ruta_guardar_archivos,informar):
     lista_archivos = cantidad_minima_info_archivo(lista_archivos)
     for archivo in lista_archivos:
         try:
-            nombre_archivo = archivo.split("\\")[-1].replace("____","_").replace("___","_").replace("__","_")
+            nombre_archivo = archivo.split("\\")[-1].replace(" ","_")
+            for i in range(9):
+                j = 10-i
+                nombre_archivo = nombre_archivo.replace("_"*j, "_")
             nombre_archivo_lista = nombre_archivo.split(".")
             nombre_archivo_lista[0] = nombre_archivo_lista[0].upper()
             lista_nombre_aux = nombre_archivo_lista[0].split("_")
@@ -726,8 +735,8 @@ def comprimir_archivos(lista_archivos, informar=True):
             diccionario_archivos[nombre_carpeta] = ([],ubi_carpeta_zip)
         diccionario_archivos[nombre_carpeta][0].append(archivo)
     for llave,tupla in diccionario_archivos.items():
-        with zipfile.ZipFile(tupla[1], 'w') as zipf:
-            if almacenar_2_archivos(tupla[0]):
+        if almacenar_2_archivos(tupla[0]):
+            with zipfile.ZipFile(tupla[1], 'w') as zipf:
                 v_tamanio_archivos = tamanio_archivos(tupla[0])
                 for file in tupla[0]:
                     zipf.write(file, os.path.basename(file))
@@ -1362,11 +1371,10 @@ def apoyo_reporte_comparacion_prd_cld_cer(lista_archivos, informar, filial):
     porcentaje_consumo_GRC1_PRD = "0 %"
     porcentaje_facturado_GRC1_CLD = "0 %"
     porcentaje_facturado_GRC1_PRD = "0 %"
-    suma_NIU_GRC1 = df_porcentaje[df_porcentaje["Archivo"] == "GRC1"]["Usuarios NIU Unicos"].sum()
     if proceso_CLD:
-        df_porcentaje.loc[df_porcentaje['Archivo'] == 'GRC1_SAP_CLD', 'Nuevos NIU'] = suma_NIU_GRC1-df_porcentaje[df_porcentaje["Archivo"] == "GRC1_SAP_CLD"]["Usuarios NIU Unicos"].sum()
+        df_porcentaje.loc[df_porcentaje['Archivo'] == 'GRC1_SAP_CLD', 'Nuevos NIU'] = len(dic_GRC1)-len(dic_SAP_CLD)
     if proceso_PRD:
-        df_porcentaje.loc[df_porcentaje['Archivo'] == 'GRC1_SAP_PRD', 'Nuevos NIU'] = suma_NIU_GRC1-df_porcentaje[df_porcentaje["Archivo"] == "GRC1_SAP_PRD"]["Usuarios NIU Unicos"].sum()
+        df_porcentaje.loc[df_porcentaje['Archivo'] == 'GRC1_SAP_PRD', 'Nuevos NIU'] = len(dic_GRC1)-len(dic_SAP_PRD)
     if valor_consumo_GRC1 > 0:
         if proceso_CLD:
             porcentaje_consumo_GRC1_CLD = str(round((abs(valor_consumo_GRC1_CLD-valor_consumo_GRC1)/valor_consumo_GRC1)*100,2))+" %"
@@ -1448,14 +1456,19 @@ def apoyo_reporte_comparacion_prd_cld_cer(lista_archivos, informar, filial):
     except ValueError:
         pass
 
-def reporte_comparacion_prd_cld_cer(lista_archivos, seleccionar_reporte, informar):
-    for filial in seleccionar_reporte["filial"]:
-        lista_archivos_filial = []
-        for archivo in lista_archivos:
-            if filial in archivo:
-                lista_archivos_filial.append(archivo)
-        if len(lista_archivos_filial) > 0:
-            apoyo_reporte_comparacion_prd_cld_cer(lista_archivos_filial, informar, filial)
+def reporte_comparacion_prd_cld_cer(dic_archivos, seleccionar_reporte, informar):
+    lista_filiales_archivo = seleccionar_reporte["filial"]
+    for fecha, lista_archivos in dic_archivos.items():
+        for filial in lista_filiales_archivo:
+            lista_archivos_filial = []
+            for archivo in lista_archivos:
+                if filial in archivo:
+                    lista_archivos_filial.append(archivo)
+            if len(lista_archivos_filial):
+                if len(lista_archivos_filial) > 1:
+                    apoyo_reporte_comparacion_prd_cld_cer(lista_archivos_filial, informar, filial)
+                else:
+                    print(f"Se necesitan al menos 2 archivos para generar la comparación entre reportes comerciales GRC1")
 
 def configurar_cantidad_filas_dataframe(lista_df, cantidad_filas):
     nueva_lista_df = []
@@ -1612,14 +1625,19 @@ def apoyo_reporte_comparacion_p1_p2(lista_archivos, informar, cantidad_filas, p1
     else:
         print(f"\nDeben existir los archivos {p1} y {p2} para el proceso de comparacion\n")
 
-def reporte_comparacion_SAP(lista_archivos, seleccionar_reporte, informar, cantidad_filas, p1, p2):
-    for filial in seleccionar_reporte["filial"]:
-        lista_archivos_filial = []
-        for archivo in lista_archivos:
-            if filial in archivo:
-                lista_archivos_filial.append(archivo)
-        if len(lista_archivos_filial) > 0:
-            apoyo_reporte_comparacion_p1_p2(lista_archivos_filial, informar, cantidad_filas, p1, p2) #Colocar SIEMPRE primero GRC1, PRD / GRC1, PRD / PRD, CLD
+def reporte_comparacion_SAP(dic_archivos, seleccionar_reporte, informar, cantidad_filas, p1, p2):
+    lista_filiales_archivo = seleccionar_reporte["filial"]
+    for fecha, lista_archivos in dic_archivos.items():
+        for filial in lista_filiales_archivo:
+            lista_archivos_filial = []
+            for archivo in lista_archivos:
+                if filial in archivo:
+                    lista_archivos_filial.append(archivo)
+            if len(lista_archivos_filial):
+                if len(lista_archivos_filial) > 1:
+                    apoyo_reporte_comparacion_p1_p2(lista_archivos_filial, informar, cantidad_filas, p1, p2) #Colocar SIEMPRE primero GRC1, PRD / GRC1, PRD / PRD, CLD
+                else:
+                    print(f"Se necesitan al menos 2 archivos para generar la comparación entre reportes comerciales GRC1")
 
 def generar_sumatoria_df(df):
     columnas = list(df.columns)
@@ -1996,7 +2014,7 @@ def generar_reporte_compensacion_mensual(dic_archivos, seleccionar_reporte, info
             df_total_compilado.loc[len(df_total_compilado)] = lista_fila
             df_total_compilado = df_total_compilado[["Filial","Mes_reportado","Anio_reportado","Usuarios_compensados","Valor_compensado","CI","Mes_compensado","Anio_compensado"]]
             lista_nombre = nombre.split("\\")
-            lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[2:],"_",False)
+            lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[2:],"_")
             lista_nombre[-5] = "05. REPORTES_GENERADOS_APLICATIVO"
             lista_nombre.pop(-2)
             nuevo_nombre = lista_a_texto(lista_nombre,"\\")
@@ -2289,42 +2307,42 @@ def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, alma
         almacenar_df_csv_y_excel(df, nombre_2)
     return df, nombre_2, df2, nombre_1
 
-def reporte_usuarios_unicos_mensual(lista_archivos, informar, seleccionar_reporte, almacenar_excel=True):
-    lista_df_filiales_1 = []
-    lista_df_filiales_2 = []
+def reporte_usuarios_unicos_mensual(dic_archivos, seleccionar_reporte, informar, almacenar_excel=True):
     lista_filiales_archivo = seleccionar_reporte["filial"]
-    for filial in lista_filiales_archivo:
-        lista_archivos_filial = []
-        for archivo in lista_archivos:
-            if filial in archivo:
-                lista_archivos_filial.append(archivo)
-        if len(lista_archivos_filial) > 0:
-            df1,nombre_1,df2,nombre_2 = apoyo_reporte_usuarios_unicos_mensual(lista_archivos_filial,informar,filial, almacenar_excel)
-            if nombre_1:
-                lista_df_filiales_1.append(df1)
-            if nombre_2:
-                lista_df_filiales_2.append(df2)
-    if len(lista_df_filiales_2) > 0 and len(lista_filiales_archivo) == 4:
-        df_total = pd.concat(lista_df_filiales_2, ignore_index=True)
-        df_total = generar_suma_df_filiales(df_total, ["Clasificacion_usuarios","Sector_consumo"],["Cantidad_facturas_emitidas","Consumo_m3",
-                                                        "Valor_consumo_facturado","Valor_total_facturado"])
-        lista_nombre = nombre_2.split("\\")
-        lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
-        lista_nombre.pop(-2)
-        lista_nombre[-4] = "05. REPORTES_GENERADOS_APLICATIVO"
-        nuevo_nombre = lista_a_texto(lista_nombre,"\\")
-        almacenar_df_csv_y_excel(df_total, nuevo_nombre)
-    if len(lista_df_filiales_1) > 0 and len(lista_filiales_archivo) == 4:
-        df_total = pd.concat(lista_df_filiales_1, ignore_index=True)
-        df_total = generar_suma_df_filiales(df_total,["Clasificacion_usuarios"],["Cantidad_facturas_emitidas",
-                                                        "Consumo_m3","Valor_consumo_facturado","Valor_total_facturado", "Cantidad_usuarios_unicos"])
-        lista_nombre = nombre_1.split("\\")
-        lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
-        lista_nombre.pop(-2)
-        lista_nombre[-4] = "05. REPORTES_GENERADOS_APLICATIVO"
-        nuevo_nombre = lista_a_texto(lista_nombre,"\\")
-        almacenar_df_csv_y_excel(df_total, nuevo_nombre)
-        return df_total, nuevo_nombre
+    for fecha, lista_archivos in dic_archivos.items():
+        lista_df_filiales_1 = []
+        lista_df_filiales_2 = []
+        for filial in lista_filiales_archivo:
+            lista_archivos_filial = []
+            for archivo in lista_archivos:
+                if filial in archivo:
+                    lista_archivos_filial.append(archivo)
+            if len(lista_archivos_filial):
+                df1,nombre_1,df2,nombre_2 = apoyo_reporte_usuarios_unicos_mensual(lista_archivos_filial,informar,filial, almacenar_excel)
+                if nombre_1:
+                    lista_df_filiales_1.append(df1)
+                if nombre_2:
+                    lista_df_filiales_2.append(df2)
+        if len(lista_df_filiales_2) > 0 and len(lista_filiales_archivo) == 4:
+            df_total = pd.concat(lista_df_filiales_2, ignore_index=True)
+            df_total = generar_suma_df_filiales(df_total, ["Clasificacion_usuarios","Sector_consumo"],["Cantidad_facturas_emitidas","Consumo_m3",
+                                                            "Valor_consumo_facturado","Valor_total_facturado"])
+            lista_nombre = nombre_2.split("\\")
+            lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
+            lista_nombre[-5] = "05. REPORTES_GENERADOS_APLICATIVO"
+            lista_nombre.pop(-2)
+            nuevo_nombre = lista_a_texto(lista_nombre,"\\")
+            almacenar_df_csv_y_excel(df_total, nuevo_nombre)
+        if len(lista_df_filiales_1) > 0 and len(lista_filiales_archivo) == 4:
+            df_total = pd.concat(lista_df_filiales_1, ignore_index=True)
+            df_total = generar_suma_df_filiales(df_total,["Clasificacion_usuarios"],["Cantidad_facturas_emitidas",
+                                                            "Consumo_m3","Valor_consumo_facturado","Valor_total_facturado", "Cantidad_usuarios_unicos"])
+            lista_nombre = nombre_1.split("\\")
+            lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
+            lista_nombre[-5] = "05. REPORTES_GENERADOS_APLICATIVO"
+            lista_nombre.pop(-2)
+            nuevo_nombre = lista_a_texto(lista_nombre,"\\")
+            almacenar_df_csv_y_excel(df_total, nuevo_nombre)
 
 def reporte_comportamiento_patrimonial(fi,ff,listas_unidas):
     nombre = "info_trimestral"
@@ -2823,6 +2841,35 @@ def generar_porcentaje_cumplimientos_regulatorios():
             print(f"No es posible acceder al archivo {archivo}.")
     else:
         print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
+
+# * -------------------------------------------------------------------------------------------------------
+# *                                             Reportes Anuales
+# * -------------------------------------------------------------------------------------------------------
+
+def union_archivos_mensuales_anual(dic_archivos, seleccionar_reporte, informar=True, almacenar_excel=True):
+    fecha_nombre = (seleccionar_reporte["fecha_personalizada"][0][0]+"_"+seleccionar_reporte["fecha_personalizada"][0][1].upper()
+                    +"_"+seleccionar_reporte["fecha_personalizada"][1][0]+"_"+seleccionar_reporte["fecha_personalizada"][1][1].upper())
+    lista_anual = []
+    for fecha, lista_archivos in dic_archivos.items():
+        for archivo in lista_archivos:
+            df = leer_dataframe_utf_8(archivo)
+            nombre = archivo
+            if len(df):
+                lista_anual.append(df)
+    if len(lista_anual):
+        lista_nombre = nombre.split("\\")
+        lista_nombre[-5] = "00. Compilado"
+        lista_nombre[-3] = "00. Compilado"
+        ext_nombre = lista_nombre[-1].split("_")
+        ext_nombre.pop(0)
+        ext_nombre[0] = fecha_nombre
+        lista_nombre[-1] = lista_a_texto(ext_nombre, "_")
+        #crear_carpeta_anual(fecha_nombre, lista_nombre)
+        lista_nombre.insert(-2, fecha_nombre)
+        nombre = lista_a_texto(lista_nombre, "\\")
+        print(nombre)
+        #df_anual = pd.concat(lista_anual)
+        #almacenar_df_csv_y_excel(df_anual, nombre, informar, almacenar_excel)
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Uso de listas (arreglos)

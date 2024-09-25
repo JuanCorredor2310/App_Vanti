@@ -2,3 +2,6 @@ Aceptados
 mercado_relevante.csv
 Reporte SUI.xlsx
 info_trimestral.xlsx
+ruta.txt
+reportes_disponibles.txt
+reportes_disponibles_carpeta.txt

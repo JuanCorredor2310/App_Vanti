@@ -56,7 +56,11 @@ def tamanio_archivos(archivo):
 def formato_nombre(nombre):
     nombre = nombre.replace("\\\\","\\")
     lista_nombre = nombre.split("\\")[-1]
-    texto = f"{lista_nombre}{tamanio_archivos(nombre)}"
+    largo = 80
+    v_tamanio_archivos = tamanio_archivos(nombre)
+    sepa = largo - len(lista_nombre)- len(v_tamanio_archivos)
+    sepa = " "*sepa
+    texto = f"{lista_nombre}{sepa}{tamanio_archivos(nombre)}"
     return texto
 
 def encontrar_meses(tipo, mes_1, mes_2):
@@ -168,11 +172,7 @@ def agrupar_archivos(seleccionar_reporte, lista_archivos):
                 dic_archivos_3[llave][filial] = []
                 for i in range(0, len(lista_archivos_filial), 2):
                     elementos = lista_archivos_filial[i:i+2]
-                    largo = 70-len(elementos[0])
-                    if largo > 0:
-                        dic_archivos_3[llave][filial].append(lista_a_texto(elementos,","+" "*largo))
-                    else:
-                        dic_archivos_3[llave][filial].append(lista_a_texto(elementos,","+" "))
+                    dic_archivos_3[llave][filial].append(lista_a_texto(elementos,",    "))
         return True, dic_archivos,dic_archivos_3
     else:
         return False, False, False
@@ -197,11 +197,7 @@ def agrupar_archivos_anual(seleccionar_reporte, lista_archivos):
             dic_archivos_3[llave] = []
             for i in range(0, len(valor), 2):
                 elementos = valor[i:i+2]
-                largo = 70-len(elementos[0])
-                if largo > 0:
-                    dic_archivos_3[llave].append(lista_a_texto(elementos,","+" "*largo))
-                else:
-                    dic_archivos_3[llave].append(lista_a_texto(elementos,","+" "))
+                dic_archivos_3[llave].append(lista_a_texto(elementos,",    "))
         return True, dic_archivos,dic_archivos_3
     else:
         return False, False, False

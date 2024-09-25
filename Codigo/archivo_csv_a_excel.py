@@ -76,10 +76,10 @@ def definir_tipo_texto(sheet):
             valor = celda.value
             try:
                 if isinstance(valor, int):
-                    celda.value = str(int(celda.value)).replace("np.int64","").replace("np.float64","")
+                    celda.value = int(str(int(celda.value)).replace("np.int64","").replace("np.float64",""))
                     celda.number_format = "0"
                 elif isinstance(valor, float):
-                    celda.value = str(float(celda.value)).replace("np.int64","").replace("np.float64","")
+                    celda.value = float(str(float(celda.value)).replace("np.int64","").replace("np.float64",""))
                     celda.number_format = "0.00"
                 else:
                     valor = str(valor).replace("np.int64","").replace("np.float64","")

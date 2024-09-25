@@ -1,0 +1,12 @@
+Tarifario,GRT1
+Tarifario,GRT3
+Comercial,GRC1
+Comercial,GRC2
+Comercial,GRC3
+Comercial,GRTT2
+Tecnico,GRCS1
+Tecnico,GRCS2
+Tecnico,GRCS3
+Tecnico,GRCS7
+Tecnico,GRCS9
+Tecnico,GRS1
