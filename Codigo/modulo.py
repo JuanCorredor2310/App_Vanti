@@ -1798,7 +1798,7 @@ def reporte_info_comercial_anual(lista_archivos, lista_archivos_aux, informar, s
         if informar and almacenar:
             informar_archivo_creado(nombre, True)"""
 
-def apoyo_reporte_usuarios_filial(lista_archivos,informar,filial,almacenar_excel=True):
+def apoyo_reporte_usuarios_filial(lista_archivos,informar,filial,almacenar_excel=True, usuarios_unicos=True):
     proceso_GRTT2 = False
     proceso_GRC1 = False
     for archivo in lista_archivos:
@@ -1844,25 +1844,24 @@ def apoyo_reporte_usuarios_filial(lista_archivos,informar,filial,almacenar_excel
                         if valor not in dic_dataframe_NIU_GRC1:
                             dic_dataframe_NIU_GRC1[valor] = True
     if proceso_GRTT2 and proceso_GRC1:
-        dic_df_NIU_GRTT2_GRC1 = {"NIU":[],
-                                    "Apariciones_GRTT2":[],
-                                    "Existe_GRC1":[]}
-        for llave, valor in dic_dataframe_NIU.items():
-            dic_df_NIU_GRTT2_GRC1["NIU"].append(llave)
-            dic_df_NIU_GRTT2_GRC1["Apariciones_GRTT2"].append(valor)
-            if llave in dic_dataframe_NIU_GRC1:
-                dic_df_NIU_GRTT2_GRC1["Existe_GRC1"].append(1)
-            else:
-                dic_df_NIU_GRTT2_GRC1["Existe_GRC1"].append(2)
-        df_NIU_GRTT2_GRC1 = pd.DataFrame(dic_df_NIU_GRTT2_GRC1)
-        df_NIU_GRTT2_GRC1["Mes_reportado"] = mes_reportado
-        df_NIU_GRTT2_GRC1["Anio_reportado"] = anio_reportado
-        lista_nombre = nombre.split("\\")
-        lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
-        nombre = lista_a_texto(lista_nombre,"\\")
-        df_NIU_GRTT2_GRC1.to_csv(nombre.replace("_resumen","_inventario_suscriptores_activos"), index=False, encoding="utf-8-sig")
-        if informar:
-            informar_archivo_creado(nombre.replace("_resumen","_inventario_suscriptores_activos"), True)
+        if usuarios_unicos:
+            dic_df_NIU_GRTT2_GRC1 = {"NIU":[],
+                                        "Apariciones_GRTT2":[],
+                                        "Existe_GRC1":[]}
+            for llave, valor in dic_dataframe_NIU.items():
+                dic_df_NIU_GRTT2_GRC1["NIU"].append(llave)
+                dic_df_NIU_GRTT2_GRC1["Apariciones_GRTT2"].append(valor)
+                if llave in dic_dataframe_NIU_GRC1:
+                    dic_df_NIU_GRTT2_GRC1["Existe_GRC1"].append(1)
+                else:
+                    dic_df_NIU_GRTT2_GRC1["Existe_GRC1"].append(2)
+            df_NIU_GRTT2_GRC1 = pd.DataFrame(dic_df_NIU_GRTT2_GRC1)
+            df_NIU_GRTT2_GRC1["Mes_reportado"] = mes_reportado
+            df_NIU_GRTT2_GRC1["Anio_reportado"] = anio_reportado
+            lista_nombre = nombre.split("\\")
+            lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
+            nombre = lista_a_texto(lista_nombre,"\\")
+            almacenar_df_csv_y_excel(df_NIU_GRTT2_GRC1, nombre.replace("_resumen","_inventario_suscriptores_activos"), almacenar_excel=False)
         nombre = nombre.replace("_resumen","_inventario_suscriptores_sector_consumo")
         dic_dataframe = dict(sorted(dic_dataframe.items()))
         dic_dataframe_texto = {}
@@ -1875,43 +1874,37 @@ def apoyo_reporte_usuarios_filial(lista_archivos,informar,filial,almacenar_excel
         df_filial_resumen["NIT"] = dic_nit[dic_filiales[filial]]
         df_filial_resumen["Mes_reportado"] = mes_reportado
         df_filial_resumen["Anio_reportado"] = anio_reportado
-        df_filial_resumen.to_csv(nombre, index=False, encoding="utf-8-sig")
-        if informar:
-            informar_archivo_creado(nombre, True)
-        df_filial_resumen = leer_dataframe_utf_8(nombre)
-        almacenar = mod_5.almacenar_csv_en_excel(df_filial_resumen, nombre.replace(".csv",".xlsx"),"Datos")
-        if informar and almacenar and almacenar_excel:
-            informar_archivo_creado(nombre.replace(".csv",".xlsx"), True)
+        almacenar_df_csv_y_excel(df_filial_resumen, nombre)
         return df_filial_resumen, nombre
 
-def reporte_usuarios_filial(lista_archivos, informar, seleccionar_reporte, almacenar_excel=True):
-    lista_df_filiales = []
+def reporte_usuarios_filial(dic_archivos, seleccionar_reporte, informar, almacenar_excel=True, usuarios_unicos=True):
     lista_filiales_archivo = seleccionar_reporte["filial"]
-    for filial in lista_filiales_archivo:
-        lista_archivos_filial = []
-        for archivo in lista_archivos:
-            if filial in archivo:
-                lista_archivos_filial.append(archivo)
-        if len(lista_archivos_filial) > 0:
-            df,nombre = apoyo_reporte_usuarios_filial(lista_archivos_filial,informar,filial)
-            if nombre:
-                lista_df_filiales.append(df)
-    if len(lista_archivos_filial) > 0 and len(lista_filiales_archivo) == 4:
-        df_total = pd.concat(lista_df_filiales, ignore_index=True)
-        lista_nombre = nombre.split("\\")
-        lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
-        lista_nombre.pop(-2)
-        lista_nombre[-4] = "05. REPORTES_GENERADOS_APLICATIVO"
-        nuevo_nombre = lista_a_texto(lista_nombre,"\\")
-        df_total.to_csv(nuevo_nombre, index=False, encoding="utf-8-sig")
-        if informar:
-            informar_archivo_creado(nuevo_nombre, True)
-        df1 = leer_dataframe_utf_8(nuevo_nombre)
-        if almacenar_excel:
-            almacenar = mod_5.almacenar_csv_en_excel(df1,nuevo_nombre.replace(".csv",".xlsx"),"Datos")
-            if informar and almacenar:
-                informar_archivo_creado(nuevo_nombre.replace(".csv",".xlsx"), True)
-        return df1, nuevo_nombre
+    for fecha, lista_archivos in dic_archivos.items():
+        lista_df_filiales = []
+        for filial in lista_filiales_archivo:
+            lista_archivos_filial = []
+            for archivo in lista_archivos:
+                if filial in archivo:
+                    lista_archivos_filial.append(archivo)
+            if len(lista_archivos_filial):
+                df1,nombre = apoyo_reporte_usuarios_filial(lista_archivos_filial,informar,filial, usuarios_unicos=usuarios_unicos)
+                if nombre:
+                    lista_df_filiales.append(df1)
+        if len(lista_archivos_filial) > 0 and len(lista_filiales_archivo) == 4:
+            df_total = pd.concat(lista_df_filiales, ignore_index=True)
+            lista_nombre = nombre.split("\\")
+            lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
+            lista_nombre.pop(-2)
+            lista_nombre[-4] = "05. REPORTES_GENERADOS_APLICATIVO"
+            nuevo_nombre = lista_a_texto(lista_nombre,"\\")
+            df_total.to_csv(nuevo_nombre, index=False, encoding="utf-8-sig")
+            if informar:
+                informar_archivo_creado(nuevo_nombre, True)
+            df1 = leer_dataframe_utf_8(nuevo_nombre)
+            if almacenar_excel:
+                almacenar = mod_5.almacenar_csv_en_excel(df1,nuevo_nombre.replace(".csv",".xlsx"),"Datos")
+                if informar and almacenar:
+                    informar_archivo_creado(nuevo_nombre.replace(".csv",".xlsx"), True)
 
 def apoyo_generar_reporte_compensacion_mensual(lista_archivos,informar,filial,inventario):
     proceso1 = False
@@ -2484,28 +2477,28 @@ def apoyo_reporte_tarifas_mensual(lista_archivos,informar,filial,almacenar_excel
         else:
             return None, None
 
-def reporte_tarifas_mensual(lista_archivos, informar, seleccionar_reporte, almacenar_excel=True):
-    lista_df_filiales = []
+def reporte_tarifas_mensual(dic_archivos, seleccionar_reporte, informar, almacenar_excel=True):
     lista_filiales_archivo = seleccionar_reporte["filial"]
-    for filial in lista_filiales_archivo:
-        lista_archivos_filial = []
-        for archivo in lista_archivos:
-            if filial in archivo:
-                lista_archivos_filial.append(archivo)
-        if len(lista_archivos_filial) > 0:
-            df,nombre = apoyo_reporte_tarifas_mensual(lista_archivos_filial,informar,filial)
-            if nombre:
-                lista_df_filiales.append(df)
-    if len(lista_df_filiales) > 0 and len(lista_filiales_archivo) == 4:
-        df_total = pd.concat(lista_df_filiales, ignore_index=True)
-        lista_nombre = nombre.split("\\")
-        lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[2:],"_",False)
-        lista_nombre[-5] = "05. REPORTES_GENERADOS_APLICATIVO"
-        lista_nombre.pop(-2)
-        nuevo_nombre = lista_a_texto(lista_nombre,"\\",False)
-        df_total.to_csv(nuevo_nombre, index=False, encoding="utf-8-sig")
-        almacenar_df_csv_y_excel(df_total, nuevo_nombre, informar, almacenar_excel)
-        return df_total,nuevo_nombre
+    for fecha, lista_archivos in dic_archivos.items():
+        lista_df_filiales = []
+        for filial in lista_filiales_archivo:
+            lista_archivos_filial = []
+            for archivo in lista_archivos:
+                if filial in archivo:
+                    lista_archivos_filial.append(archivo)
+            if len(lista_archivos_filial):
+                df,nombre = apoyo_reporte_tarifas_mensual(lista_archivos_filial,informar,filial)
+                if nombre:
+                    lista_df_filiales.append(df)
+        if len(lista_df_filiales) > 0 and len(lista_filiales_archivo) == 4:
+            df_total = pd.concat(lista_df_filiales, ignore_index=True)
+            lista_nombre = nombre.split("\\")
+            lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[2:],"_",False)
+            lista_nombre[-5] = "05. REPORTES_GENERADOS_APLICATIVO"
+            lista_nombre.pop(-2)
+            nuevo_nombre = lista_a_texto(lista_nombre,"\\")
+            df_total.to_csv(nuevo_nombre, index=False, encoding="utf-8-sig")
+            almacenar_df_csv_y_excel(df_total, nuevo_nombre, informar, almacenar_excel)
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Reportes Técnicos
@@ -2528,27 +2521,27 @@ def apoyo_generar_reporte_indicadores_tecnicos_mensual(lista_archivos, informar,
         almacenar_df_csv_y_excel(df, nuevo_nombre, informar, almacenar_excel)
         return df, nuevo_nombre
 
-def generar_reporte_indicadores_tecnicos_mensual(lista_archivos, seleccionar_reporte, informar,almacenar_excel=True):
-    lista_df_filiales = []
+def generar_reporte_indicadores_tecnicos_mensual(dic_archivos, seleccionar_reporte, informar,almacenar_excel=True):
     lista_filiales_archivo = seleccionar_reporte["filial"]
-    for filial in lista_filiales_archivo:
-        lista_archivos_filial = []
-        for archivo in lista_archivos:
-            if filial in archivo:
-                lista_archivos_filial.append(archivo)
-        if len(lista_archivos_filial) > 0:
-            df,nombre = apoyo_generar_reporte_indicadores_tecnicos_mensual(lista_archivos_filial,informar,filial)
-            if nombre:
-                lista_df_filiales.append(df)
-    if len(lista_df_filiales) and len(lista_filiales_archivo) == 4:
-        df_total = pd.concat(lista_df_filiales, ignore_index=True)
-        lista_nombre = nombre.split("\\")
-        lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[2:],"_",False)
-        lista_nombre[-5] = "05. REPORTES_GENERADOS_APLICATIVO"
-        nuevo_nombre = lista_a_texto(lista_nombre,"\\",False)
-        df_total.to_csv(nuevo_nombre, index=False, encoding="utf-8-sig")
-        almacenar_df_csv_y_excel(df_total, nuevo_nombre, informar, almacenar_excel)
-        return df_total,nuevo_nombre
+    for fecha, lista_archivos in dic_archivos.items():
+        lista_df_filiales = []
+        for filial in lista_filiales_archivo:
+            lista_archivos_filial = []
+            for archivo in lista_archivos:
+                if filial in archivo:
+                    lista_archivos_filial.append(archivo)
+            if len(lista_archivos_filial):
+                df,nombre = apoyo_generar_reporte_indicadores_tecnicos_mensual(lista_archivos_filial,informar,filial)
+                if nombre:
+                    lista_df_filiales.append(df)
+        if len(lista_df_filiales) and len(lista_filiales_archivo) == 4:
+            df_total = pd.concat(lista_df_filiales, ignore_index=True)
+            lista_nombre = nombre.split("\\")
+            lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[2:],"_")
+            lista_nombre[-5] = "05. REPORTES_GENERADOS_APLICATIVO"
+            lista_nombre.pop(-2)
+            nuevo_nombre = lista_a_texto(lista_nombre,"\\")
+            almacenar_df_csv_y_excel(df_total, nuevo_nombre, informar, almacenar_excel)
 
 def diferencia_minutos_fechas(df, lista_dia_1, lista_hora_1, lista_dia_2, lista_hora_2):
     lista_dif_minutos = []
@@ -2556,13 +2549,15 @@ def diferencia_minutos_fechas(df, lista_dia_1, lista_hora_1, lista_dia_2, lista_
         try:
             fecha_1 = datetime.strptime(str(lista_dia_1[i])+" "+str(lista_hora_1[i]), '%d-%m-%Y %H:%M')
             fecha_2 = datetime.strptime(str(lista_dia_2[i])+" "+str(lista_hora_2[i]), '%d-%m-%Y %H:%M')
-            lista_dif_minutos.append(float(round((fecha_2-fecha_1).total_seconds() / 60)))
-        except ValueError:
-            lista_dif_minutos.append(np.nan)
-        except TypeError:
-            lista_dif_minutos.append(np.nan)
-        except AttributeError:
-            lista_dif_minutos.append(np.nan)
+            diferencia = float(round((fecha_2-fecha_1).total_seconds() / 60))
+        except Exception:
+            try:
+                fecha_1 = datetime.strptime(str(lista_dia_1[i])+" "+str(lista_hora_1[i]), '%d/%m/%Y %H:%M')
+                fecha_2 = datetime.strptime(str(lista_dia_2[i])+" "+str(lista_hora_2[i]), '%d/%m/%Y %H:%M')
+                diferencia = float(round((fecha_2-fecha_1).total_seconds() / 60))
+            except Exception:
+                diferencia = float("inf")
+        lista_dif_minutos.append(diferencia)
     df["Cantidad_minutos"] = lista_dif_minutos
     return df
 
@@ -2606,14 +2601,16 @@ def apoyo_generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos, fili
                                             "15 - 30 min":((15,30),[]),
                                             "30 - 45 min":((30,45),[]),
                                             "45 - 60 min":((45,60),[]),
-                                            "> 1 hora":((60,float("inf")),[])}
+                                            "1 hora - 4 horas":((60,240),[]),
+                                            "4 hora - 8 horas":((240,480),[]),
+                                            "> 8 horas":((480,float("inf")),[])}
         dic_minutos_evento_contr = {"0 - 15 min":((0,15),[]),
                                             "15 - 30 min":((15,30),[]),
                                             "30 - 45 min":((30,45),[]),
                                             "45 - 60 min":((45,60),[]),
                                             "1 hora - 4 horas":((60,240),[]),
                                             "4 hora - 8 horas":((240,480),[]),
-                                            "> 8 horas":((480,float("inf")),[]),}
+                                            "> 8 horas":((480,float("inf")),[])}
         dic_minutos_evento = {}
         for evento in lista_eventos:
             df_filtro = df[df["Observaciones"] == evento].reset_index(drop=True)
@@ -2654,73 +2651,26 @@ def apoyo_generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos, fili
         almacenar_df_csv_y_excel(df1, nombre, informar, almacenar_excel)
         return df1, nombre, df2, nombre_1
 
-def generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos, seleccionar_reporte, informar=True,almacenar_excel=True):
-    lista_df_filiales_1 = []
-    lista_df_filiales_2 = []
-    df_total = None
-    df_total_2 = None
-    nuevo_nombre = None
-    nuevo_nombre_2 = None
+def generar_reporte_indicadores_tecnicos_IRST_mensual(dic_archivos, seleccionar_reporte, informar=True,almacenar_excel=True):
     lista_filiales_archivo = seleccionar_reporte["filial"]
-    for filial in lista_filiales_archivo:
-        lista_archivos_filial = []
-        for archivo in lista_archivos:
-            if filial in archivo:
-                lista_archivos_filial.append(archivo)
-        if len(lista_archivos_filial) > 0:
-            df1,n1,df2,n2 = apoyo_generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos_filial,filial, informar,almacenar_excel)
-            if n1:
-                lista_df_filiales_1.append(df1)
-            if n2:
-                lista_df_filiales_2.append(df2)
-    if len(lista_df_filiales_1) and len(lista_filiales_archivo) == 4:
-        df_total, nuevo_nombre = generar_formato_almacenamiento_reportes(lista_df_filiales_1, n1, informar,almacenar_excel)
-    if len(lista_df_filiales_2) and len(lista_filiales_archivo) == 4:
-        df_total_2, nuevo_nombre_2 = generar_formato_almacenamiento_reportes(lista_df_filiales_2, n2, informar,almacenar_excel)
-    return df_total, df_total_2, nuevo_nombre, nuevo_nombre_2
-
-def generar_reporte_indicadores_tecnicos_anual(lista_archivos, informar, filial, seleccionar_reporte):
-    fecha = seleccionar_reporte["fecha_personalizada"]
-    lista_df = []
-    df_anual = pd.DataFrame()
-    for archivo in lista_archivos:
-        if filial in lista_archivos:
-            df = leer_dataframe(archivo)
-            lista_df.append(df)
-            df_anual = pd.concat([df_anual, df], axis=0)
-    df_anual["Filial"] = filial
-    nombre = lista_archivos[0]
-    lista_nombre = nombre.split("\\")
-    lista_nombre[-6] = "02. Compilado"
-    lista_nombre[-4] = "00. Compilado"
-    ext_archivo = lista_nombre[-1].split("_")
-    nombre_1 = ext_archivo[:2]
-    nombre_1.append(fecha[0][0])
-    nombre_1.append(fecha[0][1].upper())
-    nombre_1.append(fecha[1][0])
-    nombre_1.append(fecha[1][1].upper())
-    nombre_1.append("indicador_tecnico.csv")
-    lista_nombre[-1] = lista_a_texto(nombre_1,"_",False)
-    nombre = lista_a_texto(lista_nombre,"\\",False)
-    df_anual.to_csv(nombre, index=False)
-    if informar:
-        informar_archivo_creado(nombre, True)
-    return df_anual, nombre
-
-def generar_reporte_indicadores_tecnicos_anual_total(lista_archivos, informar, seleccionar_reporte):
-    df_total = pd.DataFrame()
-    for filial in seleccionar_reporte["filial"]:
-        df = generar_reporte_indicadores_tecnicos_anual(lista_archivos, False, filial, seleccionar_reporte)
-        df_total, nombre = pd.concat([df_total, df], axis=0)
-    lista_nombre = nombre.split("\\")
-    lista_nombre[-5] = "05. REPORTES_GENERADOS_APLICATIVO"
-    nombre_1 = lista_nombre[-1].split("_")
-    del nombre_1[1]
-    lista_nombre[-1] = lista_a_texto(nombre_1, "_", False)
-    nombre = lista_a_texto(lista_nombre,"\\",False)
-    df_total.to_csv(nombre, index=False)
-    if informar:
-        informar_archivo_creado(nombre, True)
+    for fecha, lista_archivos in dic_archivos.items():
+        lista_df_filiales_1 = []
+        lista_df_filiales_2 = []
+        for filial in lista_filiales_archivo:
+            lista_archivos_filial = []
+            for archivo in lista_archivos:
+                if filial in archivo:
+                    lista_archivos_filial.append(archivo)
+            if len(lista_archivos_filial):
+                df1,nombre_1,df2,nombre_2 = apoyo_generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos_filial,filial, informar, almacenar_excel)
+                if nombre_1:
+                    lista_df_filiales_1.append(df1)
+                if nombre_2:
+                    lista_df_filiales_2.append(df2)
+        if len(lista_df_filiales_1) and len(lista_filiales_archivo) == 4:
+            df_total, nuevo_nombre = generar_formato_almacenamiento_reportes(lista_df_filiales_1, nombre_1, informar,almacenar_excel)
+        if len(lista_df_filiales_2) and len(lista_filiales_archivo) == 4:
+            df_total_2, nuevo_nombre_2 = generar_formato_almacenamiento_reportes(lista_df_filiales_2, nombre_2, informar,almacenar_excel)
 
 def apoyo_generar_reporte_suspension_mensual(lista_archivos,informar,filial):
     for archivo in lista_archivos:
@@ -2748,47 +2698,34 @@ def apoyo_generar_reporte_suspension_mensual(lista_archivos,informar,filial):
                 df1["Filial"] = filial
                 df1["Anio_reportado"] = anio
                 df1["Mes_reportado"] = mes
-            return df1, archivo
+                nombre = archivo.replace("_resumen.csv","_reporte_suspension.csv")
+                almacenar_df_csv_y_excel(df1, nombre)
+            return df1, nombre
         else:
             return None, None
     return None, None
 
-def generar_reporte_suspension_mensual(lista_archivos, seleccionar_reporte, informar, almacenar_excel=True):
-    lista_df_filiales = []
+def generar_reporte_suspension_mensual(dic_archivos, seleccionar_reporte, informar, almacenar_excel=True):
     lista_filiales_archivo = seleccionar_reporte["filial"]
-    for filial in lista_filiales_archivo:
-        lista_archivos_filial = []
-        for archivo in lista_archivos:
-            if filial in archivo:
-                lista_archivos_filial.append(archivo)
-        if len(lista_archivos_filial) > 0:
-            df,nombre = apoyo_generar_reporte_suspension_mensual(lista_archivos_filial,informar,filial)
+    for fecha, lista_archivos in dic_archivos.items():
+        lista_df_filiales = []
+        for filial in lista_filiales_archivo:
+            lista_archivos_filial = []
+            for archivo in lista_archivos:
+                if filial in archivo:
+                    lista_archivos_filial.append(archivo)
+            if len(lista_archivos_filial):
+                df,nombre = apoyo_generar_reporte_suspension_mensual(lista_archivos_filial,informar,filial)
             if nombre:
-                nombre = nombre.replace("_resumen.csv","_reporte_suspension.csv")
-                df.to_csv(nombre, index=False, encoding="utf-8-sig")
-                if informar:
-                    informar_archivo_creado(nombre, True)
-                df_total = leer_dataframe_utf_8(nombre)
-                if almacenar_excel:
-                    almacenar = mod_5.almacenar_csv_en_excel(df_total, nombre.replace(".csv",".xlsx"),"Datos")
-                    if informar and almacenar:
-                        informar_archivo_creado(nombre.replace(".csv",".xlsx"), True)
                 lista_df_filiales.append(df)
-    if len(lista_df_filiales):
-        df_total = pd.concat(lista_df_filiales, ignore_index=True)
-        lista_nombre = nombre.split("\\")
-        lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[2:],"_",False)
-        lista_nombre[-5] = "05. REPORTES_GENERADOS_APLICATIVO"
-        nuevo_nombre = lista_a_texto(lista_nombre,"\\",False)
-        df_total.to_csv(nuevo_nombre, index=False, encoding="utf-8-sig")
-        if informar:
-            informar_archivo_creado(nuevo_nombre, True)
-        df_total = leer_dataframe_utf_8(nuevo_nombre)
-        if almacenar_excel:
-            almacenar = mod_5.almacenar_csv_en_excel(df_total, nuevo_nombre.replace(".csv",".xlsx"),"Datos")
-            if informar and almacenar:
-                informar_archivo_creado(nuevo_nombre.replace(".csv",".xlsx"), True)
-        return df_total,nuevo_nombre
+        if len(lista_df_filiales) and len(lista_filiales_archivo) == 4:
+            df_total = pd.concat(lista_df_filiales, ignore_index=True)
+            lista_nombre = nombre.split("\\")
+            lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[2:],"_",False)
+            lista_nombre[-5] = "05. REPORTES_GENERADOS_APLICATIVO"
+            lista_nombre.pop(-2)
+            nuevo_nombre = lista_a_texto(lista_nombre,"\\",False)
+            almacenar_df_csv_y_excel(df_total, nuevo_nombre)
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Menú de Cumplimiento de Reportes Regulatorios
@@ -2864,12 +2801,11 @@ def union_archivos_mensuales_anual(dic_archivos, seleccionar_reporte, informar=T
         ext_nombre.pop(0)
         ext_nombre[0] = fecha_nombre
         lista_nombre[-1] = lista_a_texto(ext_nombre, "_")
-        #crear_carpeta_anual(fecha_nombre, lista_nombre)
+        crear_carpeta_anual(fecha_nombre, lista_nombre)
         lista_nombre.insert(-2, fecha_nombre)
         nombre = lista_a_texto(lista_nombre, "\\")
-        print(nombre)
-        #df_anual = pd.concat(lista_anual)
-        #almacenar_df_csv_y_excel(df_anual, nombre, informar, almacenar_excel)
+        df_anual = pd.concat(lista_anual)
+        almacenar_df_csv_y_excel(df_anual, nombre, informar, almacenar_excel)
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Uso de listas (arreglos)

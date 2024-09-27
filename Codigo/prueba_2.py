@@ -21,7 +21,7 @@ fig, ax = plt.subplots(figsize=(16, 10))
 ax.set_facecolor('#22405e')"""
 bar = ax.bar(categorias,valores)
 def gradientbars(bars,rotation=0):
-    cmap = LinearSegmentedColormap.from_list("Hola", ["#0a274a","#3d5a7d"])
+    cmap = LinearSegmentedColormap.from_list("Hola", ["#924e8c","#c9a7c6"])
     grad = np.atleast_2d(np.linspace(0, 1, 256)).T
     grad = cmap(grad)
     ax = bars[0].axes
@@ -43,4 +43,6 @@ ax.tick_params(axis='y', colors='#14314a',size=0)
 for spine in ax.spines.values():
     spine.set_visible(False)
 plt.subplots_adjust(left=0.08, right=1.02, top=0.92, bottom=0.15)
-plt.savefig("i2.png")
+
+plt.show()
+#plt.savefig("i2.png")
