@@ -1,0 +1,33 @@
+{
+    "descripcion": "Sectores_consumo_clasificados",
+    "datos": {
+        "Regulados": {
+            "Residencial Bajo - Bajo": "Residencial",
+            "Residencial Bajo": "Residencial",
+            "Residencial Medio - Bajo": "Residencial",
+            "Residencial Medio": "Residencial",
+            "Residencial Medio - Alto": "Residencial",
+            "Residencial Alto": "Residencial",
+            "Comercial": "Comercial",
+            "Industrial": "Industrial",
+            "Oficial": "Comercial",
+            "Especial Asistencial - EA": "Comercial",
+            "Especial Educativo - ED": "Comercial",
+            "Usuario Exento - UE": "Residencial",
+            "Industrial Exento - IE": "Industrial",
+            "Zonas comunes": "Comercial",
+            "Provisional": "Residencial"
+        },
+        "No Regulados": {
+            "Comercial": "Comercial",
+            "Comercializadoras de gas natural": "Comercializadoras de gas natural",
+            "Transportadores de gas natural": "Transportadores de gas natural",
+            "GNCV": "GNCV",
+            "Petroqu\u00edmica": "Petroqu\u00edmica",
+            "Industrial": "Industrial",
+            "Oficiales": "Oficiales",
+            "Termoel\u00e9ctrico": "Termoel\u00e9ctrico",
+            "Refiner\u00eda": "Refiner\u00eda"
+        }
+    }
+}

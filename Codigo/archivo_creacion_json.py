@@ -618,7 +618,7 @@ def variables_reportes(reporte):
                         "2":"Residencial Bajo",
                         "3":"Residencial Medio - Bajo",
                         "4":"Residencial Medio",
-                        "5":"Residencial Medio- Alto",
+                        "5":"Residencial Medio - Alto",
                         "6":"Residencial Alto",
                         "7":"Comercial",
                         "8":"Industrial",
@@ -734,6 +734,35 @@ def variables_reportes(reporte):
                 datos = {"descripcion":desc,
                         "datos":data}
                 guardar_diccionario_ruta(datos, n_archivo)
+        elif reporte == "sectores_consumo":
+                desc = "Sectores_consumo_clasificados"
+                data = {"Regulados":{"Residencial Bajo - Bajo":"Residencial",
+                                        "Residencial Bajo":"Residencial",
+                                        "Residencial Medio - Bajo":"Residencial",
+                                        "Residencial Medio":"Residencial",
+                                        "Residencial Medio - Alto":"Residencial",
+                                        "Residencial Alto":"Residencial",
+                                        "Comercial":"Comercial",
+                                        "Industrial":"Industrial",
+                                        "Oficial":"Comercial",
+                                        "Especial Asistencial - EA":"Comercial",
+                                        "Especial Educativo - ED":"Comercial",
+                                        "Usuario Exento - UE":"Residencial",
+                                        "Industrial Exento - IE":"Industrial",
+                                        "Zonas comunes":"Comercial",
+                                        "Provisional":"Residencial"},
+                        "No Regulados":{"Comercial":"Comercial",
+                                        "Comercializadoras de gas natural":"Comercializadoras de gas natural",
+                                        "Transportadores de gas natural":"Transportadores de gas natural",
+                                        "GNCV":"GNCV",
+                                        "Petroquímica":"Petroquímica",
+                                        "Industrial":"Industrial",
+                                        "Oficiales":"Oficiales",
+                                        "Termoeléctrico":"Termoeléctrico",
+                                        "Refinería":"Refinería"}}
+                datos = {"descripcion":desc,
+                        "datos":data}
+                guardar_diccionario_ruta(datos, n_archivo)
 
 def crear_archivos_json_principales():
         variables_reportes("GRT1")
@@ -772,5 +801,6 @@ def crear_archivos_json_principales():
         variables_reportes("anios")
         variables_reportes("trimestres")
         variables_reportes("meses_abre")
+        variables_reportes("sectores_consumo")
         creacion_directorio_carpetas_principales()
 

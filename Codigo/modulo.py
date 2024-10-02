@@ -113,6 +113,23 @@ def cambiar_formato_fecha(ruta):
     else:
         return None, None
 
+def fecha_anterior(anio, mes):
+    pos_mes = lista_meses.index(mes.capitalize())
+    if pos_mes == 0:
+        return str(int(anio)-1), lista_meses[-1]
+    else:
+        return str(anio), lista_meses[pos_mes-1]
+
+def fecha_siguiente(anio, mes):
+    pos_mes = lista_meses.index(mes.capitalize())
+    if pos_mes == len(lista_meses)-1:
+        return str(int(anio)+1), lista_meses[0]
+    else:
+        return str(anio), lista_meses[pos_mes+1]
+
+
+
+
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Manejo DataFrames
@@ -922,7 +939,7 @@ def buscar_NIU(lista_NIU, dic_NIU, subsidio=False, rango=20):
     volumen = 0
     valor_total_facturado = 0
     for elemento in lista_NIU:
-        try:
+        if elemento in dic_2:
             valor = dic_2[elemento] #consumo, valor_total_facturado
             if subsidio:
                 if valor[0] > 0:
@@ -936,8 +953,6 @@ def buscar_NIU(lista_NIU, dic_NIU, subsidio=False, rango=20):
                 volumen += valor[0]
                 valor_total_facturado += valor[1]
                 cantidad_usuario += 1
-        except KeyError:
-            pass
     return cantidad_usuario, volumen, valor_total_facturado
 
 def busqueda_sector_GRTT2(lista_archivos, dic_NIU, codigo_DANE, reporte, filial, nombre, valor_facturado=True, subsidio=False, rango=20):
@@ -966,7 +981,7 @@ def busqueda_sector_GRTT2(lista_archivos, dic_NIU, codigo_DANE, reporte, filial,
                                                 df_sector = df_codigo_DANE[df_codigo_DANE["Estrato"] == s1].reset_index(drop=True)
                                                 lista_NIU_sector = list(df_sector["NIU"].unique())
                                                 if s1 not in dic_codigo_DANE[ele_codigo_DANE]:
-                                                    dic_codigo_DANE[ele_codigo_DANE][s1] = [0,0,0] # cantidad_usuario, volumen, valor_total_facturado
+                                                    dic_codigo_DANE[ele_codigo_DANE][s1] = [0,0,0].copy() # cantidad_usuario, volumen, valor_total_facturado
                                                 cantidad_usuario, volumen, valor_total_facturado = buscar_NIU(lista_NIU_sector, dic_NIU, subsidio, rango)
                                                 dic_codigo_DANE[ele_codigo_DANE][s1][0] += cantidad_usuario
                                                 dic_codigo_DANE[ele_codigo_DANE][s1][1] += volumen
@@ -982,7 +997,7 @@ def busqueda_sector_GRTT2(lista_archivos, dic_NIU, codigo_DANE, reporte, filial,
                                                 df_sector = df_codigo_DANE[df_codigo_DANE["Estrato"] == s1].reset_index(drop=True)
                                                 lista_NIU_sector = list(df_sector["NIU"].unique())
                                                 if s1 not in dic_codigo_DANE[ele_codigo_DANE]:
-                                                    dic_codigo_DANE[ele_codigo_DANE][s1] = [0,0,0] # cantidad_usuario, volumen, valor_total_facturado
+                                                    dic_codigo_DANE[ele_codigo_DANE][s1] = [0,0,0].copy() # cantidad_usuario, volumen, valor_total_facturado
                                                 cantidad_usuario, volumen, valor_total_facturado = buscar_NIU(lista_NIU_sector, dic_NIU, subsidio, rango)
                                                 dic_codigo_DANE[ele_codigo_DANE][s1][0] += cantidad_usuario
                                                 dic_codigo_DANE[ele_codigo_DANE][s1][1] += volumen
@@ -1050,7 +1065,7 @@ def busqueda_sector_GRTT2(lista_archivos, dic_NIU, codigo_DANE, reporte, filial,
                                         df_sector = df[df["Estrato"] == s1].reset_index(drop=True)
                                         lista_NIU_sector = list(df_sector["NIU"].unique())
                                         if s1 not in dic_dataframe:
-                                            dic_dataframe[s1] = [0,0,0] # cantidad_usuario, volumen, valor_total_facturado
+                                            dic_dataframe[s1] = [0,0,0].copy() # cantidad_usuario, volumen, valor_total_facturado
                                         cantidad_usuario, volumen, valor_total_facturado = buscar_NIU(lista_NIU_sector, dic_NIU, subsidio, rango)
                                         dic_dataframe[s1][0] += cantidad_usuario
                                         dic_dataframe[s1][1] += volumen
@@ -1066,7 +1081,7 @@ def busqueda_sector_GRTT2(lista_archivos, dic_NIU, codigo_DANE, reporte, filial,
                                         df_sector = df[df["Estrato"] == s1].reset_index(drop=True)
                                         lista_NIU_sector = list(df_sector["NIU"].unique())
                                         if s1 not in dic_dataframe:
-                                            dic_dataframe[s1] = [0,0,0] # cantidad_usuario, volumen, valor_total_facturado
+                                            dic_dataframe[s1] = [0,0,0].copy() # cantidad_usuario, volumen, valor_total_facturado
                                         cantidad_usuario, volumen, valor_total_facturado = buscar_NIU(lista_NIU_sector, dic_NIU, subsidio, rango)
                                         dic_dataframe[s1][0] += cantidad_usuario
                                         dic_dataframe[s1][1] += volumen
@@ -1112,12 +1127,13 @@ def busqueda_sector_GRTT2(lista_archivos, dic_NIU, codigo_DANE, reporte, filial,
             return None, None
     return None, None
 
-def apoyo_reporte_comercial_sector_consumo_regulados(lista_archivos, codigo_DANE, reporte, valor_facturado,filial, subsidio=False):
+def apoyo_reporte_comercial_sector_consumo_regulados(lista_archivos, codigo_DANE, reporte, valor_facturado,filial, subsidio=False, total=False):
     for archivo in lista_archivos:
         if reporte in archivo:
             lista_df = lectura_dataframe_chunk(archivo)
             if lista_df:
                 dic_1 = {}
+                dic = {"Cantidad de usuarios":0,"Consumo m3":0,"Valor total facturado":0}
                 for i in range(len(lista_df)):
                     df = lista_df[i].copy().reset_index()
                     for pos in range(len(df)):
@@ -1125,7 +1141,9 @@ def apoyo_reporte_comercial_sector_consumo_regulados(lista_archivos, codigo_DANE
                             elemento = df["NIU"][pos]
                             consumo = float(df["Consumo"][pos])
                             valor_total_facturado = float(df["Valor_total_facturado"][pos])
-                            if not math.isnan(consumo) and consumo > 0 and not math.isnan(valor_total_facturado) and valor_total_facturado > 0:
+                            dic["Consumo m3"] += consumo
+                            dic["Valor total facturado"] = valor_facturado
+                            if not math.isnan(consumo) and not math.isnan(valor_total_facturado):
                                 if elemento not in dic_1:
                                     dic_1[elemento] = [0,0] #consumo, valor_total_facturado
                                 dic_1[elemento][0] += consumo
@@ -1135,6 +1153,12 @@ def apoyo_reporte_comercial_sector_consumo_regulados(lista_archivos, codigo_DANE
                         except TypeError:
                             pass
                 df1, nombre = busqueda_sector_GRTT2(lista_archivos, dic_1, codigo_DANE, "GRTT2", filial, archivo, valor_facturado, subsidio)
+                if total:
+                    dic["Cantidad de usuarios"] = len(dic_1)
+                    if valor_facturado:
+                        del dic["Valor total facturado"]
+                    for llave, valor in dic.items():
+                        print(llave, valor)
                 if nombre:
                     return df1, nombre
                 else:
@@ -1175,44 +1199,92 @@ def apoyo_reporte_comercial_sector_consumo(df1, n1, df2, n2, informar=True, subs
         return df3, n2
     return None, None
 
-def reporte_comercial_sector_consumo(lista_archivos, seleccionar_reporte, codigo_DANE=None, valor_facturado=True, informar=True, subsidio=False, almacenar_excel=True, total=False):
-    lista_df_filiales = []
+def reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=None, valor_facturado=True, subsidio=False, almacenar_excel=True, total=False):
     lista_filiales_archivo = seleccionar_reporte["filial"]
-    n1 = None
-    n2 = None
-    df1 = pd.DataFrame()
-    df2 = pd.DataFrame()
-    nombre_compilado = None
-    for filial in lista_filiales_archivo:
-        proceso = None
-        lista_archivos_filial = []
+    for fecha, lista_archivos in dic_archivos.items():
+        lista_df_filiales = []
+        for filial in lista_filiales_archivo:
+            n1 = None
+            n2 = None
+            df1 = pd.DataFrame()
+            df2 = pd.DataFrame()
+            nombre_compilado = None
+            lista_archivos_filial = []
+            for archivo in lista_archivos:
+                if filial in archivo:
+                    lista_archivos_filial.append(archivo)
+            if len(lista_archivos_filial):
+                df1, n1 = apoyo_reporte_comercial_sector_consumo_regulados(lista_archivos_filial, codigo_DANE, "GRC1", valor_facturado, filial, subsidio, total)
+                if not subsidio:
+                    df2, n2 = apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos_filial, codigo_DANE, "GRC2", filial, valor_facturado)
+                df,nombre = apoyo_reporte_comercial_sector_consumo(df1, n1, df2, n2, informar, subsidio)
+                if nombre:
+                    lista_df_filiales.append(df)
+                    nombre_compilado = nombre
+        if len(lista_df_filiales) > 0 and len(lista_filiales_archivo) == 4:
+            df_total = pd.concat(lista_df_filiales)
+            lista_nombre = nombre_compilado.split("\\")
+            lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
+            lista_nombre[-5] = "05. REPORTES_GENERADOS_APLICATIVO"
+            lista_nombre.pop(-2)
+            nuevo_nombre = lista_a_texto(lista_nombre,"\\")
+            if total:
+                df_total_suma, proceso = generar_sumatoria_df(df_total)
+                if proceso:
+                    df_total = df_total_suma.copy()
+                    nuevo_nombre = nuevo_nombre.replace(".csv","_sumatoria.csv")
+            almacenar_df_csv_y_excel(df_total, nuevo_nombre, informar, almacenar_excel)
+
+def diferencia_columnas_dataframe(df_actual, df_anterior):
+    df_actual = df_actual.copy().reset_index(drop=True)
+    df_anterior = df_anterior.copy().reset_index(drop=True)
+    lista_columnas_num = ["Cantidad de usuarios","Consumo m3","Valor total facturado"]
+    for columna in lista_columnas_num:
+        df_actual["Diferencia "+columna] = None
+    for i in range(len(df_actual)):
+        df_filtro_anterior = df_anterior[(df_anterior["Tipo de usuario"] == df_actual["Tipo de usuario"][i]) &
+                                            (df_anterior["Sector de consumo"] == df_actual["Sector de consumo"][i]) &
+                                            (df_anterior["Filial"] == df_actual["Filial"][i])].reset_index(drop=True)
+        df_filtro_actual = df_actual[(df_actual["Tipo de usuario"] == df_actual["Tipo de usuario"][i]) &
+                                            (df_actual["Sector de consumo"] == df_actual["Sector de consumo"][i]) &
+                                            (df_actual["Filial"] == df_actual["Filial"][i])].reset_index(drop=True)
+        if len(df_filtro_anterior) > 0 and len(df_filtro_actual):
+            for columna in lista_columnas_num:
+                valor_actual = df_filtro_actual[columna][0]
+                valor_anterior = df_filtro_anterior[columna][0]
+                df_actual.iloc[i, df_actual.columns.get_loc("Diferencia "+columna)] = valor_actual - valor_anterior
+    return df_actual
+
+def union_archivos_mensuales_anual_reporte_consumo(dic_archivos, seleccionar_reporte, informar, almacenar_excel=True):
+    v_fecha_siguiente = fecha_siguiente(seleccionar_reporte["fecha_personalizada"][0][0],seleccionar_reporte["fecha_personalizada"][0][1])
+    v_fecha_anterior = fecha_siguiente(seleccionar_reporte["fecha_personalizada"][1][0],seleccionar_reporte["fecha_personalizada"][1][1])
+    fecha_nombre = (v_fecha_siguiente[0]+"_"+v_fecha_siguiente[1].upper()
+                    +"_"+seleccionar_reporte["fecha_personalizada"][1][0]+"_"+seleccionar_reporte["fecha_personalizada"][1][1].upper())
+    lista_anual = []
+    lista_df_anual_dif = []
+    for fecha, lista_archivos in dic_archivos.items():
         for archivo in lista_archivos:
-            if filial in archivo:
-                lista_archivos_filial.append(archivo)
-        if len(lista_archivos_filial) > 0:
-            df1, n1 = apoyo_reporte_comercial_sector_consumo_regulados(lista_archivos_filial, codigo_DANE, "GRC1", valor_facturado, filial, subsidio)
-            if not subsidio:
-                df2, n2 = apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos_filial, codigo_DANE, "GRC2", filial, valor_facturado)
-            df,nombre = apoyo_reporte_comercial_sector_consumo(df1, n1, df2, n2, informar, subsidio)
-            if nombre:
-                lista_df_filiales.append(df)
-                nombre_compilado = nombre
-    if len(lista_df_filiales) > 0 and len(lista_filiales_archivo) == 4 and nombre_compilado:
-        df_total = pd.concat(lista_df_filiales, ignore_index=True)
-        lista_nombre = nombre_compilado.split("\\")
-        lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
-        lista_nombre[-5] = "05. REPORTES_GENERADOS_APLICATIVO"
-        lista_nombre.pop(-2)
-        nuevo_nombre = lista_a_texto(lista_nombre,"\\")
-        if total:
-            df_total_suma, proceso = generar_sumatoria_df(df_total)
-            if proceso:
-                df_total = df_total_suma.copy()
-                nuevo_nombre = nuevo_nombre.replace(".csv","_sumatoria.csv")
-        almacenar_df_csv_y_excel(df_total, nuevo_nombre, informar, almacenar_excel)
-        return df_total, nuevo_nombre
-    else:
-        return None, None
+            df = leer_dataframe_utf_8(archivo)
+            nombre = archivo
+            if len(df):
+                lista_anual.append(df)
+    for i in range(1,len(lista_anual)):
+        df = lista_anual[i]
+        df_actual = diferencia_columnas_dataframe(lista_anual[i], lista_anual[i-1])
+        lista_df_anual_dif.append(df_actual)
+    if len(lista_df_anual_dif) > 0:
+        lista_nombre = nombre.split("\\")
+        lista_nombre[-5] = "00. Compilado"
+        lista_nombre[-3] = "00. Compilado"
+        ext_nombre = lista_nombre[-1].split("_")
+        ext_nombre.pop(0)
+        ext_nombre[0] = fecha_nombre
+        lista_nombre[-1] = lista_a_texto(ext_nombre, "_")
+        crear_carpeta_anual(fecha_nombre, lista_nombre)
+        lista_nombre.insert(-2, fecha_nombre)
+        nombre = lista_a_texto(lista_nombre, "\\")
+        df_anual = pd.concat(lista_df_anual_dif)
+        almacenar_df_csv_y_excel(df_anual, nombre, informar, almacenar_excel)
 
 def apoyo_reporte_comparacion_prd_cld_cer(lista_archivos, informar, filial):
     dic_GRTT2 = {}
@@ -1643,33 +1715,53 @@ def generar_sumatoria_df(df):
     columnas = list(df.columns)
     lista_df = []
     lista_filiales = list(df["Filial"].unique())
-    lista_tipo_usuarios = list(df["Tipo de usuario"].unique())
     for filial in lista_filiales:
         df_filial = df[df["Filial"] == filial].reset_index(drop=True)
-        nueva_fila_final = []
-        for columna in columnas:
-            if columna in ["Cantidad de usuarios","Consumo m3","Valor total facturado"]:
-                nueva_fila_final.append(df_filial[columna].sum())
-            elif columna in ["NIT","Filial","Anio reportado","Mes reportado"]:
-                nueva_fila_final.append(df_filial[columna][0])
-            else:
-                nueva_fila_final.append("Total")
-        for usuario in lista_tipo_usuarios:
-            df_usuario = df_filial[df_filial["Tipo de usuario"] == usuario].reset_index(drop=True)
-            nueva_fila = []
+        if len(df_filial):
+            nueva_fila_final = []
             for columna in columnas:
                 if columna in ["Cantidad de usuarios","Consumo m3","Valor total facturado"]:
-                    nueva_fila.append(df_usuario[columna].sum())
-                elif columna in ["NIT","Filial","Anio reportado","Mes reportado","Tipo de usuario"]:
-                    nueva_fila.append(df_usuario[columna][0])
+                    nueva_fila_final.append(df_filial[columna].sum())
+                elif columna in ["NIT","Filial","Anio reportado","Mes reportado"]:
+                    nueva_fila_final.append(df_filial[columna][0])
                 else:
-                    nueva_fila.append("Total")
-            df_filial.loc[len(df_filial)] = nueva_fila
-        df_filial.loc[len(df_filial)] = nueva_fila_final
-        lista_df.append(df_filial)
+                    nueva_fila_final.append("Total")
+            lista_tipo_usuarios = list(df_filial["Tipo de usuario"].unique())
+            for usuario in lista_tipo_usuarios:
+                df_usuario = df_filial[df_filial["Tipo de usuario"] == usuario].reset_index(drop=True)
+                if len(df_usuario):
+                    nueva_fila = []
+                    for columna in columnas:
+                        if columna in ["Cantidad de usuarios","Consumo m3","Valor total facturado"]:
+                            nueva_fila.append(df_usuario[columna].sum())
+                        elif columna in ["NIT","Filial","Anio reportado","Mes reportado","Tipo de usuario"]:
+                            nueva_fila.append(df_usuario[columna][0])
+                        else:
+                            nueva_fila.append("Total")
+                    df_filial.loc[len(df_filial)] = nueva_fila
+            df_filial.loc[len(df_filial)] = nueva_fila_final
+            lista_df.append(df_filial)
     if len(lista_df) > 0:
         df_total = pd.concat(lista_df, ignore_index=True)
-        df_final = df_total[df_total["Sector de consumo"] == "Total"].reset_index(drop=True)
+        lista_tipo_usuarios = list(df_total["Tipo de usuario"].unique())
+        lista_tipo_usuarios.remove("Total")
+        for tipo_usuario in lista_tipo_usuarios:
+            df_final = df_total[(df_total["Sector de consumo"] == "Total") & (df_total["Tipo de usuario"] == tipo_usuario)].reset_index(drop=True)
+            if len(df_final):
+                nueva_fila_final = []
+                for columna in columnas:
+                    if columna in ["Cantidad de usuarios","Consumo m3","Valor total facturado"]:
+                        nueva_fila_final.append(df_final[columna].sum())
+                    elif columna in ["Anio reportado","Mes reportado"]:
+                        nueva_fila_final.append(df_final[columna][0])
+                    elif columna in ["NIT","Filial"]:
+                        nueva_fila_final.append(grupo_vanti)
+                    elif columna == "Tipo de usuario":
+                        nueva_fila_final.append(tipo_usuario)
+                    else:
+                        nueva_fila_final.append("Total")
+                df_total.loc[len(df_total)] = nueva_fila_final
+        df_final = df_total[(df_total["Sector de consumo"] == "Total") & ((df_total["Tipo de usuario"] == "Total"))].reset_index(drop=True)
         nueva_fila_final = []
         for columna in columnas:
             if columna in ["Cantidad de usuarios","Consumo m3","Valor total facturado"]:
@@ -1692,18 +1784,26 @@ def aux_lista_porcentaje_dataframe(df_filial, columna):
     lista_tipo_usuario = list(df_filial["Tipo de usuario"].unique())
     for tipo_usuario in lista_tipo_usuario:
         df_total = df_filial[(df_filial["Tipo de usuario"] == tipo_usuario) & (df_filial["Sector de consumo"]=="Total")].reset_index(drop=True)
-        dic[tipo_usuario] = df_total[columna][0]
+        dic[tipo_usuario] = float(df_total[columna][0])
     lista_tipo_usuario.remove("Total")
     for tipo_usuario in lista_tipo_usuario:
         df_usuario = df_filial[(df_filial["Tipo de usuario"] == tipo_usuario) & (df_filial["Sector de consumo"] != "Total")].reset_index(drop=True)
         lista_sector_consumo = list(df_usuario["Sector de consumo"].unique())
         for sector_consumo in lista_sector_consumo:
             df_sector_consumo = df_usuario[df_usuario["Sector de consumo"] == sector_consumo].reset_index(drop=True)
-            porcentaje = round((df_sector_consumo[columna][0]/dic[tipo_usuario])*100,2)
+            valor = float(df_sector_consumo[columna][0])
+            if dic[tipo_usuario] > 0:
+                porcentaje = round((valor/dic[tipo_usuario])*100,2)
+            else:
+                porcentaje = 0
             lista_porcentaje.append(str(porcentaje)+" %")
     for tipo_usuario in lista_tipo_usuario:
         df_usuario = df_filial[(df_filial["Tipo de usuario"] == tipo_usuario) & (df_filial["Sector de consumo"] == "Total")].reset_index(drop=True)
-        porcentaje = round((df_usuario[columna][0]/dic["Total"])*100,2)
+        valor = float(df_usuario[columna][0])
+        if dic["Total"] > 0:
+            porcentaje = round((valor/dic["Total"])*100,2)
+        else:
+            porcentaje = 0
         lista_porcentaje.append(str(porcentaje)+" %")
     lista_porcentaje.append("100 %")
     return lista_porcentaje
@@ -1739,64 +1839,6 @@ def dif_numerica_listas(lista_actual, lista_anterior):
         return lista_diferencia
     else:
         return lista_diferencia
-
-def diferencia_columnas_dataframe(df_actual, df_anterior):
-    df_actual = df_actual.copy().reset_index(drop=True)
-    df_anterior = df_anterior.copy().reset_index(drop=True)
-    lista_columnas_num = ["Cantidad de usuarios","Consumo m3","Valor total facturado"]
-    for columna in lista_columnas_num:
-        df_actual["Diferencia "+columna] = None
-    for i in range(len(df_actual)):
-        df_filtro_anterior = df_anterior[(df_anterior["Tipo de usuario"] == df_actual["Tipo de usuario"][i]) &
-                                            (df_anterior["Sector de consumo"] == df_actual["Sector de consumo"][i]) &
-                                            (df_anterior["Filial"] == df_actual["Filial"][i])].reset_index(drop=True)
-        df_filtro_actual = df_actual[(df_actual["Tipo de usuario"] == df_actual["Tipo de usuario"][i]) &
-                                            (df_actual["Sector de consumo"] == df_actual["Sector de consumo"][i]) &
-                                            (df_actual["Filial"] == df_actual["Filial"][i])].reset_index(drop=True)
-        if len(df_filtro_anterior) > 0 and len(df_filtro_actual):
-            for columna in lista_columnas_num:
-                valor_actual = df_filtro_actual[columna][0]
-                valor_anterior = df_filtro_anterior[columna][0]
-                df_actual.iloc[i, df_actual.columns.get_loc("Diferencia "+columna)] = valor_actual - valor_anterior
-    return df_actual
-
-def reporte_info_comercial_anual(lista_archivos, lista_archivos_aux, informar, seleccionar_reporte, lista_fechas):
-    pass
-    """lista_df_anual = []
-    lista_df_anual_dif = []
-    df, nombre = reporte_info_comercial_mensual(lista_archivos_aux, informar, seleccionar_reporte,almacenar_excel=False)
-    if nombre != None:
-        lista_df_anual.append(df)
-    for fecha in lista_fechas:
-        print(fecha)
-        lista_archivos_fecha = []
-        for archivo in lista_archivos:
-            if fecha[0] in archivo and fecha[1].upper() in archivo:
-                lista_archivos_fecha.append(archivo)
-        df, nombre = reporte_info_comercial_mensual(lista_archivos_fecha, informar, seleccionar_reporte,almacenar_excel=False)
-        if nombre != None:
-            lista_df_anual.append(df)
-    for i in range(1,len(lista_df_anual)):
-        df_actual = diferencia_columnas_dataframe(lista_df_anual[i], lista_df_anual[i-1])
-        lista_df_anual_dif.append(df_actual)
-    if len(lista_df_anual) > 0:
-        lista_nombre = nombre.split("\\")
-        lista_nombre[-6] = "02. Compilado"
-        lista_nombre[-4] = "00. Compilado"
-        n1 = lista_nombre[-1].split("_")
-        n1[0] = lista_a_texto([lista_fechas[0][0],lista_fechas[0][1]],"_",False)
-        n1[1] = lista_a_texto([lista_fechas[-1][0],lista_fechas[-1][1]],"_",False)
-        lista_nombre[-1] = lista_a_texto(n1,"_",False)
-        nombre = lista_a_texto(lista_nombre,"\\",False)
-        df_total = pd.concat(lista_df_anual_dif, ignore_index=True)
-        df_total.to_csv(nombre, index=False, encoding="utf-8-sig")
-        if informar:
-            informar_archivo_creado(nombre, True)
-        df_total = leer_dataframe_utf_8(nombre)
-        nombre = nombre.replace(".csv",".xlsx")
-        almacenar = mod_5.almacenar_csv_en_excel(df_total, nombre,"Datos")
-        if informar and almacenar:
-            informar_archivo_creado(nombre, True)"""
 
 def apoyo_reporte_usuarios_filial(lista_archivos,informar,filial,almacenar_excel=True, usuarios_unicos=True):
     proceso_GRTT2 = False
@@ -2592,32 +2634,24 @@ def apoyo_generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos, fili
         df = leer_dataframe_utf_8(archivo)
         anio_archivo = df["Anio_reportado"][0]
         mes_archivo = df["Mes_reportado"][0]
+        df['Observaciones'] = df['Observaciones'].str.replace("CONTROLADA", "CONTROLADO").astype(str)
+        df['Observaciones'] = np.where(df['Observaciones'].str.contains('NO CONTR', case=False), 'NO CONTROLADO', df['Observaciones'])
+        df['Observaciones'] = df['Observaciones'].str.strip().astype(str)
         df = diferencia_minutos_fechas(df, list(df["Fecha_solicitud"]), list(df["Hora_solicitud"]), list(df["Fecha_llegada_servicio_tecnico"]), list(df["Hora_llegada_servicio_tecnico"]))
+        df['Hora_llegada'] = df['Hora_llegada_servicio_tecnico'].str.split(':').str[0].astype(int)
         lista_eventos = list(df["Observaciones"].unique())
         dic_df_evento = {"Tipo_evento":[],
                         "Cantidad_eventos":[],
                         "Tiempo_promedio_llegada (min)":[]}
-        dic_minutos_evento_no_contr = {"0 - 15 min":((0,15),[]),
-                                            "15 - 30 min":((15,30),[]),
-                                            "30 - 45 min":((30,45),[]),
-                                            "45 - 60 min":((45,60),[]),
-                                            "1 hora - 4 horas":((60,240),[]),
-                                            "4 hora - 8 horas":((240,480),[]),
-                                            "> 8 horas":((480,float("inf")),[])}
-        dic_minutos_evento_contr = {"0 - 15 min":((0,15),[]),
-                                            "15 - 30 min":((15,30),[]),
-                                            "30 - 45 min":((30,45),[]),
-                                            "45 - 60 min":((45,60),[]),
-                                            "1 hora - 4 horas":((60,240),[]),
-                                            "4 hora - 8 horas":((240,480),[]),
-                                            "> 8 horas":((480,float("inf")),[])}
         dic_minutos_evento = {}
         for evento in lista_eventos:
             df_filtro = df[df["Observaciones"] == evento].reset_index(drop=True)
             if "NO CONTROL" in evento:
-                dic_minutos_evento[evento] = dic_minutos_evento_no_contr.copy()
+                dic_minutos_evento[evento] = {"< 60 min":((0,60),[]),
+                                            "> 1 hora":((60,float("inf")),[]),}
             else:
-                dic_minutos_evento[evento] = dic_minutos_evento_contr.copy()
+                dic_minutos_evento[evento] = {"< 12 horas":((0,int(60*12)),[]),
+                                            "> 12 horas":((int(12*60),float("inf")),[]),}
             for i in range(len(df_filtro)):
                 for llave, tupla in dic_minutos_evento[evento].items():
                     if tupla[0][0] < df_filtro["Cantidad_minutos"][i] <= tupla[0][1]:
@@ -2627,11 +2661,12 @@ def apoyo_generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos, fili
             dic_df_evento["Tiempo_promedio_llegada (min)"].append(round(df_filtro["Cantidad_minutos"].mean()))
         nombre = archivo.replace("_resumen.csv","_indicador_tecnico_IRST.csv")
         nombre_1 = archivo.replace("_resumen.csv","_indicador_tecnico_IRST_minutos.csv")
+        nombre_2 = archivo.replace("_resumen.csv","_indicador_tecnico_IRST_horas.csv")
         dic_df_evento_minutos = {"Tipo_evento":[],
                                 "Clasificacion":[],
                                 "Cantidad_eventos":[]}
-        for evento, dic_minuto in dic_minutos_evento.items():
-            for llave, valor in dic_minuto.items():
+        for evento in dic_minutos_evento:
+            for llave, valor in dic_minutos_evento[evento].items():
                 dic_df_evento_minutos["Tipo_evento"].append(evento)
                 dic_df_evento_minutos["Clasificacion"].append(llave)
                 dic_df_evento_minutos["Cantidad_eventos"].append(len(valor[1]))
@@ -2649,28 +2684,70 @@ def apoyo_generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos, fili
         df1["Anio_reportado"] = anio_archivo
         df1["Mes_reportado"] = mes_archivo
         almacenar_df_csv_y_excel(df1, nombre, informar, almacenar_excel)
-        return df1, nombre, df2, nombre_1
+        dic_horas_evento = {}
+        for evento in lista_eventos:
+            df_filtro = df[df["Observaciones"] == evento].reset_index(drop=True)
+            if "NO CONTROL" in evento:
+                dic_horas_evento[evento] = {}
+                for hora in range(24):
+                    dic_horas_evento[evento][hora] = {"0 - 30 min":((0,30),[]),
+                                                    "30 - 60 min":((30,60),[]),
+                                                    "> 1 hora":((60,float("inf")),[])}
+            else:
+                dic_horas_evento[evento] = {}
+                for hora in range(24):
+                    dic_horas_evento[evento][hora] = {"< 12 h":((0,int(60*12)),[]),
+                                                    "12 - 24 h":((int(60*12),int(60*24)),[]),
+                                                    "> 1 dia":((int(60*24),float("inf")),[])}
+            for i in range(len(df_filtro)):
+                hora = int(df_filtro["Hora_llegada"][i])
+                for llave, tupla in dic_horas_evento[evento][hora].items():
+                    if tupla[0][0] < df_filtro["Cantidad_minutos"][i] <= tupla[0][1]:
+                        dic_horas_evento[evento][hora][llave][1].append(float(df_filtro["Cantidad_minutos"][i]))
+        dic_df_evento_horas = {"Tipo_evento":[],
+                                "Clasificacion":[],
+                                "Hora_llegada":[],
+                                "Cantidad_eventos":[]}
+        for evento in dic_horas_evento:
+            for hora in dic_horas_evento[evento]:
+                for llave, valor in dic_horas_evento[evento][hora].items():
+                    dic_df_evento_horas["Tipo_evento"].append(evento)
+                    dic_df_evento_horas["Clasificacion"].append(llave)
+                    dic_df_evento_horas["Hora_llegada"].append(hora)
+                    dic_df_evento_horas["Cantidad_eventos"].append(len(valor[1]))
+        df3 = pd.DataFrame(dic_df_evento_horas)
+        df3["Filial"] = dic_filiales[filial]
+        df3["NIT"] = dic_nit[dic_filiales[filial]]
+        df3["Anio_reportado"] = anio_archivo
+        df3["Mes_reportado"] = mes_archivo
+        almacenar_df_csv_y_excel(df3, nombre_2, informar, almacenar_excel)
+        return df1, nombre, df2, nombre_1, df3, nombre_2
 
 def generar_reporte_indicadores_tecnicos_IRST_mensual(dic_archivos, seleccionar_reporte, informar=True,almacenar_excel=True):
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for fecha, lista_archivos in dic_archivos.items():
         lista_df_filiales_1 = []
         lista_df_filiales_2 = []
+        lista_df_filiales_3 = []
         for filial in lista_filiales_archivo:
             lista_archivos_filial = []
             for archivo in lista_archivos:
                 if filial in archivo:
                     lista_archivos_filial.append(archivo)
             if len(lista_archivos_filial):
-                df1,nombre_1,df2,nombre_2 = apoyo_generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos_filial,filial, informar, almacenar_excel)
+                df1,nombre_1,df2,nombre_2,df3,nombre_3 = apoyo_generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos_filial,filial, informar, almacenar_excel)
                 if nombre_1:
                     lista_df_filiales_1.append(df1)
                 if nombre_2:
                     lista_df_filiales_2.append(df2)
+                if nombre_3:
+                    lista_df_filiales_3.append(df3)
         if len(lista_df_filiales_1) and len(lista_filiales_archivo) == 4:
             df_total, nuevo_nombre = generar_formato_almacenamiento_reportes(lista_df_filiales_1, nombre_1, informar,almacenar_excel)
         if len(lista_df_filiales_2) and len(lista_filiales_archivo) == 4:
             df_total_2, nuevo_nombre_2 = generar_formato_almacenamiento_reportes(lista_df_filiales_2, nombre_2, informar,almacenar_excel)
+        if len(lista_df_filiales_3) and len(lista_filiales_archivo) == 4:
+            df_total_3, nuevo_nombre_3 = generar_formato_almacenamiento_reportes(lista_df_filiales_3, nombre_3, informar,almacenar_excel)
 
 def apoyo_generar_reporte_suspension_mensual(lista_archivos,informar,filial):
     for archivo in lista_archivos:
