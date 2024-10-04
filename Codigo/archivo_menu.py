@@ -305,8 +305,8 @@ def anadir_opciones(regenerar=False, codigo_DANE=False, valor_facturado=False, c
         reportes_mensuales = elegir_regenerar_archivos_mensuales(texto_regenerar_mensuales)
     if (reportes_mensuales and inventario) or (reportes_mensuales == None and inventario):
         inventario = elegir_inventario()
-    if reporte_consumo_anual:
-        if not reportes_mensuales:
+    """if reporte_consumo_anual:
+        if reportes_mensuales:
             if codigo_DANE:
                 codigo_DANE = elegir_codigo_DANE()
             if valor_facturado:
@@ -315,7 +315,11 @@ def anadir_opciones(regenerar=False, codigo_DANE=False, valor_facturado=False, c
         if codigo_DANE:
             codigo_DANE = elegir_codigo_DANE()
         if valor_facturado:
-            valor_facturado = elegir_valor_facturado()
+            valor_facturado = elegir_valor_facturado()"""
+    if codigo_DANE:
+        codigo_DANE = elegir_codigo_DANE()
+    if valor_facturado:
+        valor_facturado = elegir_valor_facturado()
     if (reportes_mensuales and usuarios_activos) or (reportes_mensuales == None and usuarios_activos):
         usuarios_activos = elegir_usuarios_activos()
     return (calcular_tiempo, regenerar, codigo_DANE, valor_facturado, cantidad_filas, mostrar_archivos, reportes_mensuales, inventario, usuarios_activos, sumatoria)
@@ -521,6 +525,151 @@ def generar_archivos_extra(seleccionar_reporte, regenerar=False, evitar_extra=[]
     else:
         return None, None
 
+def generar_archivos_extra_dashboard(seleccionar_reporte, regenerar=False, evitar_extra=[], continuar=False, informar=True, ext="_resumen.csv", solo_crear_arc=False, mostrar_dic=False):
+    tipo = ext
+    lista_agrupar_archivos = []
+    lista_agrupar_archivos_mostrar = []
+    seleccionar_reporte["tipo"] = ["Comercial"]
+    seleccionar_reporte["clasificacion"] = ["GRC1","GRC2","GRTT2"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte, evitar_extra, informar=False)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte])
+            lista_agrupar_archivos_mostrar.append({"Sector de consumo":dic_archivos_mostrar})
+        else:
+            lista_agrupar_archivos.append([{},None])
+    seleccionar_reporte["tipo"] = ["Comercial"]
+    seleccionar_reporte["clasificacion"] = ["GRC1","GRTT2"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte, evitar_extra, informar=False)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([{"Sector_consumo_subsidio":dic_archivos},seleccionar_reporte])
+        else:
+            lista_agrupar_archivos.append([{},None])
+    seleccionar_reporte["tipo"] = ["Comercial"]
+    seleccionar_reporte["clasificacion"] = ["GRC3","GRTT2"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte, evitar_extra, informar=False)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte])
+            lista_agrupar_archivos_mostrar.append({"Compensaciones":dic_archivos_mostrar})
+        else:
+            lista_agrupar_archivos.append([{},None])
+    seleccionar_reporte["tipo"] = ["Tarifario"]
+    seleccionar_reporte["clasificacion"] = ["GRT1"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte, evitar_extra, informar=False)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte])
+            lista_agrupar_archivos_mostrar.append({"Tarifas":dic_archivos_mostrar})
+        else:
+            lista_agrupar_archivos.append([{},None])
+    seleccionar_reporte["tipo"] = ["Tecnico"]
+    seleccionar_reporte["clasificacion"] = ["GRS1"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte, evitar_extra, informar=False)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte])
+            lista_agrupar_archivos_mostrar.append({"Suspensiones":dic_archivos_mostrar})
+        else:
+            lista_agrupar_archivos.append([{},None])
+    seleccionar_reporte["tipo"] = ["Tecnico"]
+    seleccionar_reporte["clasificacion"] = ["GRCS1"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte, evitar_extra, informar=False)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte])
+            lista_agrupar_archivos_mostrar.append({"Índices de Respuesta Servicio Ténico":dic_archivos_mostrar})
+        else:
+            lista_agrupar_archivos.append([{},None])
+    seleccionar_reporte["tipo"] = ["Tecnico"]
+    seleccionar_reporte["clasificacion"] = ["GRCS2"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte, evitar_extra, informar=False)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte])
+            lista_agrupar_archivos_mostrar.append({"Indicadores_tecnicos":dic_archivos_mostrar})
+        else:
+            lista_agrupar_archivos.append([{},None])
+    nuevo_dic_mostrar = {}
+    nuevo_dic = {}
+    if len(lista_agrupar_archivos_mostrar):
+        for elemento in lista_agrupar_archivos_mostrar:
+            for llave, dic in elemento.items():
+                for fecha, dic_filial in dic.items():
+                    if fecha not in nuevo_dic_mostrar:
+                        nuevo_dic_mostrar[fecha] = {}
+                    nuevo_dic_mostrar[fecha][llave] = dic_filial
+        mostrar_dic_archivos_agrupados_dashboard(nuevo_dic_mostrar)
+        lista_menu = ["Sí","No"]
+        option,valor = opcion_menu_valida(lista_menu, "¿Desea generar el reporte con los archivos disponibles?")
+        if option == "1":
+            for i in range(len(lista_agrupar_archivos)):
+                elemento = lista_agrupar_archivos[i][0]
+                seleccionar_reporte = lista_agrupar_archivos[i][1]
+                if len(elemento):
+                    if i == 0:
+                        print(elemento)
+                        print(seleccionar_reporte,"\n")
+                        #Sector consumo
+                    elif i == 1:
+                        print(elemento)
+                        print(seleccionar_reporte,"\n")
+                        #Sector consumo subsidio
+                    elif i == 2:
+                        print(elemento)
+                        print(seleccionar_reporte,"\n")
+                        #Compensaciones
+                    elif i == 3:
+                        print(elemento)
+                        print(seleccionar_reporte,"\n")
+                        #Tarifas
+                    elif i == 4:
+                        mod_1.generar_reporte_suspension_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte, True)
+                    elif i == 5:
+                        print(elemento)
+                        print(seleccionar_reporte,"\n")
+                        #Índices de Respuesta Servicio Ténico
+                    elif i == 6:
+                        print(elemento)
+                        print(seleccionar_reporte,"\n")
+                        #Indicadores técnicos
+            
+
+            
+        #    dic_archivos_reporte = mod_4.agrupar_dic_archivos(dic_archivos)
+        #    return True, dic_archivos_reporte
+
+def cambio_diccionario_reportes(diccionario):
+    nuevo_dic = {}
+    for fecha, dic in diccionario.items():
+        if fecha not in nuevo_dic:
+            nuevo_dic[fecha] = []
+            for llave, valor in dic.items():
+                for elemento in valor:
+                    nuevo_dic[fecha].append(elemento)
+    return nuevo_dic
+
+def mostrar_dic_archivos_agrupados_dashboard(nuevo_dic_mostrar):
+    print("\nArchivos disponibles para la selección realizada: \n")
+    for fecha, dic in nuevo_dic_mostrar.items():
+        print(f"Fecha: {fecha}")
+        for categoria, dic_categoria in dic.items():
+            print(f"Categoría: {categoria}")
+            for llave, valor in dic_categoria.items():
+                print(llave)
+                for texto in valor:
+                    print(texto)
+                print("\n")
+            print("\n")
+
 def busqueda_archivos_tipo(tipo, seleccionar_reporte, evitar_extra=[], txt=False, informar=True):
     tipo_evitar = tipo.replace(".csv","").replace(".CSV","").replace(".TXT","").replace(".txt","")
     lista_evitar_extra_copia = evitar_extra.copy()
@@ -537,10 +686,13 @@ def busqueda_archivos_tipo(tipo, seleccionar_reporte, evitar_extra=[], txt=False
 
 def generar_archivos_extra_anual(seleccionar_reporte, tipo=".csv", evitar_extra=[], continuar=False, informar=True, mostrar_dic=True, todos=False):
     list_of_tuples = list(seleccionar_reporte.items())
-    list_of_tuples.insert(3, ('carpeta', ["REPORTES_GENERADOS_APLICATIVO"]))
-    seleccionar_reporte_1 = dict(list_of_tuples)
-    del seleccionar_reporte_1["clasificacion"]
-    del seleccionar_reporte_1["filial"]
+    if len(seleccionar_reporte["filial"]) == 4:
+        list_of_tuples.insert(3, ('carpeta', ["REPORTES_GENERADOS_APLICATIVO"]))
+        seleccionar_reporte_1 = dict(list_of_tuples)
+        del seleccionar_reporte_1["clasificacion"]
+        del seleccionar_reporte_1["filial"]
+    else:
+        seleccionar_reporte_1 = seleccionar_reporte.copy()
     proceso, lista_archivos = busqueda_archivos_tipo_anual(tipo, seleccionar_reporte_1, evitar_extra, informar=informar, todos=todos)
     if proceso:
         proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos_anual(seleccionar_reporte, lista_archivos)
@@ -647,7 +799,10 @@ def menu_comercial_sectores_consumo(option,valor):
     elif option == "2":
         seleccionar_reporte = funcion_seleccionar_reportes("reporte_comercial_anual")
         reporte = "_reporte_consumo.csv"
-        op_add = anadir_opciones(regenerar=True, codigo_DANE=True, sumatoria=True, valor_facturado=True, reportes_mensuales=True,texto_regenerar_mensuales=f"{reporte}",reporte_consumo_anual=True)
+        if len(seleccionar_reporte["filial"]) == 4:
+            op_add = anadir_opciones(regenerar=True, codigo_DANE=True, sumatoria=True, valor_facturado=True, reportes_mensuales=True,texto_regenerar_mensuales=f"{reporte}",reporte_consumo_anual=True)
+        else:
+            op_add = anadir_opciones(regenerar=True, codigo_DANE=True, valor_facturado=True, reportes_mensuales=True,texto_regenerar_mensuales=f"{reporte}",reporte_consumo_anual=True)
         regenerar = op_add[1]
         codigo_DANE = op_add[2]
         valor_facturado = op_add[3]
@@ -655,15 +810,17 @@ def menu_comercial_sectores_consumo(option,valor):
         regenerar_reportes_mensuales = op_add[6]
         if sumatoria:
             reporte = reporte.replace(".csv", "_sumatoria.csv")
+        if codigo_DANE:
+            v_codigo_DANE_texto = mod_1.codigo_DANE_texto(codigo_DANE)+".csv"
+            reporte = reporte.replace(".csv", "_"+v_codigo_DANE_texto)
         t_i = time.time()
-        print(f"\nInicio de procesamiento para: {valor}\n\n")
         if regenerar:
             proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False)
         if regenerar_reportes_mensuales:
             proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, False, continuar=True, mostrar_dic=True)
             if proceso:
                 mod_1.reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=codigo_DANE, total=sumatoria, valor_facturado=valor_facturado)
-        proceso,dic_archivos_anual = generar_archivos_extra_anual(seleccionar_reporte, reporte, ["_reporte_consumo"])
+        proceso,dic_archivos_anual = generar_archivos_extra_anual(seleccionar_reporte, reporte, ["_reporte_consumo", reporte.replace(".csv","")])
         if proceso:
             mod_1.union_archivos_mensuales_anual_reporte_consumo(dic_archivos_anual, seleccionar_reporte, True)
         t_f = time.time()
@@ -1112,7 +1269,27 @@ def menu_cumplimientos_reportes(option, valor):
 # * -------------------------------------------------------------------------------------------------------
 def menu_creacion_dashboard():
     seleccionar_reporte_dashboard = funcion_seleccionar_reportes("dashboard")
-    print(seleccionar_reporte_dashboard)
+    option,valor = opcion_menu_valida(["Generar información para los 12 meses seleccionados","Generar información para el último mes seleccionado", "Continuar"], "Información anual Dashboard")
+    if option == "1":
+        pass
+        #Reporte anual
+
+    elif option == "2":
+        #TODO Carga pendiente archivos
+        seleccionar_reporte = seleccionar_reporte_dashboard.copy()
+        seleccionar_reporte["anios"] = [seleccionar_reporte_dashboard["fecha_personalizada"][1][0]]
+        seleccionar_reporte["meses"] = [seleccionar_reporte_dashboard["fecha_personalizada"][1][1]]
+        seleccionar_reporte["tipo"] = list(dic_reportes.keys()).copy()
+        seleccionar_reporte["clasificacion"] = lista_reportes_totales.copy()
+        seleccionar_reporte["fecha_personalizada"] = None
+        op_add = anadir_opciones(regenerar=True)
+        regenerar = op_add[1]
+        if regenerar:
+            proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False)
+        generar_archivos_extra_dashboard(seleccionar_reporte, False, continuar=True, mostrar_dic=True)
+
+        
+
     #TODO Generar diccionario de reportes
     # Reporte sector consumo (sumatoria)
     # Reporte sector consumo subsidio (sumatoria)
@@ -1120,6 +1297,8 @@ def menu_creacion_dashboard():
     # Reporte suspensiones
     # Reporte indicador técnico GRCS2
     # Reporte indicador técnico minutos
+    # Reporte indicador técnico horas
+
 
     # Porcentaje de cumpliminetos regulatorios
     # Porcentaje de cumplimientos AEGR
@@ -1131,7 +1310,6 @@ def menu_creacion_dashboard():
         #Creación de información mensual
         #Creación de información anual
 
-    op_add = anadir_opciones(regenerar=True)
     t_i = time.time()
     t_f = time.time()
     mod_1.mostrar_tiempo(t_f, t_i)
@@ -1429,6 +1607,7 @@ def funcion_seleccionar_reportes(tipo):
     elif tipo == "dashboard":
         seleccionar_reportes["ubicacion"] = ["Reportes Nuevo SUI"]
         seleccionar_reportes["tipo"] = list(dic_reportes.keys()).copy()
+        seleccionar_reportes["filial"] = lista_filiales.copy()
         seleccionar_reportes = eleccion_rango_anual(seleccionar_reportes, dashboard=True)
         return seleccionar_reportes
     iniciar_menu()
@@ -1488,7 +1667,6 @@ def eleccion_rango_anual(seleccionar_reportes, dashboard=False, sector_consumo=F
     else:
         option_1,valor_1 = opcion_menu_valida(["Inicio del rango anual","Fin del rango anual"], "Elección tipos de rangos", False)
     listas_unidas = mod_1.unir_listas_anio_mes(lista_anios, lista_meses)
-    print(listas_unidas)
     if option_1 == "1":
         option_2,valor_2 = opcion_menu_valida(listas_unidas, "Elección de mes-año inicial para el rango anual", True)
         fecha = valor_2.split(" - ")

@@ -176,7 +176,7 @@ def lectura_dataframe_chunk(archivo, valor_chunksize=chunksize,separador=","):
                 pass
     return None
 
-def lectura_dataframe_chunk_prueba(archivo, valor_chunksize=80000,separador=","):
+def lectura_dataframe_chunk_prueba(archivo, valor_chunksize=10000,separador=","):
     lista_codificaciones = [elegir_codificacion(archivo)]
     lista_codificaciones.extend(['utf-8-sig','utf-8','iso-8859-1','latin-1','ansi','utf-16','utf-16-be','utf-32','ascii',
                                 'windows-1252','iso-8859-2','iso-8859-5','koi8-r','big5','gb2312',
@@ -665,13 +665,13 @@ def almacenar_archivos(ruta_guardar_archivos,informar):
     lista_fallidos = conversion_archivos_CSV(lista_archivos, lista_fallidos=lista_fallidos)
     lista_fallidos = conversion_archivos_lista(lista_archivos,"TXT","txt",informar=True, lista_fallidos=lista_fallidos)
     lista_fallidos = conversion_archivos_lista(lista_archivos,"txt","csv",informar=True, lista_fallidos=lista_fallidos)
-    lista_fallidos = conversion_archivos_lista(lista_archivos,"CSV","csv",informar=True, lista_fallidos=lista_fallidos)
     lista_fallidos = evaluar_archivos_prueba(lista_archivos, lista_fallidos=lista_fallidos)
     lista_fallidos = list(set(lista_fallidos))
     lista_archivos = busqueda_archivos_tipo(ruta_guardar_archivos, lista_fallidos=lista_fallidos)
     lista_archivos = retirar_archivos_fallidos(lista_archivos, lista_fallidos)
     lista_archivos = cantidad_minima_info_archivo(lista_archivos)
     for archivo in lista_archivos:
+        print(archivo)
         try:
             nombre_archivo = archivo.split("\\")[-1].replace(" ","_")
             for i in range(9):
@@ -796,11 +796,12 @@ def codigo_DANE_texto(codigo_DANE):
 
 #(lista_archivos, codigo_DANE, reporte, informar, valor_facturado,filial, subsidio=False, almacenar_excel=True):
 
-def apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos, codigo_DANE, reporte, filial, valor_facturado=True):
+def apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos, codigo_DANE, reporte, filial, valor_facturado=True, total=False):
     for archivo in lista_archivos:
         if reporte in archivo:
             lista_df = lectura_dataframe_chunk(archivo)
             if lista_df:
+                dic = {"Cantidad de usuarios":0,"Consumo m3":0,"Valor total facturado":0}
                 anio_reportado = lista_df[0]["Anio_reportado"][0]
                 mes_reportado = lista_df[0]["Mes_reportado"][0]
                 dic_dataframe = {}
@@ -809,6 +810,8 @@ def apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos, codigo_D
                     for i in range(len(lista_df)):
                         df = lista_df[i].copy()
                         for ele_codigo_DANE in codigo_DANE:
+                            df = df.replace([np.inf, -np.inf], np.nan).dropna(subset=['Codigo_DANE'])
+                            df["Codigo_DANE"] = df["Codigo_DANE"].astype(int)
                             df_codigo_DANE = df[df["Codigo_DANE"] == ele_codigo_DANE].reset_index(drop=True)
                             if len(df_codigo_DANE) > 0:
                                 if ele_codigo_DANE not in dic_codigo_DANE:
@@ -884,12 +887,16 @@ def apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos, codigo_D
                                 df_sector = df[df["Sector_consumo"] == s1]
                                 if s1 not in dic_dataframe:
                                     dic_dataframe[s1] = [0,0,0]
-                                cantidad_usuarios = len(list(df_sector["ID_Factura"].unique()))
+                                cantidad = len(list(df_sector["ID_Factura"].unique()))
+                                cantidad_usuarios = cantidad
                                 volumen = df_sector["Volumen"].sum()
                                 valor_total = df_sector["Valor_total_facturado"].sum()
                                 dic_dataframe[s1][0] += cantidad_usuarios
                                 dic_dataframe[s1][1] += volumen
                                 dic_dataframe[s1][2] += valor_total
+                                dic["Cantidad de usuarios"] += cantidad
+                                dic["Consumo m3"] += volumen
+                                dic["Valor total facturado"] += valor_total
                             except ValueError:
                                 pass
                             except TypeError:
@@ -925,6 +932,18 @@ def apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos, codigo_D
                         if valor_facturado:
                             lista_columnas.append("Valor total facturado")
                         df1 = df1[lista_columnas]
+                        if total and not codigo_DANE:
+                            if not valor_facturado:
+                                del dic["Valor total facturado"]
+                            nueva_fila = []
+                            for columna in list(df1.columns):
+                                if columna in dic:
+                                    nueva_fila.append(dic[columna])
+                                elif columna == "Sector de consumo":
+                                    nueva_fila.append("Total")
+                                else:
+                                    nueva_fila.append(df1[columna][0])
+                            df1.loc[len(df1)] = nueva_fila
                         return df1, nombre
                     else:
                         return None,None
@@ -968,6 +987,8 @@ def busqueda_sector_GRTT2(lista_archivos, dic_NIU, codigo_DANE, reporte, filial,
                     for i in range(len(lista_df)):
                         df = lista_df[i].copy()
                         for ele_codigo_DANE in codigo_DANE:
+                            df = df.replace([np.inf, -np.inf], np.nan).dropna(subset=['Codigo_DANE'])
+                            df["Codigo_DANE"] = df["Codigo_DANE"].astype(int)
                             df_codigo_DANE = df[df["Codigo_DANE"] == ele_codigo_DANE].reset_index(drop=True)
                             if len(df_codigo_DANE) > 0:
                                 if ele_codigo_DANE not in dic_codigo_DANE:
@@ -1142,7 +1163,7 @@ def apoyo_reporte_comercial_sector_consumo_regulados(lista_archivos, codigo_DANE
                             consumo = float(df["Consumo"][pos])
                             valor_total_facturado = float(df["Valor_total_facturado"][pos])
                             dic["Consumo m3"] += consumo
-                            dic["Valor total facturado"] = valor_facturado
+                            dic["Valor total facturado"] = valor_total_facturado
                             if not math.isnan(consumo) and not math.isnan(valor_total_facturado):
                                 if elemento not in dic_1:
                                     dic_1[elemento] = [0,0] #consumo, valor_total_facturado
@@ -1153,12 +1174,19 @@ def apoyo_reporte_comercial_sector_consumo_regulados(lista_archivos, codigo_DANE
                         except TypeError:
                             pass
                 df1, nombre = busqueda_sector_GRTT2(lista_archivos, dic_1, codigo_DANE, "GRTT2", filial, archivo, valor_facturado, subsidio)
-                if total:
+                if total and not subsidio and not codigo_DANE:
                     dic["Cantidad de usuarios"] = len(dic_1)
-                    if valor_facturado:
+                    if not valor_facturado:
                         del dic["Valor total facturado"]
-                    for llave, valor in dic.items():
-                        print(llave, valor)
+                    nueva_fila = []
+                    for columna in list(df1.columns):
+                        if columna in dic:
+                            nueva_fila.append(dic[columna])
+                        elif columna == "Sector de consumo":
+                            nueva_fila.append("Total")
+                        else:
+                            nueva_fila.append(df1[columna][0])
+                    df1.loc[len(df1)] = nueva_fila
                 if nombre:
                     return df1, nombre
                 else:
@@ -1216,7 +1244,7 @@ def reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar
             if len(lista_archivos_filial):
                 df1, n1 = apoyo_reporte_comercial_sector_consumo_regulados(lista_archivos_filial, codigo_DANE, "GRC1", valor_facturado, filial, subsidio, total)
                 if not subsidio:
-                    df2, n2 = apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos_filial, codigo_DANE, "GRC2", filial, valor_facturado)
+                    df2, n2 = apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos_filial, codigo_DANE, "GRC2", filial, valor_facturado, total)
                 df,nombre = apoyo_reporte_comercial_sector_consumo(df1, n1, df2, n2, informar, subsidio)
                 if nombre:
                     lista_df_filiales.append(df)
@@ -1229,7 +1257,7 @@ def reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar
             lista_nombre.pop(-2)
             nuevo_nombre = lista_a_texto(lista_nombre,"\\")
             if total:
-                df_total_suma, proceso = generar_sumatoria_df(df_total)
+                df_total_suma, proceso = generar_sumatoria_df(df_total, subsidio, codigo_DANE)
                 if proceso:
                     df_total = df_total_suma.copy()
                     nuevo_nombre = nuevo_nombre.replace(".csv","_sumatoria.csv")
@@ -1268,23 +1296,41 @@ def union_archivos_mensuales_anual_reporte_consumo(dic_archivos, seleccionar_rep
             nombre = archivo
             if len(df):
                 lista_anual.append(df)
-    for i in range(1,len(lista_anual)):
-        df = lista_anual[i]
-        df_actual = diferencia_columnas_dataframe(lista_anual[i], lista_anual[i-1])
-        lista_df_anual_dif.append(df_actual)
+    if len(seleccionar_reporte["filial"]) == 4:
+        for i in range(1,len(lista_anual)):
+            df = lista_anual[i]
+            df_actual = diferencia_columnas_dataframe(lista_anual[i], lista_anual[i-1])
+            lista_df_anual_dif.append(df_actual)
+    else:
+        if len(lista_anual) == 12:
+            lista_df_anual_dif = lista_anual.copy()
+        else:
+            lista_df_anual_dif = lista_anual.copy()[1:]
     if len(lista_df_anual_dif) > 0:
-        lista_nombre = nombre.split("\\")
-        lista_nombre[-5] = "00. Compilado"
-        lista_nombre[-3] = "00. Compilado"
-        ext_nombre = lista_nombre[-1].split("_")
-        ext_nombre.pop(0)
-        ext_nombre[0] = fecha_nombre
-        lista_nombre[-1] = lista_a_texto(ext_nombre, "_")
-        crear_carpeta_anual(fecha_nombre, lista_nombre)
-        lista_nombre.insert(-2, fecha_nombre)
-        nombre = lista_a_texto(lista_nombre, "\\")
-        df_anual = pd.concat(lista_df_anual_dif)
-        almacenar_df_csv_y_excel(df_anual, nombre, informar, almacenar_excel)
+        if len(seleccionar_reporte["filial"]) == 4:
+            lista_nombre = nombre.split("\\")
+            lista_nombre[-5] = "00. Compilado"
+            lista_nombre[-3] = "00. Compilado"
+            ext_nombre = lista_nombre[-1].split("_")
+            ext_nombre.pop(0)
+            ext_nombre[0] = fecha_nombre
+            lista_nombre[-1] = lista_a_texto(ext_nombre, "_")
+            crear_carpeta_anual(fecha_nombre, lista_nombre)
+            lista_nombre.insert(-2, fecha_nombre)
+            nombre = lista_a_texto(lista_nombre, "\\")
+            df_anual = pd.concat(lista_df_anual_dif)
+            almacenar_df_csv_y_excel(df_anual, nombre, informar, almacenar_excel)
+        else:
+            lista_nombre = nombre.split("\\")
+            lista_nombre[-6] = "00. Compilado"
+            lista_nombre[-4] = "00. Compilado"
+            ext_nombre = lista_nombre[-1].split("_")
+            ext_nombre.pop(1)
+            ext_nombre[1] = fecha_nombre
+            lista_nombre[-1] = lista_a_texto(ext_nombre, "_")
+            nombre = lista_a_texto(lista_nombre, "\\")
+            df_anual = pd.concat(lista_df_anual_dif)
+            almacenar_df_csv_y_excel(df_anual, nombre, informar, almacenar_excel)
 
 def apoyo_reporte_comparacion_prd_cld_cer(lista_archivos, informar, filial):
     dic_GRTT2 = {}
@@ -1711,34 +1757,36 @@ def reporte_comparacion_SAP(dic_archivos, seleccionar_reporte, informar, cantida
                 else:
                     print(f"Se necesitan al menos 2 archivos para generar la comparación entre reportes comerciales GRC1")
 
-def generar_sumatoria_df(df):
+def generar_sumatoria_df(df, subsidio, codigo_DANE):
     columnas = list(df.columns)
     lista_df = []
     lista_filiales = list(df["Filial"].unique())
     for filial in lista_filiales:
         df_filial = df[df["Filial"] == filial].reset_index(drop=True)
         if len(df_filial):
+            if subsidio or codigo_DANE:
+                lista_tipo_usuarios = list(df_filial["Tipo de usuario"].unique())
+                for usuario in lista_tipo_usuarios:
+                    df_usuario = df_filial[df_filial["Tipo de usuario"] == usuario].reset_index(drop=True)
+                    if len(df_usuario):
+                        nueva_fila = []
+                        for columna in columnas:
+                            if columna in ["Cantidad de usuarios","Consumo m3","Valor total facturado"]:
+                                nueva_fila.append(df_usuario[columna].sum())
+                            elif columna in ["NIT","Filial","Anio reportado","Mes reportado","Tipo de usuario"]:
+                                nueva_fila.append(df_usuario[columna][0])
+                            else:
+                                nueva_fila.append("Total")
+                        df_filial.loc[len(df_filial)] = nueva_fila
             nueva_fila_final = []
+            df_total = df_filial[df_filial["Sector de consumo"] == "Total"].reset_index(drop=True)
             for columna in columnas:
                 if columna in ["Cantidad de usuarios","Consumo m3","Valor total facturado"]:
-                    nueva_fila_final.append(df_filial[columna].sum())
+                    nueva_fila_final.append(df_total[columna].sum())
                 elif columna in ["NIT","Filial","Anio reportado","Mes reportado"]:
-                    nueva_fila_final.append(df_filial[columna][0])
+                    nueva_fila_final.append(df_total[columna][0])
                 else:
                     nueva_fila_final.append("Total")
-            lista_tipo_usuarios = list(df_filial["Tipo de usuario"].unique())
-            for usuario in lista_tipo_usuarios:
-                df_usuario = df_filial[df_filial["Tipo de usuario"] == usuario].reset_index(drop=True)
-                if len(df_usuario):
-                    nueva_fila = []
-                    for columna in columnas:
-                        if columna in ["Cantidad de usuarios","Consumo m3","Valor total facturado"]:
-                            nueva_fila.append(df_usuario[columna].sum())
-                        elif columna in ["NIT","Filial","Anio reportado","Mes reportado","Tipo de usuario"]:
-                            nueva_fila.append(df_usuario[columna][0])
-                        else:
-                            nueva_fila.append("Total")
-                    df_filial.loc[len(df_filial)] = nueva_fila
             df_filial.loc[len(df_filial)] = nueva_fila_final
             lista_df.append(df_filial)
     if len(lista_df) > 0:
@@ -2700,6 +2748,7 @@ def apoyo_generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos, fili
                                                     "12 - 24 h":((int(60*12),int(60*24)),[]),
                                                     "> 1 dia":((int(60*24),float("inf")),[])}
             for i in range(len(df_filtro)):
+                #TODO: CAMBIO HORA COLICUTYD Hora_solicitud
                 hora = int(df_filtro["Hora_llegada"][i])
                 for llave, tupla in dic_horas_evento[evento][hora].items():
                     if tupla[0][0] < df_filtro["Cantidad_minutos"][i] <= tupla[0][1]:
