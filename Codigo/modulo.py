@@ -148,7 +148,7 @@ def leer_dataframe_utf_8(archivo):
 
 def elegir_codificacion(archivo):
     with open(archivo, 'rb') as file:
-        raw_data = file.read()
+        raw_data = file.read(5000)
         result = chardet.detect(raw_data)
         encoding_1 = result['encoding']
     return encoding_1
@@ -398,7 +398,7 @@ def encontrar_codificacion(archivo):
     for elemento in lista_codificaciones:
         try:
             with open(archivo, 'r', encoding=elemento) as file:
-                sample = file.read(10000)
+                sample = file.read(5000)
                 dialect = csv.Sniffer().sniff(sample)
                 return dialect
         except UnicodeDecodeError:
@@ -1966,6 +1966,8 @@ def apoyo_reporte_usuarios_filial(lista_archivos,informar,filial,almacenar_excel
         df_filial_resumen["Anio_reportado"] = anio_reportado
         almacenar_df_csv_y_excel(df_filial_resumen, nombre)
         return df_filial_resumen, nombre
+    else:
+        return None,None
 
 def reporte_usuarios_filial(dic_archivos, seleccionar_reporte, informar, almacenar_excel=True, usuarios_unicos=True):
     lista_filiales_archivo = seleccionar_reporte["filial"]
@@ -2134,6 +2136,8 @@ def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, alma
     proceso_GRTT2 = False
     nombre_1 = None
     nombre_2 = None
+    df = pd.DataFrame()
+    df2 = pd.DataFrame()
     lista_archivos_exitosos = []
     for archivo in lista_archivos:
         if "GRC1" in archivo:
@@ -2567,7 +2571,7 @@ def apoyo_reporte_tarifas_mensual(lista_archivos,informar,filial,almacenar_excel
         else:
             return None, None
 
-def reporte_tarifas_mensual(dic_archivos, seleccionar_reporte, informar, almacenar_excel=True):
+def reporte_tarifas_mensual(dic_archivos, seleccionar_reporte, informar=True, almacenar_excel=True):
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for fecha, lista_archivos in dic_archivos.items():
         lista_df_filiales = []
@@ -2611,7 +2615,7 @@ def apoyo_generar_reporte_indicadores_tecnicos_mensual(lista_archivos, informar,
         almacenar_df_csv_y_excel(df, nuevo_nombre, informar, almacenar_excel)
         return df, nuevo_nombre
 
-def generar_reporte_indicadores_tecnicos_mensual(dic_archivos, seleccionar_reporte, informar,almacenar_excel=True):
+def generar_reporte_indicadores_tecnicos_mensual(dic_archivos, seleccionar_reporte, informar=True,almacenar_excel=True):
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for fecha, lista_archivos in dic_archivos.items():
         lista_df_filiales = []
@@ -2686,7 +2690,7 @@ def apoyo_generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos, fili
         df['Observaciones'] = np.where(df['Observaciones'].str.contains('NO CONTR', case=False), 'NO CONTROLADO', df['Observaciones'])
         df['Observaciones'] = df['Observaciones'].str.strip().astype(str)
         df = diferencia_minutos_fechas(df, list(df["Fecha_solicitud"]), list(df["Hora_solicitud"]), list(df["Fecha_llegada_servicio_tecnico"]), list(df["Hora_llegada_servicio_tecnico"]))
-        df['Hora_llegada'] = df['Hora_llegada_servicio_tecnico'].str.split(':').str[0].astype(int)
+        df['Hora_solicitud'] = df['Hora_solicitud'].str.split(':').str[0].astype(int)
         lista_eventos = list(df["Observaciones"].unique())
         dic_df_evento = {"Tipo_evento":[],
                         "Cantidad_eventos":[],
@@ -2749,20 +2753,20 @@ def apoyo_generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos, fili
                                                     "> 1 dia":((int(60*24),float("inf")),[])}
             for i in range(len(df_filtro)):
                 #TODO: CAMBIO HORA COLICUTYD Hora_solicitud
-                hora = int(df_filtro["Hora_llegada"][i])
+                hora = int(df_filtro["Hora_solicitud"][i])
                 for llave, tupla in dic_horas_evento[evento][hora].items():
                     if tupla[0][0] < df_filtro["Cantidad_minutos"][i] <= tupla[0][1]:
                         dic_horas_evento[evento][hora][llave][1].append(float(df_filtro["Cantidad_minutos"][i]))
         dic_df_evento_horas = {"Tipo_evento":[],
                                 "Clasificacion":[],
-                                "Hora_llegada":[],
+                                "Hora_solicitud":[],
                                 "Cantidad_eventos":[]}
         for evento in dic_horas_evento:
             for hora in dic_horas_evento[evento]:
                 for llave, valor in dic_horas_evento[evento][hora].items():
                     dic_df_evento_horas["Tipo_evento"].append(evento)
                     dic_df_evento_horas["Clasificacion"].append(llave)
-                    dic_df_evento_horas["Hora_llegada"].append(hora)
+                    dic_df_evento_horas["Hora_solicitud"].append(hora)
                     dic_df_evento_horas["Cantidad_eventos"].append(len(valor[1]))
         df3 = pd.DataFrame(dic_df_evento_horas)
         df3["Filial"] = dic_filiales[filial]
@@ -2831,7 +2835,7 @@ def apoyo_generar_reporte_suspension_mensual(lista_archivos,informar,filial):
             return None, None
     return None, None
 
-def generar_reporte_suspension_mensual(dic_archivos, seleccionar_reporte, informar, almacenar_excel=True):
+def generar_reporte_suspension_mensual(dic_archivos, seleccionar_reporte, informar=True, almacenar_excel=True):
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for fecha, lista_archivos in dic_archivos.items():
         lista_df_filiales = []
