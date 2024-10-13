@@ -224,6 +224,17 @@ def elegir_valor_facturado():
     else:
         return False
 
+def elegir_facturas():
+    lista = ["Sí","No"]
+    lista.append("Regresar al menú inicial")
+    option,valor = opcion_menu_valida(lista, "Incluir la cantidad de facturas emitidas", False)
+    if option == str(len(lista)):
+        iniciar_menu()
+    elif option == "1":
+        return True
+    else:
+        return False
+
 def elegir_mostrar_archivos():
     lista = ["Sí","No"]
     lista.append("Regresar al menú inicial")
@@ -290,7 +301,7 @@ def elegir_sumatoria():
 
 def anadir_opciones(regenerar=False, codigo_DANE=False, valor_facturado=False, cantidad_filas=False, mostrar_archivos=False, inventario=False,
                     calcular_tiempo=True, reportes_mensuales=False, texto_regenerar = "_form_estandar, _resumen", texto_regenerar_mensuales="",
-                    usuarios_activos=False, sumatoria=False, reporte_consumo_anual=False):
+                    usuarios_activos=False, sumatoria=False, reporte_consumo_anual=False, facturas=False):
     if regenerar:
         regenerar = elegir_regenerar_archivos(texto_regenerar)
     if cantidad_filas:
@@ -305,24 +316,15 @@ def anadir_opciones(regenerar=False, codigo_DANE=False, valor_facturado=False, c
         reportes_mensuales = elegir_regenerar_archivos_mensuales(texto_regenerar_mensuales)
     if (reportes_mensuales and inventario) or (reportes_mensuales == None and inventario):
         inventario = elegir_inventario()
-    """if reporte_consumo_anual:
-        if reportes_mensuales:
-            if codigo_DANE:
-                codigo_DANE = elegir_codigo_DANE()
-            if valor_facturado:
-                valor_facturado = elegir_valor_facturado()
-    else:
-        if codigo_DANE:
-            codigo_DANE = elegir_codigo_DANE()
-        if valor_facturado:
-            valor_facturado = elegir_valor_facturado()"""
     if codigo_DANE:
         codigo_DANE = elegir_codigo_DANE()
     if valor_facturado:
         valor_facturado = elegir_valor_facturado()
+    if facturas:
+        facturas = elegir_facturas()
     if (reportes_mensuales and usuarios_activos) or (reportes_mensuales == None and usuarios_activos):
         usuarios_activos = elegir_usuarios_activos()
-    return (calcular_tiempo, regenerar, codigo_DANE, valor_facturado, cantidad_filas, mostrar_archivos, reportes_mensuales, inventario, usuarios_activos, sumatoria)
+    return (calcular_tiempo, regenerar, codigo_DANE, valor_facturado, cantidad_filas, mostrar_archivos, reportes_mensuales, inventario, usuarios_activos, sumatoria,facturas)
 
 def especificar_lista_reportes_generados(lista_1):
     lista = lista_reportes_generados.copy()
@@ -427,10 +429,6 @@ def menu_opciones_archivos(option, valor):
         seleccionar_reporte = funcion_seleccionar_reportes("reporte_vanti")
         opciones_adicionales = anadir_opciones()
         t_i = time.time()
-        """tipo = ".CSV"
-        lista_evitar = especificar_lista_reportes_generados(["_CLD","_PRD"])
-        lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
-        mod_1.conversion_archivos_CSV(lista_archivos)"""
         tipo = ".csv"
         lista_evitar = especificar_lista_reportes_generados(["_CLD","_PRD"])
         lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
@@ -446,10 +444,6 @@ def menu_opciones_archivos(option, valor):
         seleccionar_reporte = funcion_seleccionar_reportes("reporte_vanti")
         opciones_adicionales = anadir_opciones(True, texto_regenerar="_form_estandar")
         t_i = time.time()
-        """tipo = ".CSV"
-        lista_evitar = especificar_lista_reportes_generados(["_CLD","_PRD"])
-        lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
-        mod_1.conversion_archivos_CSV(lista_archivos)"""
         print(f"\nInicio de procesamiento para: {valor}\n\n")
         proceso,lista_archivos = generar_archivos_extra(seleccionar_reporte, opciones_adicionales[1],evitar_extra=["_CLD","_PRD"],solo_crear_arc=True)
         t_f = time.time()
@@ -617,10 +611,10 @@ def generar_archivos_extra_dashboard(seleccionar_reporte, regenerar=False, evita
                 if len(elemento):
                     if i == 0:
                         print(f"\nInicio de procesamiento para: {nombre}\n\n")
-                        #mod_1.reporte_comercial_sector_consumo(cambio_diccionario_reportes(elemento), seleccionar_reporte, total=True, valor_facturado=True)
+                        mod_1.reporte_comercial_sector_consumo(cambio_diccionario_reportes(elemento), seleccionar_reporte, total=True, valor_facturado=True)
                     elif i == 1:
                         print(f"\nInicio de procesamiento para: {nombre}\n\n")
-                        #mod_1.reporte_comercial_sector_consumo(cambio_diccionario_reportes(elemento), seleccionar_reporte, total=True, valor_facturado=True, subsidio=True)
+                        mod_1.reporte_comercial_sector_consumo(cambio_diccionario_reportes(elemento), seleccionar_reporte, total=True, valor_facturado=True, subsidio=True)
                     elif i == 2:
                         print(f"\nInicio de procesamiento para: {nombre}\n\n")
                         mod_1.generar_reporte_compensacion_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte)
@@ -769,20 +763,21 @@ def menu_comercial_sectores_consumo(option,valor):
     if option == "1":
         seleccionar_reporte = funcion_seleccionar_reportes("reporte_comercial_mensual")
         if len(seleccionar_reporte["filial"]) == 4:
-            op_add = anadir_opciones(regenerar=True, codigo_DANE=True, sumatoria=True, valor_facturado=True)
+            op_add = anadir_opciones(regenerar=True, codigo_DANE=True, sumatoria=True, valor_facturado=True, facturas=True)
         else:
-            op_add = anadir_opciones(regenerar=True, codigo_DANE=True, valor_facturado=True)
+            op_add = anadir_opciones(regenerar=True, codigo_DANE=True, valor_facturado=True, facturas=True)
         regenerar = op_add[1]
         codigo_DANE = op_add[2]
         valor_facturado = op_add[3]
         sumatoria = op_add[9]
+        facturas = op_add[10]
         t_i = time.time()
         print(f"\nInicio de procesamiento para: {valor}\n\n")
         if regenerar:
             proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False)
         proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, False, continuar=False, mostrar_dic=True)
         if proceso:
-            mod_1.reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=codigo_DANE, total=sumatoria, valor_facturado=valor_facturado)
+            mod_1.reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=codigo_DANE, total=sumatoria, valor_facturado=valor_facturado, facturas=facturas)
         t_f = time.time()
         mod_1.mostrar_tiempo(t_f, t_i)
     #? Generación de información comercial por sectores de consumo anual
@@ -790,9 +785,9 @@ def menu_comercial_sectores_consumo(option,valor):
         seleccionar_reporte = funcion_seleccionar_reportes("reporte_comercial_anual")
         reporte = "_reporte_consumo.csv"
         if len(seleccionar_reporte["filial"]) == 4:
-            op_add = anadir_opciones(regenerar=True, codigo_DANE=True, sumatoria=True, valor_facturado=True, reportes_mensuales=True,texto_regenerar_mensuales=f"{reporte}",reporte_consumo_anual=True)
+            op_add = anadir_opciones(regenerar=True, codigo_DANE=True, sumatoria=True, valor_facturado=True, reportes_mensuales=True,texto_regenerar_mensuales=f"{reporte}",reporte_consumo_anual=True, facturas=True)
         else:
-            op_add = anadir_opciones(regenerar=True, codigo_DANE=True, valor_facturado=True, reportes_mensuales=True,texto_regenerar_mensuales=f"{reporte}",reporte_consumo_anual=True)
+            op_add = anadir_opciones(regenerar=True, codigo_DANE=True, valor_facturado=True, reportes_mensuales=True,texto_regenerar_mensuales=f"{reporte}",reporte_consumo_anual=True, facturas=True)
         regenerar = op_add[1]
         codigo_DANE = op_add[2]
         valor_facturado = op_add[3]
@@ -809,7 +804,7 @@ def menu_comercial_sectores_consumo(option,valor):
         if regenerar_reportes_mensuales:
             proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, False, continuar=True, mostrar_dic=True)
             if proceso:
-                mod_1.reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=codigo_DANE, total=sumatoria, valor_facturado=valor_facturado)
+                mod_1.reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=codigo_DANE, total=sumatoria, valor_facturado=valor_facturado, facturas=facturas)
         proceso,dic_archivos_anual = generar_archivos_extra_anual(seleccionar_reporte, reporte, ["_reporte_consumo", reporte.replace(".csv","")])
         if proceso:
             mod_1.union_archivos_mensuales_anual_reporte_consumo(dic_archivos_anual, seleccionar_reporte, True)
@@ -1052,15 +1047,8 @@ def menu_comercial(option,valor):
                     "Regresar al menú inicial"]
         option,valor = opcion_menu_valida(lista_menu, "Información comercial para compensaciones")
         menu_comercial_compensaciones(option,valor)
-    #? Información comercial para reportes trimestrales
-    elif option == "3":
-        lista_menu = ["Generación de información para el comportamiento patrimonial",
-                    "Generación de información de relación reclamos facturación (10.000)",
-                    "Regresar al menú inicial"]
-        option,valor = opcion_menu_valida(lista_menu, "Información comercial para información de usuarios únicos")
-        menu_comercial_trimestral(option,valor)
     #? Análisis previo para comprobar la calidad de la información
-    elif option == "4":
+    elif option == "3":
         lista_menu = ["Generación de información para el inventrario de suscriptores mensual",
                     "Generación de información para el inventrario de suscriptores anual",
                     "Generación de información de facturación para usuarios regulados / no regulados mensual",
@@ -1069,7 +1057,7 @@ def menu_comercial(option,valor):
         option,valor = opcion_menu_valida(lista_menu, "Información comercial para información de usuarios únicos")
         menu_comercial_analisis_previo(option,valor)
     #? "Análisis previo para comprobar la calidad de la información
-    elif option == "5":
+    elif option == "4":
         lista_menu = ["Generación de reporte de comparación Certificación - Calidad - Producción (GRC1-SAP)", #Op1
                     "Generación de reporte de comparación Certificación - Calidad (GRC1-SAP)", #Op2
                     "Generación de reporte de comparación Certificación - Producción (GRC1-SAP)", #Op3
@@ -1245,13 +1233,13 @@ def menu_cumplimientos_reportes(option, valor):
         mod_1.generar_porcentaje_cumplimientos_regulatorios()
         t_f = time.time()
         mod_1.mostrar_tiempo(t_f, t_i)
-    #? Porcentaje de AEGR
+    #? Información comercial para reportes trimestrales
     elif option == "2":
-        t_i = time.time()
-        print(f"\nInicio de procesamiento para: {valor}\n\n")
-        #LL=llamado función
-        t_f = time.time()
-        mod_1.mostrar_tiempo(t_f, t_i)
+        lista_menu = ["Generación de información para el comportamiento patrimonial",
+                    "Generación de información de relación reclamos facturación (10.000)",
+                    "Regresar al menú inicial"]
+        option,valor = opcion_menu_valida(lista_menu, "Información comercial para información de usuarios únicos")
+        menu_comercial_trimestral(option,valor)
 
 
 # * -------------------------------------------------------------------------------------------------------
@@ -1309,7 +1297,6 @@ def menu_inicial(lista, nombre):
         time.sleep(2)
         subprocess.run(['taskkill', '/F', '/IM', 'pwsh.exe', '/T'], check=True)
         os.system("exit")
-        #os.system("taskkill /F /IM cmd.exe") 
     elif option == "1":
         lista_menu = ["Creación de espacio de trabajo (Carpetas)",
                         "Agregar un nuevo año",
@@ -1330,7 +1317,6 @@ def menu_inicial(lista, nombre):
     elif option == "3":
         lista_menu = ["Información comercial por sector de consumo",
                         "Información comercial para compensaciones",
-                        "Información comercial para reportes trimestrales",
                         "Análisis previo para comprobar la calidad de la información",
                         "Comparación entre archivos de certificación, calidad (CLD) y/o producción (PRD)",
                         "Regresar al menú inicial"]
@@ -1354,9 +1340,11 @@ def menu_inicial(lista, nombre):
         menu_tecnico(option,valor)
     elif option == "6":
         lista_menu = ["Porcentaje de Cumplimientos Regulatorios",
-                    "Porcentaje de AEGR",
+                    "Información comercial para reportes trimestrales",
+                    "Información para Matriz de requerimientos"
+                    "Gastos AOM",
                     "Regresar al menú inicial"]
-        option,valor = opcion_menu_valida(lista_menu, "Reportes Técnicos", False)
+        option,valor = opcion_menu_valida(lista_menu, "Cumplimientos Regulatorios", False)
         menu_cumplimientos_reportes(option,valor)
     elif option == "7":
         menu_creacion_dashboard()
@@ -1790,9 +1778,21 @@ mostrar_inicio_app()
     #Revisar llamado de todas las funciones
 
 # TODO Aplicativo:
-    # Generación de gráficas
     # Incluir tiempo estimado promedio por mes para la documentación de explicación
 
 # TODO Opcionales:
     # Revisión reportes anuales de calidad de la info
     # Generar un archivo CSV en la comparación del GRC1/CLD/PRD si la cantidad de NIU no encontrados es mayor al 1% de la muestra total
+
+
+
+
+# TODO: Pendientes
+    # Revsiión sector consumo
+    # Revisión sector consumo subsidio
+    # Revisión Gastos AOM
+    # Revisión cumplimientos regulatorios
+    # Revisión hora de llagada a IRST
+    # Revisión lógica Código DANE
+
+    # Corregir gráficas
