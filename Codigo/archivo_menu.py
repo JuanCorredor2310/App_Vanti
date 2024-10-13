@@ -216,7 +216,7 @@ def elegir_regenerar_archivos_mensuales(texto):
 def elegir_valor_facturado():
     lista = ["Sí","No"]
     lista.append("Regresar al menú inicial")
-    option,valor = opcion_menu_valida(lista, "Incluir el valor total facturado", False)
+    option,valor = opcion_menu_valida(lista, "Incluir el valor facturado (valor facturado por consumo, valor total facturado)", False)
     if option == str(len(lista)):
         iniciar_menu()
     elif option == "1":
@@ -1480,14 +1480,14 @@ def funcion_seleccionar_reportes(tipo):
     elif tipo == "reporte_comercial_subsidio_mensual":
         seleccionar_reportes["ubicacion"] = ["Reportes Nuevo SUI"]
         seleccionar_reportes["tipo"] = ["Comercial"]
-        seleccionar_reportes["clasificacion"] = ["GRC1","GRTT2"]
+        seleccionar_reportes["clasificacion"] = ["GRC1","GRC2","GRTT2"]
         seleccionar_reportes = eleccion_fecha_personalizada(seleccionar_reportes, True)
         seleccionar_reportes = eleccion_elemento(seleccionar_reportes, lista_filiales.copy(), "Seleccionar todas las filiales", "Elección filial", "filial", False)
         return seleccionar_reportes
     elif tipo == "reporte_comercial_subsidio_anual":
         seleccionar_reportes["ubicacion"] = ["Reportes Nuevo SUI"]
         seleccionar_reportes["tipo"] = ["Comercial"]
-        seleccionar_reportes["clasificacion"] = ["GRC1","GRTT2"]
+        seleccionar_reportes["clasificacion"] = ["GRC1","GRC2","GRTT2"]
         seleccionar_reportes = eleccion_rango_anual(seleccionar_reportes)
         seleccionar_reportes = eleccion_elemento(seleccionar_reportes, lista_filiales.copy(), "Seleccionar todas las filiales", "Elección filial", "filial", False)
         return seleccionar_reportes
@@ -1792,7 +1792,4 @@ mostrar_inicio_app()
     # Revisión sector consumo subsidio
     # Revisión Gastos AOM
     # Revisión cumplimientos regulatorios
-    # Revisión hora de llagada a IRST
     # Revisión lógica Código DANE
-
-    # Corregir gráficas
