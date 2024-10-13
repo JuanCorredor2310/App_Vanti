@@ -793,11 +793,11 @@ def menu_comercial_sectores_consumo(option,valor):
         valor_facturado = op_add[3]
         sumatoria = op_add[9]
         regenerar_reportes_mensuales = op_add[6]
-        if sumatoria:
-            reporte = reporte.replace(".csv", "_sumatoria.csv")
         if codigo_DANE:
             v_codigo_DANE_texto = mod_1.codigo_DANE_texto(codigo_DANE)+".csv"
             reporte = reporte.replace(".csv", "_"+v_codigo_DANE_texto)
+        if sumatoria:
+            reporte = reporte.replace(".csv", "_sumatoria.csv")
         t_i = time.time()
         if regenerar:
             proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False)
@@ -832,8 +832,34 @@ def menu_comercial_sectores_consumo(option,valor):
         mod_1.mostrar_tiempo(t_f, t_i)
     #? Generación de información comercial por sectores de consumo para usuarios subsidiados anual
     elif option == "4":
-        print(valor)
-        #reporte_comercial_subsidio_anual
+        seleccionar_reporte = funcion_seleccionar_reportes("reporte_comercial_subsidio_anual")
+        reporte = "_reporte_consumo_subsidio.csv"
+        if len(seleccionar_reporte["filial"]) == 4:
+            op_add = anadir_opciones(regenerar=True, codigo_DANE=True, sumatoria=True, valor_facturado=True, reportes_mensuales=True,texto_regenerar_mensuales=f"{reporte}",reporte_consumo_anual=True)
+        else:
+            op_add = anadir_opciones(regenerar=True, codigo_DANE=True, valor_facturado=True, reportes_mensuales=True,texto_regenerar_mensuales=f"{reporte}",reporte_consumo_anual=True)
+        regenerar = op_add[1]
+        codigo_DANE = op_add[2]
+        valor_facturado = op_add[3]
+        sumatoria = op_add[9]
+        regenerar_reportes_mensuales = op_add[6]
+        if codigo_DANE:
+            v_codigo_DANE_texto = mod_1.codigo_DANE_texto(codigo_DANE)+".csv"
+            reporte = reporte.replace(".csv", "_"+v_codigo_DANE_texto)
+        if sumatoria:
+            reporte = reporte.replace(".csv", "_sumatoria.csv")
+        t_i = time.time()
+        if regenerar:
+            proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False)
+        if regenerar_reportes_mensuales:
+            proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, False, continuar=True, mostrar_dic=True)
+            if proceso:
+                mod_1.reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=codigo_DANE, total=sumatoria, valor_facturado=valor_facturado, facturas=facturas, subsidio=True)
+        proceso,dic_archivos_anual = generar_archivos_extra_anual(seleccionar_reporte, reporte, ["_reporte_consumo", reporte.replace(".csv",""), "_subsidio"])
+        if proceso:
+            mod_1.union_archivos_mensuales_anual_reporte_consumo(dic_archivos_anual, seleccionar_reporte, True, subsidio=True)
+        t_f = time.time()
+        mod_1.mostrar_tiempo(t_f, t_i)
 
 def menu_comercial_compensaciones(option,valor):
     #? Generación de reportes de compensaciones mensual
@@ -1240,7 +1266,12 @@ def menu_cumplimientos_reportes(option, valor):
                     "Regresar al menú inicial"]
         option,valor = opcion_menu_valida(lista_menu, "Información comercial para información de usuarios únicos")
         menu_comercial_trimestral(option,valor)
-
+    #? Información para matriz de requerimientost_i = time.time()
+    if option == "3":
+        print(f"\nInicio de procesamiento para: {valor}\n\n")
+        mod_1.generar_porcentaje_cumplimientos_regulatorios()
+        t_f = time.time()
+        mod_1.mostrar_tiempo(t_f, t_i)
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Creación DASHBOARD
@@ -1333,15 +1364,15 @@ def menu_inicial(lista, nombre):
                     "Generación de consolidación de indicadores técnicos (IPLI,IO,IRST-EG) anual",
                     "Generación de reporte de suspensiones mensual",
                     "Generación de reporte de suspensiones anual",
-                    "Generación de reporte de índice de respuesta a servicio técnico (IRST) mensual",
-                    "Generación de reporte de índice de respuesta a servicio técnico (IRST) anual",
+                    "Generación de reporte de Índice de Respuesta a Servicio Técnico (IRST) mensual",
+                    "Generación de reporte de Índice de Respuesta a Servicio Técnico (IRST) anual",
                     "Regresar al menú inicial"]
         option,valor = opcion_menu_valida(lista_menu, "Reportes Técnicos", False)
         menu_tecnico(option,valor)
     elif option == "6":
-        lista_menu = ["Porcentaje de Cumplimientos Regulatorios",
+        lista_menu = ["Porcentaje de cumplimientos regulatorios",
                     "Información comercial para reportes trimestrales",
-                    "Información para Matriz de requerimientos"
+                    "Información para matriz de requerimientos"
                     "Gastos AOM",
                     "Regresar al menú inicial"]
         option,valor = opcion_menu_valida(lista_menu, "Cumplimientos Regulatorios", False)
@@ -1788,8 +1819,16 @@ mostrar_inicio_app()
 
 
 # TODO: Pendientes
-    # Revsiión sector consumo
-    # Revisión sector consumo subsidio
     # Revisión Gastos AOM
     # Revisión cumplimientos regulatorios
-    # Revisión lógica Código DANE
+
+    #Generar archivos anuales Dashboard
+    #Almacenamiento de gráficas en la carpeta imágenes
+
+    #Corregir gráfica subsidios
+    #Corregir gráficas minutos y horas
+    #Generación gráfica sector consumo apilados
+
+    #Creación de mapa de suspensiones
+    #Creación de mapa tarifario
+    #Almacenamiento de slides

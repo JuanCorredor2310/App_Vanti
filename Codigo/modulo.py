@@ -337,7 +337,9 @@ def crear_carpeta_anual(fecha, lista_archivo):
     lista_archivo.append(fecha)
     crear_carpeta(lista_a_texto(lista_archivo, "\\"))
     lista_clasi = []
-    for clasi in union_listas_numeros(lista_clasi_reportes):
+    lista_copia = lista_clasi_reportes.copy()
+    lista_copia.append("Dashboard")
+    for clasi in union_listas_numeros(lista_copia):
         lista_temp = lista_archivo.copy()
         lista_temp.append(clasi)
         lista_clasi.append(lista_temp)
@@ -789,7 +791,7 @@ def codigo_DANE_texto(codigo_DANE):
     if len(codigo_DANE) > 0:
         lista_texto_codigo_DANE = []
         for elemento in codigo_DANE:
-            lista_texto_codigo_DANE.append(int(elemento)[:5])
+            lista_texto_codigo_DANE.append(int(str(elemento)[:5]))
         lista_texto_codigo_DANE.sort()
         lista_texto_codigo_DANE_str = [str(x) for x in lista_texto_codigo_DANE]
         return lista_a_texto(lista_texto_codigo_DANE_str,"_")
@@ -1035,7 +1037,6 @@ def buscar_NIU(lista_NIU, dic_NIU, subsidio=False, rango=20):
                 cantidad_facturas += valor[3]
                 v_subsidios += valor[4]
                 v_contribuciones += valor[5]
-                print(v_subsidios, v_contribuciones)
             else:
                 cantidad_usuario += 1
                 volumen += valor[0]
@@ -1290,7 +1291,7 @@ def apoyo_reporte_comercial_sector_consumo_regulados(lista_archivos, codigo_DANE
                                 dic_1[elemento][2] += valor_consumo_facturado
                                 if factura[0] == "F":
                                     dic_1[elemento][3] += 1
-                                if subsidio_contribuciones[0] < 0:
+                                if subsidio_contribuciones < 0:
                                     dic_1[elemento][4] += subsidio_contribuciones
                                 else:
                                     dic_1[elemento][5] += subsidio_contribuciones
@@ -1394,7 +1395,8 @@ def reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar
 def diferencia_columnas_dataframe(df_actual, df_anterior):
     df_actual = df_actual.copy().reset_index(drop=True)
     df_anterior = df_anterior.copy().reset_index(drop=True)
-    lista_columnas_num = ["Cantidad de usuarios","Consumo m3","Valor total facturado"]
+    lista_columnas_num = ["Cantidad de usuarios","Consumo m3","Valor total facturado","Valor consumo facturado",
+                        "Cantidad de facturas","Subsidios","Contribuciones"]
     for columna in lista_columnas_num:
         df_actual["Diferencia "+columna] = None
     for i in range(len(df_actual)):
@@ -1404,14 +1406,14 @@ def diferencia_columnas_dataframe(df_actual, df_anterior):
         df_filtro_actual = df_actual[(df_actual["Tipo de usuario"] == df_actual["Tipo de usuario"][i]) &
                                             (df_actual["Sector de consumo"] == df_actual["Sector de consumo"][i]) &
                                             (df_actual["Filial"] == df_actual["Filial"][i])].reset_index(drop=True)
-        if len(df_filtro_anterior) > 0 and len(df_filtro_actual):
+        if len(df_filtro_anterior) and len(df_filtro_actual):
             for columna in lista_columnas_num:
                 valor_actual = df_filtro_actual[columna][0]
                 valor_anterior = df_filtro_anterior[columna][0]
                 df_actual.iloc[i, df_actual.columns.get_loc("Diferencia "+columna)] = valor_actual - valor_anterior
     return df_actual
 
-def union_archivos_mensuales_anual_reporte_consumo(dic_archivos, seleccionar_reporte, informar, almacenar_excel=True):
+def union_archivos_mensuales_anual_reporte_consumo(dic_archivos, seleccionar_reporte, informar, almacenar_excel=True, subsidio=True):
     v_fecha_siguiente = fecha_siguiente(seleccionar_reporte["fecha_personalizada"][0][0],seleccionar_reporte["fecha_personalizada"][0][1])
     v_fecha_anterior = fecha_siguiente(seleccionar_reporte["fecha_personalizada"][1][0],seleccionar_reporte["fecha_personalizada"][1][1])
     fecha_nombre = (v_fecha_siguiente[0]+"_"+v_fecha_siguiente[1].upper()
@@ -1424,17 +1426,27 @@ def union_archivos_mensuales_anual_reporte_consumo(dic_archivos, seleccionar_rep
             nombre = archivo
             if len(df):
                 lista_anual.append(df)
-    if len(seleccionar_reporte["filial"]) == 4:
-        for i in range(1,len(lista_anual)):
-            df = lista_anual[i]
-            df_actual = diferencia_columnas_dataframe(lista_anual[i], lista_anual[i-1])
-            lista_df_anual_dif.append(df_actual)
-    else:
+    if subsidio:
+        fecha_nombre = (seleccionar_reporte["fecha_personalizada"][0][0]+"_"+seleccionar_reporte["fecha_personalizada"][0][1].upper()
+                    +"_"+seleccionar_reporte["fecha_personalizada"][1][0]+"_"+seleccionar_reporte["fecha_personalizada"][1][1].upper())
         if len(lista_anual) == 12:
             lista_df_anual_dif = lista_anual.copy()
         else:
-            lista_df_anual_dif = lista_anual.copy()[1:]
-    if len(lista_df_anual_dif) > 0:
+            lista_df_anual_dif = lista_anual[1:]
+    else:
+        fecha_nombre = (v_fecha_siguiente[0]+"_"+v_fecha_siguiente[1].upper()
+                    +"_"+seleccionar_reporte["fecha_personalizada"][1][0]+"_"+seleccionar_reporte["fecha_personalizada"][1][1].upper())
+        if len(seleccionar_reporte["filial"]) == 4:
+            for i in range(1,len(lista_anual)):
+                df = lista_anual[i]
+                df_actual = diferencia_columnas_dataframe(lista_anual[i], lista_anual[i-1])
+                lista_df_anual_dif.append(df_actual)
+        else:
+            if len(lista_anual) == 12:
+                lista_df_anual_dif = lista_anual.copy()
+            else:
+                lista_df_anual_dif = lista_anual.copy()[1:]
+    if len(lista_df_anual_dif):
         if len(seleccionar_reporte["filial"]) == 4:
             lista_nombre = nombre.split("\\")
             lista_nombre[-5] = "00. Compilado"
@@ -2221,30 +2233,6 @@ def generar_reporte_compensacion_mensual(dic_archivos, seleccionar_reporte, info
             nuevo_nombre = lista_a_texto(lista_nombre,"\\")
             nuevo_nombre = nuevo_nombre.replace("_resumen","_compilado_compensacion")
             almacenar_df_csv_y_excel(df_total_compilado,nuevo_nombre, informar)
-
-def generar_reporte_compensacion_anual(dic_archivos, seleccionar_reporte, informar=True, almacenar_excel=True):
-    fecha_nombre = (seleccionar_reporte["fecha_personalizada"][0][0]+"_"+seleccionar_reporte["fecha_personalizada"][0][1].upper()
-                    +"_"+seleccionar_reporte["fecha_personalizada"][1][0]+"_"+seleccionar_reporte["fecha_personalizada"][1][1].upper())
-    lista_anual = []
-    for fecha, lista_archivos in dic_archivos.items():
-        for archivo in lista_archivos:
-            df = leer_dataframe_utf_8(archivo)
-            nombre = archivo
-            if len(df):
-                lista_anual.append(df)
-    if len(lista_anual):
-        lista_nombre = nombre.split("\\")
-        lista_nombre[-5] = "00. Compilado"
-        lista_nombre[-3] = "00. Compilado"
-        ext_nombre = lista_nombre[-1].split("_")
-        ext_nombre.pop(0)
-        ext_nombre[0] = fecha_nombre
-        lista_nombre[-1] = lista_a_texto(ext_nombre, "_")
-        crear_carpeta_anual(fecha_nombre, lista_nombre)
-        lista_nombre.insert(-2, fecha_nombre)
-        nombre = lista_a_texto(lista_nombre, "\\")
-        df_anual = pd.concat(lista_anual)
-        almacenar_df_csv_y_excel(df_anual, nombre, informar, almacenar_excel)
 
 def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, almacenar_excel=True):
     proceso_GRC1 = False
