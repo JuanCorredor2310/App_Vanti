@@ -1829,11 +1829,11 @@ mostrar_inicio_app()
 # TODO: Pendientes
     # Revisión Gastos AOM
 
+    #Generar los archivos mensuales de 12 meses para el Dashboard
     #Generar archivos anuales Dashboard
     #Almacenamiento de gráficas en la carpeta imágenes
 
     #Corregir gráficas minutos
-    #Corregir gráfica de horas
 
     #Creación de mapa de suspensiones
     #Creación de mapa tarifario
