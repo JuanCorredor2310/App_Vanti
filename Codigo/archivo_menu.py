@@ -1266,8 +1266,16 @@ def menu_cumplimientos_reportes(option, valor):
                     "Regresar al menú inicial"]
         option,valor = opcion_menu_valida(lista_menu, "Información comercial para información de usuarios únicos")
         menu_comercial_trimestral(option,valor)
-    #? Información para matriz de requerimientost_i = time.time()
+    #? Información para matriz de requerimientos
     if option == "3":
+        t_i = time.time()
+        print(f"\nInicio de procesamiento para: {valor}\n\n")
+        mod_1.generar_porcentaje_matriz_requerimientos()
+        t_f = time.time()
+        mod_1.mostrar_tiempo(t_f, t_i)
+    #? Gastos AOM
+    if option == "4":
+        t_i = time.time()
         print(f"\nInicio de procesamiento para: {valor}\n\n")
         mod_1.generar_porcentaje_cumplimientos_regulatorios()
         t_f = time.time()
@@ -1372,7 +1380,7 @@ def menu_inicial(lista, nombre):
     elif option == "6":
         lista_menu = ["Porcentaje de cumplimientos regulatorios",
                     "Información comercial para reportes trimestrales",
-                    "Información para matriz de requerimientos"
+                    "Información para matriz de requerimientos",
                     "Gastos AOM",
                     "Regresar al menú inicial"]
         option,valor = opcion_menu_valida(lista_menu, "Cumplimientos Regulatorios", False)
@@ -1820,14 +1828,12 @@ mostrar_inicio_app()
 
 # TODO: Pendientes
     # Revisión Gastos AOM
-    # Revisión cumplimientos regulatorios
 
     #Generar archivos anuales Dashboard
     #Almacenamiento de gráficas en la carpeta imágenes
 
-    #Corregir gráfica subsidios
-    #Corregir gráficas minutos y horas
-    #Generación gráfica sector consumo apilados
+    #Corregir gráficas minutos
+    #Corregir gráfica de horas
 
     #Creación de mapa de suspensiones
     #Creación de mapa tarifario

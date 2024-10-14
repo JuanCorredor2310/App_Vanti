@@ -1,0 +1,17 @@
+{
+    "descripcion": "Trimestre_mes",
+    "datos": {
+        "Enero": "TRIM_3",
+        "Febrero": "TRIM_4",
+        "Marzo": "TRIM_4",
+        "Abril": "TRIM_4",
+        "Mayo": "TRIM_1",
+        "Junio": "TRIM_1",
+        "Julio": "TRIM_1",
+        "Agosto": "TRIM_2",
+        "Septiembre": "TRIM_2",
+        "Octubre": "TRIM_2",
+        "Noviembre": "TRIM_3",
+        "Diciembre": "TRIM_3"
+    }
+}

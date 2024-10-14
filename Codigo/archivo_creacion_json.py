@@ -763,6 +763,51 @@ def variables_reportes(reporte):
                 datos = {"descripcion":desc,
                         "datos":data}
                 guardar_diccionario_ruta(datos, n_archivo)
+        elif reporte == "trimestre_mes":
+                desc = "Trimestre_mes"
+                data = {"Enero":"TRIM_3",
+                        "Febrero":"TRIM_4",
+                        "Marzo":"TRIM_4",
+                        "Abril":"TRIM_4",
+                        "Mayo":"TRIM_1",
+                        "Junio":"TRIM_1",
+                        "Julio":"TRIM_1",
+                        "Agosto":"TRIM_2",
+                        "Septiembre":"TRIM_2",
+                        "Octubre":"TRIM_2",
+                        "Noviembre":"TRIM_3",
+                        "Diciembre":"TRIM_3"}
+                datos = {"descripcion":desc,
+                        "datos":data}
+                guardar_diccionario_ruta(datos, n_archivo)
+        elif reporte == "sector_consumo_estrato":
+                desc = "Sector_consumo_a_estrato"
+                data = {"Residencial Bajo - Bajo":"Estrato 1",
+                        "Residencial Bajo":"Estrato 2",
+                        "Residencial Medio - Bajo":"Estrato 3",
+                        "Residencial Medio":"Estrato 4",
+                        "Residencial Medio - Alto":"Estrato 5",
+                        "Residencial Alto":"Estrato 6"}
+                datos = {"descripcion":desc,
+                        "datos":data}
+                guardar_diccionario_ruta(datos, n_archivo)
+        elif reporte == "categoria_matriz_requerimientos":
+                desc = "Categorias_matriz_requerimientos"
+                data = {"AEGR":"Otros",
+                        "ALCALDIAS":"Entidades gubernamentales",
+                        "CONSEJO DE BOGOTÁ":"Entidades gubernamentales",
+                        "CREG":"CREG",
+                        "DANE":"Entidades gubernamentales",
+                        "MME":"Entidades gubernamentales",
+                        "MUNICIPIOS":"Entidades gubernamentales",
+                        "OTROS":"Otros",
+                        "SECRETARIA DEL HABITAD":"Entidades gubernamentales",
+                        "SSPD":"SSPD",
+                        "UPME":"Entidades gubernamentales",
+                        "VANTI ESP SA":"Otros"}
+                datos = {"descripcion":desc,
+                        "datos":data}
+                guardar_diccionario_ruta(datos, n_archivo)
 
 def crear_archivos_json_principales():
         variables_reportes("GRT1")
@@ -802,5 +847,7 @@ def crear_archivos_json_principales():
         variables_reportes("trimestres")
         variables_reportes("meses_abre")
         variables_reportes("sectores_consumo")
+        variables_reportes("trimestre_mes")
+        variables_reportes("sector_consumo_estrato")
+        variables_reportes("categoria_matriz_requerimientos")
         creacion_directorio_carpetas_principales()
-

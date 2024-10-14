@@ -41,7 +41,7 @@ def leer_archivos_json(archivo):
 # *                                             Constantes globales
 # * -------------------------------------------------------------------------------------------------------
 
-global lista_meses, lista_empresas, lista_anios, dic_reportes, lista_reportes_generales, reportes_generados, lista_reportes_totales,chunksize,llaves_dic_reporte, dic_carpetas, dic_filiales,antidad_datos_excel, dic_nit, cantidad_datos_estilo_excel,grupo_vanti,mercado_relevante,mercado_relevante_resumen,tabla_3,tabla_11,fecha_actual,lista_trimestres, dic_meses_abre,lista_clasi_reportes
+global lista_meses, lista_empresas, lista_anios, dic_reportes, lista_reportes_generales, reportes_generados, lista_reportes_totales,chunksize,llaves_dic_reporte, dic_carpetas, dic_filiales,antidad_datos_excel, dic_nit, cantidad_datos_estilo_excel,grupo_vanti,mercado_relevante,mercado_relevante_resumen,tabla_3,tabla_11,fecha_actual,lista_trimestres, dic_meses_abre,lista_clasi_reportes,categoria_matriz_requerimientos
 grupo_vanti = "Grupo Vanti"
 dic_carpetas = leer_archivos_json(ruta_constantes+"carpetas.json")
 lista_anios = list(leer_archivos_json(ruta_constantes+"anios.json")["datos"].values())
@@ -62,6 +62,7 @@ cantidad_datos_estilo_excel = 120000
 llaves_dic_reporte = ["generales_no_float","generales_float","generales_fecha","generales_hora"]
 tabla_3 = leer_archivos_json(ruta_constantes+"tabla_3.json")
 tabla_11 = leer_archivos_json(ruta_constantes+"/tabla_11.json")
+categoria_matriz_requerimientos = leer_archivos_json(ruta_constantes+"categoria_matriz_requerimientos.json")["datos"]
 def crear_lista_reportes_totales():
     dic = leer_archivos_json(ruta_constantes+"reportes_disponibles.json")["datos"]
     lista = []
@@ -2566,13 +2567,15 @@ def reporte_comportamiento_patrimonial(fi,ff,listas_unidas):
                 lista_df.append(df_filtro)
             df_total = pd.concat(lista_df, ignore_index=True)
             lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Comercial"]
-            nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"porcentaje_patrimonial_{f_inicial[0]}_{f_inicial[1]}_{f_inicial[0]}_{f_inicial[1]}")
+            nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"porcentaje_patrimonial_{f_inicial[0]}_{f_inicial[1]}_{f_final[0]}_{f_final[1]}")
             almacenar_df_csv_y_excel(df_total,nuevo_nombre)
-
+            return nuevo_nombre
         else:
             print(f"No es posible acceder al archivo {archivo}.")
+            return None
     else:
         print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
+        return None
 
 def reporte_info_reclamos(fi,ff,listas_unidas):
     nombre = "info_trimestral"
@@ -2607,10 +2610,65 @@ def reporte_info_reclamos(fi,ff,listas_unidas):
             lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Comercial"]
             nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"porcentaje_reclamos_facturacion_10000_{f_inicial[0]}_{f_inicial[1]}_{f_final[0]}_{f_final[1]}")
             almacenar_df_csv_y_excel(df_total,nuevo_nombre)
+            return nuevo_nombre
         else:
             print(f"No es posible acceder al archivo {archivo}.")
+            return None
     else:
         print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
+        return None
+
+def generar_porcentaje_matriz_requerimientos():
+    nombre = "Matriz requerimientos"
+    hoja = "BD"
+    archivo = ruta_constantes+"\\"+f"{nombre}.xlsm"
+    anio_actual = fecha_actual.year
+    if os.path.exists(archivo):
+        df, proceso = mod_5.lectura_hoja_xlsx(archivo, hoja)
+        if proceso:
+            columnas = list(df.columns)
+            columnas = [(x.strip()).lower().replace(" ","_") for x in columnas]
+            df.columns = columnas
+            try:
+                df = df[["fecha_de_recibido","entidad"]]
+            except BaseException:
+                texto = lista_a_texto(["Fecha de recibido","Entidad"],", ")
+                print(f"Algunas de las columnas {texto} no se encunetran en el archivo.")
+                return None
+            df['fecha_de_recibido'] = pd.to_datetime(df['fecha_de_recibido'], dayfirst=True)
+            df_filtrado = df[df['fecha_de_recibido'].dt.year == anio_actual]
+            largo = len(df_filtrado)
+            lista_elementos = list(df["entidad"].unique())
+            dic_entidad = {}
+            dic = {"Categoria_entidad":[],
+                    "Cantidad":[],
+                    "Porcentaje_entidad":[],
+                    "Anio":[]}
+            for elemento in lista_elementos:
+                cantidad = len(df_filtrado[df_filtrado["entidad"]==elemento])
+                if elemento in categoria_matriz_requerimientos:
+                    llave = categoria_matriz_requerimientos[elemento]
+                else:
+                    llave = "Otros"
+                if llave not in dic_entidad:
+                    dic_entidad[llave] = 0
+                dic_entidad[llave] += cantidad
+            for llave, valor in dic_entidad.items():
+                porcentaje = round((valor/largo)*100,2)
+                dic["Categoria_entidad"].append(llave)
+                dic["Cantidad"].append(valor)
+                dic["Porcentaje_entidad"].append(str(porcentaje)+" %")
+                dic["Anio"].append(anio_actual)
+            df = pd.DataFrame(dic)
+            lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Comercial"]
+            nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"porcentaje_matriz_requerimientos")
+            almacenar_df_csv_y_excel(df,nuevo_nombre)
+        else:
+            print(f"No es posible acceder al archivo {archivo}.")
+            return None
+    else:
+        print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
+        return None
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Reportes Tarifarios

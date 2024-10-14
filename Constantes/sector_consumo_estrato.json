@@ -1,0 +1,11 @@
+{
+    "descripcion": "Sector_consumo_a_estrato",
+    "datos": {
+        "Residencial Bajo - Bajo": "Estrato 1",
+        "Residencial Bajo": "Estrato 2",
+        "Residencial Medio - Bajo": "Estrato 3",
+        "Residencial Medio": "Estrato 4",
+        "Residencial Medio - Alto": "Estrato 5",
+        "Residencial Alto": "Estrato 6"
+    }
+}
