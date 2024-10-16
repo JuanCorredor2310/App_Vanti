@@ -8,7 +8,7 @@ import seaborn as sns
 import pandas as pd
 from pandas.plotting import table
 import os
-from PIL import Image
+from PIL import Image,ImageDraw,ImageFont
 from skimage.transform import resize
 
 import ruta_principal as mod_rp
@@ -21,7 +21,7 @@ ruta_archivos = mod_rp.v_archivos()
 import modulo as mod_1
 import archivo_creacion_json as mod_2
 
-global grupo_vanti, lista_filiales, dic_filiales, dic_filiales_largo, limite_facturas, porcentaje_ISRT, dic_nom_eventos,dic_sectores_consumo,dic_sectores_consumo_ordenados,dic_sectores_consumo_imagenes,dic_estratos,dic_industrias
+global grupo_vanti, lista_filiales, dic_filiales, dic_filiales_largo, limite_facturas, porcentaje_ISRT, dic_nom_eventos,dic_sectores_consumo,dic_sectores_consumo_ordenados,dic_sectores_consumo_imagenes,dic_estratos,dic_industrias,lista_filiales_corto
 dic_sectores_consumo = mod_1.leer_archivos_json(ruta_constantes+"sectores_consumo_categoria.json")["datos"]
 dic_sectores_consumo_ordenados = {"Regulados": ["Residencial","Comercial","Industrial"],
                                 "No regulados": ["Industrial","GNCV","Comercial","Comercializadoras /\nTransportadores","Petroqu\u00edmica","Oficiales","Termoel\u00e9ctrico","Refiner\u00eda"]}
@@ -41,6 +41,7 @@ porcentaje_ISRT = 100
 limite_facturas = 4.04
 dic_filiales = mod_1.leer_archivos_json(ruta_constantes+"tabla_empresa.json")["datos"]
 lista_filiales = list(dic_filiales.values())
+lista_filiales_corto = list(dic_filiales.keys())
 dic_filiales_largo = {valor: llave for llave, valor in dic_filiales.items()}
 dic_filiales_largo[grupo_vanti] = "grupo_vanti"
 dic_cumplimientos_reporte = {"VANTI S.A. ESP":"VANTI S.A. ESP.",
@@ -1086,3 +1087,97 @@ def grafica_barras_indicador_tecnico_horas(archivo, fecha):
                 imagen_recortada = imagen.crop(recorte)
                 imagen_recortada.save(n_imagen)
                 informar_imagen(n_imagen)
+
+def func(pct, allvalues):
+    absolute = int(pct / 100. * sum(allvalues))  # Calcula el valor absoluto
+    if absolute < 10:
+        return ''  # No mostrar porcentaje si es menor a 10
+    else:
+        return f'{pct:.1f}%'
+
+def mapa_tarifas(n_archivo, fecha):
+    x_pie = 800
+    x_texto = 1150
+    if os.path.exists(n_archivo):
+        df_ubicaciones = pd.read_csv(ruta_constantes+"mercado_relevante_ubi.csv", sep=",", encoding="utf-8-sig")
+        lista_archivo = n_archivo.split("\\")
+        lista_archivo.insert(-1, "Imagenes")
+        df = pd.read_csv(n_archivo, sep=",", encoding="utf-8-sig")
+        df = df[(df["Anio_reportado"]==int(fecha[0]))&(df["Mes_reportado"]==fecha[1])]
+        llaves_por = ["Porcentaje G","Porcentaje T","Porcentaje D", "Porcentaje P_perdidas"]
+        for llave in llaves_por:
+            df[llave] = df[llave].str.replace(" %", "").astype(float)
+        colors = ["#ea7916","#2db6cf","#4eb6a8","#815081","#05106d"]
+        colors_pie = ["#5e1cbb","#2fa711","#1029c0","#ca1313"]
+        for filial in lista_filiales_corto:
+            ruta_mapa_filial = ruta_constantes+f"mapa_{filial.lower()}.png"
+            imagen = Image.open(ruta_mapa_filial)
+            dibujo = ImageDraw.Draw(imagen)
+            ancho, alto = imagen.size
+            df_filial = df_ubicaciones[df_ubicaciones["Mapa"]==filial].reset_index(drop=True)
+            lista_archivo_limite = lista_archivo.copy()
+            lista_archivo[-1] = f"mapa_{filial.lower()}.png"
+            lista_archivo_limite[-1] = f"mapa_limite.png"
+            archivo_copia = mod_1.lista_a_texto(lista_archivo,"\\")
+            archivo_limite = mod_1.lista_a_texto(lista_archivo_limite,"\\")
+            radio = 12
+            tamanio = 50
+            fuente = ImageFont.truetype("arial.ttf", tamanio)
+            largo = len(df_filial)
+            seperacion = (alto-tamanio*largo)/(largo+1)
+            for pos in range(largo):
+                texto = df_filial["Nombre"][pos]
+                x = df_filial["pos_x"][pos]
+                y = df_filial["pos_y"][pos]
+                mercado = df_filial["Id_mercado"][pos]
+                dibujo.ellipse((x-radio,y-radio,x+radio,y+radio),fill=colors[pos])
+                ubi_y = seperacion + (pos*(tamanio+seperacion))
+                dibujo.text((x_texto,ubi_y-15), texto, fill=colors[pos], font=fuente)
+                df_mercado = df[df["ID_Mercado"]==int(mercado)].reset_index(drop=True)
+                if len(df_mercado):
+                    cuf = round(df_mercado["Cuf"][0])
+                    cuv = round(df_mercado["Cuv"][0])
+                    cuf_1000 = cuf%1000
+                    if len(str(cuf_1000)) < 3:
+                        cuf_1000 = str(cuf_1000)+"0"*(3-len(str(cuf_1000)))
+                    cuv_1000 = cuv%1000
+                    if len(str(cuv_1000)) < 3:
+                        cuv_1000 = str(cuv_1000)+"0"*(3-len(str(cuv_1000)))
+                    texto_cuf = f"Cuf: ${cuf//1000}.{cuf_1000}"
+                    texto_cuv = f"Cuv: ${cuv//1000}.{cuv_1000}"
+                    dibujo.text((x_texto,ubi_y+tamanio+5-15), texto_cuf, fill=colors[pos], font=ImageFont.truetype("arial.ttf", 30))
+                    dibujo.text((x_texto,ubi_y+tamanio+35-15), texto_cuv, fill=colors[pos], font=ImageFont.truetype("arial.ttf", 30))
+            imagen.save(archivo_copia)
+            archivo_copia_apoyo = archivo_copia.replace(".png","_apoyo.png")
+            background = Image.open(archivo_copia)
+            c = 0
+            for pos in range(largo):
+                mercado = df_filial["Id_mercado"][pos]
+                ubi_y = (seperacion-55) + (pos*(tamanio+seperacion))
+                df_mercado = df[df["ID_Mercado"]==int(mercado)].reset_index(drop=True)
+                if len(df_mercado):
+                    labels = ["Suministro","Transporte","Distribución","Pérdidas"]
+                    sizes = []
+                    for llave in llaves_por:
+                        sizes.append(df_mercado[llave][0])
+                    fig, ax = plt.subplots(figsize=(1, 1), dpi=225)
+                    ax.pie(sizes, labels=[''] * len(sizes), autopct=lambda pct: func(pct, sizes), colors=colors_pie, startangle=180, textprops={'fontsize': 5,'color':'white'})
+                    fig.savefig(archivo_copia_apoyo, transparent=True, bbox_inches='tight')
+                    plt.close(fig)
+                    pie_chart = Image.open(archivo_copia_apoyo)
+                    background.paste(pie_chart, (int(x_pie), int(ubi_y)), pie_chart)
+                    background.save(archivo_copia)
+                    mod_1.eliminar_archivos([archivo_copia_apoyo])
+                    if c == 0:
+                        c += 1
+                        plt.figure(figsize=(15,15))
+                        plt.pie(sizes, labels=labels, colors=colors_pie)
+                        plt.legend(bbox_to_anchor=(0.5, 0.01), loc='upper center',
+                                                ncol=4, borderaxespad=0.0, fontsize=20)
+                        plt.savefig(archivo_limite)
+                        plt.close()
+                        imagen = Image.open(archivo_limite)
+                        recorte = (220, 1310, imagen.width-170, imagen.height-120)
+                        imagen_recortada = imagen.crop(recorte)
+                        imagen_recortada.save(archivo_limite)
+            informar_imagen(archivo_copia)

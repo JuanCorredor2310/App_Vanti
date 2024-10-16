@@ -1613,8 +1613,7 @@ def menu_creacion_dashboard():
             elif i == 2:
                 mod_6.grafica_barras_compensacion(archivo)
             elif i == 3:
-                pass
-                # Gráfica tarifas
+                mod_6.mapa_tarifas(archivo, v_fecha_anterior)
             elif i == 4:
                 pass
                 # Gráfica suspensiones
@@ -1625,8 +1624,10 @@ def menu_creacion_dashboard():
                 pass
                 mod_6.grafica_barras_indicador_tecnico_minutos(archivo)
             elif i == 7:
+                pass
                 mod_6.grafica_barras_indicador_tecnico_horas(archivo, fecha)
             elif i == 8:
+                pass
                 mod_6.grafica_barras_indicador_tecnico(archivo)
 
     fi,ff,listas_unidas = eleccion_rango_trimestral([(fi_1, fi_2),(ff_1, ff_2)])
