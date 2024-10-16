@@ -336,7 +336,10 @@ def filtrar_carpetas_mes_anio(lista_carpetas, filtro):
 def crear_carpeta_anual(fecha, lista_archivo):
     lista_archivo = lista_archivo[:-2]
     lista_archivo.append(fecha)
-    crear_carpeta(lista_a_texto(lista_archivo, "\\"))
+    nombre = lista_a_texto(lista_archivo, "\\")
+    crear_carpeta(nombre)
+    if not os.path.exists(nombre):
+        print(f"\nSe creó la carpeta {acortar_nombre(nombre)}\n")
     lista_clasi = []
     lista_copia = lista_clasi_reportes.copy()
     lista_copia.append("Dashboard")
@@ -1396,29 +1399,30 @@ def reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar
 def diferencia_columnas_dataframe(df_actual, df_anterior):
     df_actual = df_actual.copy().reset_index(drop=True)
     df_anterior = df_anterior.copy().reset_index(drop=True)
-    lista_columnas_num = ["Cantidad de usuarios","Consumo m3","Valor total facturado","Valor consumo facturado",
-                        "Cantidad de facturas","Subsidios","Contribuciones"]
+    lista_columnas_num = ["Cantidad de usuarios","Consumo m3","Valor total facturado","Valor facturación por consumo",
+                        "Cantidad de facturas"]
     for columna in lista_columnas_num:
         df_actual["Diferencia "+columna] = None
     for i in range(len(df_actual)):
-        df_filtro_anterior = df_anterior[(df_anterior["Tipo de usuario"] == df_actual["Tipo de usuario"][i]) &
-                                            (df_anterior["Sector de consumo"] == df_actual["Sector de consumo"][i]) &
-                                            (df_anterior["Filial"] == df_actual["Filial"][i])].reset_index(drop=True)
-        df_filtro_actual = df_actual[(df_actual["Tipo de usuario"] == df_actual["Tipo de usuario"][i]) &
-                                            (df_actual["Sector de consumo"] == df_actual["Sector de consumo"][i]) &
-                                            (df_actual["Filial"] == df_actual["Filial"][i])].reset_index(drop=True)
-        if len(df_filtro_anterior) and len(df_filtro_actual):
-            for columna in lista_columnas_num:
-                valor_actual = df_filtro_actual[columna][0]
-                valor_anterior = df_filtro_anterior[columna][0]
-                df_actual.iloc[i, df_actual.columns.get_loc("Diferencia "+columna)] = valor_actual - valor_anterior
+        try:
+            df_filtro_anterior = df_anterior[(df_anterior["Tipo de usuario"] == df_actual["Tipo de usuario"][i]) &
+                                                (df_anterior["Sector de consumo"] == df_actual["Sector de consumo"][i]) &
+                                                (df_anterior["Filial"] == df_actual["Filial"][i])].reset_index(drop=True)
+            df_filtro_actual = df_actual[(df_actual["Tipo de usuario"] == df_actual["Tipo de usuario"][i]) &
+                                                (df_actual["Sector de consumo"] == df_actual["Sector de consumo"][i]) &
+                                                (df_actual["Filial"] == df_actual["Filial"][i])].reset_index(drop=True)
+            if len(df_filtro_anterior) and len(df_filtro_actual):
+                for columna in lista_columnas_num:
+                    valor_actual = df_filtro_actual[columna][0]
+                    valor_anterior = df_filtro_anterior[columna][0]
+                    df_actual.iloc[i, df_actual.columns.get_loc("Diferencia "+columna)] = valor_actual - valor_anterior
+        except BaseException:
+            pass
     return df_actual
 
 def union_archivos_mensuales_anual_reporte_consumo(dic_archivos, seleccionar_reporte, informar, almacenar_excel=True, subsidio=True):
     v_fecha_siguiente = fecha_siguiente(seleccionar_reporte["fecha_personalizada"][0][0],seleccionar_reporte["fecha_personalizada"][0][1])
-    v_fecha_anterior = fecha_siguiente(seleccionar_reporte["fecha_personalizada"][1][0],seleccionar_reporte["fecha_personalizada"][1][1])
-    fecha_nombre = (v_fecha_siguiente[0]+"_"+v_fecha_siguiente[1].upper()
-                    +"_"+seleccionar_reporte["fecha_personalizada"][1][0]+"_"+seleccionar_reporte["fecha_personalizada"][1][1].upper())
+    v_fecha_anterior = fecha_anterior(seleccionar_reporte["fecha_personalizada"][1][0],seleccionar_reporte["fecha_personalizada"][1][1])
     lista_anual = []
     lista_df_anual_dif = []
     for fecha, lista_archivos in dic_archivos.items():
@@ -1461,6 +1465,7 @@ def union_archivos_mensuales_anual_reporte_consumo(dic_archivos, seleccionar_rep
             nombre = lista_a_texto(lista_nombre, "\\")
             df_anual = pd.concat(lista_df_anual_dif)
             almacenar_df_csv_y_excel(df_anual, nombre, informar, almacenar_excel)
+            return nombre
         else:
             lista_nombre = nombre.split("\\")
             lista_nombre[-6] = "00. Compilado"
@@ -1472,6 +1477,9 @@ def union_archivos_mensuales_anual_reporte_consumo(dic_archivos, seleccionar_rep
             nombre = lista_a_texto(lista_nombre, "\\")
             df_anual = pd.concat(lista_df_anual_dif)
             almacenar_df_csv_y_excel(df_anual, nombre, informar, almacenar_excel)
+            return None
+    else:
+        return None
 
 def apoyo_reporte_comparacion_prd_cld_cer(lista_archivos, informar, filial):
     dic_GRTT2 = {}
@@ -2566,7 +2574,7 @@ def reporte_comportamiento_patrimonial(fi,ff,listas_unidas):
                 df_filtro["Porcentaje_patrimonial"] = lista_porcentaje
                 lista_df.append(df_filtro)
             df_total = pd.concat(lista_df, ignore_index=True)
-            lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Comercial"]
+            lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Cumplimientos_Regulatorios"]
             nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"porcentaje_patrimonial_{f_inicial[0]}_{f_inicial[1]}_{f_final[0]}_{f_final[1]}")
             almacenar_df_csv_y_excel(df_total,nuevo_nombre)
             return nuevo_nombre
@@ -2577,7 +2585,7 @@ def reporte_comportamiento_patrimonial(fi,ff,listas_unidas):
         print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
         return None
 
-def reporte_info_reclamos(fi,ff,listas_unidas):
+def reporte_info_reclamos(fi,ff,listas_unidas, dashboard=False, texto_fecha=None):
     nombre = "info_trimestral"
     hoja = "relacion_reclamos_facturacion"
     archivo = ruta_constantes+"\\"+f"{nombre}.xlsx"
@@ -2607,18 +2615,24 @@ def reporte_info_reclamos(fi,ff,listas_unidas):
                 df_filtro["Porcentaje_reclamos_fact_10000"] = lista_porcentaje
                 lista_df.append(df_filtro)
             df_total = pd.concat(lista_df, ignore_index=True)
-            lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Comercial"]
-            nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"porcentaje_reclamos_facturacion_10000_{f_inicial[0]}_{f_inicial[1]}_{f_final[0]}_{f_final[1]}")
-            almacenar_df_csv_y_excel(df_total,nuevo_nombre)
-            return nuevo_nombre
+            if not dashboard:
+                lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Cumplimientos_Regulatorios"]
+                nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"porcentaje_reclamos_facturacion_10000_{f_inicial[0]}_{f_inicial[1]}_{f_final[0]}_{f_final[1]}")
+                almacenar_df_csv_y_excel(df_total,nuevo_nombre)
+                return nuevo_nombre
+            else:
+                lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", texto_fecha, "Cumplimientos_Regulatorios"]
+                nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"porcentaje_reclamos_facturacion_10000")
+                almacenar_df_csv_y_excel(df_total,nuevo_nombre)
+                return nuevo_nombre
         else:
             print(f"No es posible acceder al archivo {archivo}.")
-            return None
+            return None,None
     else:
         print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
-        return None
+        return None,None
 
-def generar_porcentaje_matriz_requerimientos():
+def generar_porcentaje_matriz_requerimientos(dashboard=False, texto_fecha=None):
     nombre = "Matriz requerimientos"
     hoja = "BD"
     archivo = ruta_constantes+"\\"+f"{nombre}.xlsm"
@@ -2660,11 +2674,121 @@ def generar_porcentaje_matriz_requerimientos():
                 dic["Porcentaje_entidad"].append(str(porcentaje)+" %")
                 dic["Anio"].append(anio_actual)
             df = pd.DataFrame(dic)
-            lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Comercial"]
-            nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"porcentaje_matriz_requerimientos")
-            almacenar_df_csv_y_excel(df,nuevo_nombre)
+            if not dashboard:
+                lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Cumplimientos_Regulatorios"]
+                nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"porcentaje_matriz_requerimientos")
+                almacenar_df_csv_y_excel(df,nuevo_nombre)
+                return nuevo_nombre
+            else:
+                lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", texto_fecha, "Cumplimientos_Regulatorios"]
+                nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"porcentaje_matriz_requerimientos")
+                almacenar_df_csv_y_excel(df,nuevo_nombre)
+                return nuevo_nombre
         else:
             print(f"No es posible acceder al archivo {archivo}.")
+            return None
+    else:
+        print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
+        return None
+
+def gastos_AOM(dashboard=False, texto_fecha=None):
+    nombre = "BD"
+    anio_actual = fecha_actual.year
+    archivo_csv = ruta_constantes+"\\"+f"{nombre}.csv"
+    hoja = "BD"
+    archivo = ruta_constantes+"\\"+f"{nombre}.xlsx"
+    if os.path.exists(archivo_csv):
+        lista_df = lectura_dataframe_chunk(archivo_csv)
+        if lista_df:
+            df_prueba = lista_df[0].copy()
+            columnas = list(df_prueba.columns)
+            columnas = [(x.strip()).lower() for x in columnas]
+            df_prueba.columns = columnas
+            col_1 = "valorinde"
+            for i in columnas:
+                if col_1 in i:
+                    col_1 = i
+            columnas_AOM = ["año", "sociedad", col_1, "aom", "negocio"]
+            try:
+                df_prueba_2 = df_prueba[columnas_AOM]
+            except BaseException:
+                texto = lista_a_texto(columnas_AOM, ", ")
+                print(f"Algunas de las columnas {texto} no se encuentran en el archivo {nombre}.csv")
+                return None
+            dic = {}
+            for df in lista_df:
+                df_filtro = df.copy()
+                df_filtro.columns = columnas
+                df_filtro = df_filtro[columnas_AOM]
+                df_filtro = df_filtro[(df_filtro["año"]>2020)&(df_filtro["aom"]=="AOM")]
+                lista_anios = list(df_filtro["año"].unique())
+                lista_filiales = list(df_filtro["sociedad"].unique())
+                lista_negocios = list(df_filtro["negocio"].unique())
+                lista_negocios = [(x.strip()).capitalize() for x in lista_negocios]
+                for anio in lista_anios:
+                    anio_str = str(anio)
+                    if anio_str not in dic:
+                        dic[anio_str] = {}
+                    for filial in lista_filiales:
+                        if filial not in dic[anio_str]:
+                            dic[anio_str][filial] = {}
+                        for negocio in lista_negocios:
+                            if negocio not in dic[str(anio)][filial]:
+                                dic[anio_str][filial][negocio] = 0
+                            df_negocio = df_filtro[(df_filtro["año"]==anio)&(df_filtro["sociedad"]==filial)&(df_filtro["negocio"]==negocio)]
+                            if len(df_negocio):
+                                dic[anio_str][filial][negocio] += df_negocio[col_1].sum()
+            dic_df = {"Año":[],
+                        "Filial":[],
+                        "Valor":[],
+                        "Negocio":[]}
+            for anio, dic_anio in dic.items():
+                for filial, dic_filial in dic_anio.items():
+                    for negocio, valor in dic_filial.items():
+                        dic_df["Año"].append(anio)
+                        dic_df["Filial"].append(dic_filiales[filial])
+                        dic_df["Valor"].append(valor)
+                        dic_df["Negocio"].append(negocio)
+            df_AOM = pd.DataFrame(dic_df)
+            lista_porcentaje = []
+            lista_anios = list(df_AOM["Año"].unique())
+            lista_filiales = list(df_AOM["Filial"].unique())
+            for anio in lista_anios:
+                for filial in lista_filiales:
+                    df_total = df_AOM[(df_AOM["Año"]==anio)&(df_AOM["Filial"]==filial)].reset_index(drop=True)
+                    v_total = df_total["Valor"].sum()
+                    for pos in range(len(df_total)):
+                        porcentaje = round((df_total["Valor"][pos]/v_total)*100,2)
+                        lista_porcentaje.append(f"{porcentaje} %")
+            df_AOM["Porcentaje gastos"] = lista_porcentaje
+            if not dashboard:
+                lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", str(anio_actual-1), "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Cumplimientos_Regulatorios"]
+                nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"Gastos_AOM_{anio_actual-1}")
+                almacenar_df_csv_y_excel(df_AOM,nuevo_nombre)
+                return nuevo_nombre
+            else:
+                lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", texto_fecha, "Cumplimientos_Regulatorios"]
+                nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"Gastos_AOM")
+                almacenar_df_csv_y_excel(df_AOM,nuevo_nombre)
+                return nuevo_nombre
+            
+    elif os.path.exists(archivo):
+        lista_hojas = mod_5.hojas_disponibles(archivo)
+        proceso = False
+        for i in lista_hojas:
+            if hoja in i:
+                hoja = i
+                proceso = True
+        if proceso:
+            df, proceso = mod_5.lectura_hoja_xlsx(archivo, hoja)
+            if proceso:
+                almacenar_df_csv_y_excel(df, ruta_constantes+"\\"+f"{nombre}.csv", almacenar_excel=False)
+                gastos_AOM()
+            else:
+                print(f"No es posible a acceder al archivo {archivo}.")
+                return None
+        else:
+            print(f"No existe un hoja {hoja} en el archivo {nombre}.xlsx")
             return None
     else:
         print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
@@ -3030,7 +3154,7 @@ def encontrar_ubi_archivo(lista, nombre):
                 ruta_actual = carpeta
     return ruta_actual+"\\"+nombre+".csv"
 
-def generar_porcentaje_cumplimientos_regulatorios():
+def generar_porcentaje_cumplimientos_regulatorios(dashboard=False, texto_fecha=None):
     nombre = "Reporte SUI"
     archivo = ruta_constantes+"\\"+f"{nombre}.xlsx"
     if os.path.exists(archivo):
@@ -3062,13 +3186,22 @@ def generar_porcentaje_cumplimientos_regulatorios():
                 dic_df["Porcentaje_cumplimiento"].append(str(round((len(df_estado)/largo)*100,2))+" %")
             df_porcentaje = pd.DataFrame(dic_df)
             df_porcentaje["Anio"] = anio_actual
-            lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", str(anio_actual), "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Cumplimientos_Regulatorios"]
-            nuevo_nombre = encontrar_ubi_archivo(lista_ubi, "porcentaje_cumplimientos_regulatorios")
-            almacenar_df_csv_y_excel(df_porcentaje,nuevo_nombre)
+            if not dashboard:
+                lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", str(anio_actual), "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Cumplimientos_Regulatorios"]
+                nuevo_nombre = encontrar_ubi_archivo(lista_ubi, "porcentaje_cumplimientos_regulatorios")
+                almacenar_df_csv_y_excel(df_porcentaje,nuevo_nombre)
+                return nuevo_nombre
+            else:
+                lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", texto_fecha, "Cumplimientos_Regulatorios"]
+                nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"porcentaje_cumplimientos_regulatorios")
+                almacenar_df_csv_y_excel(df_porcentaje,nuevo_nombre)
+                return nuevo_nombre
         else:
             print(f"No es posible acceder al archivo {archivo}.")
+            return None
     else:
         print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
+        return None
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Reportes Anuales
@@ -3097,6 +3230,9 @@ def union_archivos_mensuales_anual(dic_archivos, seleccionar_reporte, informar=T
         nombre = lista_a_texto(lista_nombre, "\\")
         df_anual = pd.concat(lista_anual)
         almacenar_df_csv_y_excel(df_anual, nombre, informar, almacenar_excel)
+        return nombre
+    else:
+        return None
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Uso de listas (arreglos)

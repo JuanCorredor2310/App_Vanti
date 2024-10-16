@@ -26,6 +26,8 @@ def almacenar_csv_en_excel(df, archivo_xlsx, nombre_hoja):
         return None
     except Exception:
         return None
+    except BaseException:
+        return None
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Almacenamiento excel con patrones
@@ -49,6 +51,8 @@ def almacenar_csv_en_excel_patrones(df, archivo_xlsx, nombre_hoja):
     except ValueError:
         return None
     except Exception:
+        return None
+    except BaseException:
         return None
 
 # * -------------------------------------------------------------------------------------------------------
@@ -86,6 +90,10 @@ def definir_tipo_texto(sheet):
                     celda.value = valor
                     celda.number_format = "General"
             except ValueError:
+                valor = str(valor).replace("np.int64","").replace("np.float64","")
+                celda.value = valor
+                celda.number_format = "General"
+            except BaseException:
                 valor = str(valor).replace("np.int64","").replace("np.float64","")
                 celda.value = valor
                 celda.number_format = "General"
@@ -142,3 +150,10 @@ def lectura_hoja_xlsx(archivo, hoja):
         return None, None
     except PermissionError:
         return None, None
+    except BaseException:
+        return None, None
+
+def hojas_disponibles(archivo):
+    wb = load_workbook(archivo, read_only=True)
+    lista_hojas = list(wb.sheetnames)
+    return lista_hojas
