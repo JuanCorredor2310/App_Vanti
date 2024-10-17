@@ -12,16 +12,18 @@ from PIL import Image,ImageDraw,ImageFont
 from skimage.transform import resize
 
 import ruta_principal as mod_rp
-global ruta_principal, ruta_codigo, ruta_constantes, ruta_nuevo_sui, ruta_archivos
+global ruta_principal, ruta_codigo, ruta_constantes, ruta_nuevo_sui, ruta_archivos,ruta_fuentes,ruta_imagenes
 ruta_principal = mod_rp.v_ruta_principal()
 ruta_constantes = mod_rp.v_constantes()
 ruta_nuevo_sui = mod_rp.v_nuevo_sui()
 ruta_codigo = mod_rp.v_codigo()
 ruta_archivos = mod_rp.v_archivos()
+ruta_fuentes = mod_rp.v_fuentes()
+ruta_imagenes = mod_rp.v_imagenes()
 import modulo as mod_1
 import archivo_creacion_json as mod_2
 
-global grupo_vanti, lista_filiales, dic_filiales, dic_filiales_largo, limite_facturas, porcentaje_ISRT, dic_nom_eventos,dic_sectores_consumo,dic_sectores_consumo_ordenados,dic_sectores_consumo_imagenes,dic_estratos,dic_industrias,lista_filiales_corto
+global grupo_vanti, lista_filiales, dic_filiales, dic_filiales_largo, limite_facturas, porcentaje_ISRT, dic_nom_eventos,dic_sectores_consumo,dic_sectores_consumo_ordenados,dic_sectores_consumo_imagenes,dic_estratos,dic_industrias,lista_filiales_corto,fuente_texto,ruta_fuente
 dic_sectores_consumo = mod_1.leer_archivos_json(ruta_constantes+"sectores_consumo_categoria.json")["datos"]
 dic_sectores_consumo_ordenados = {"Regulados": ["Residencial","Comercial","Industrial"],
                                 "No regulados": ["Industrial","GNCV","Comercial","Comercializadoras /\nTransportadores","Petroqu\u00edmica","Oficiales","Termoel\u00e9ctrico","Refiner\u00eda"]}
@@ -51,6 +53,8 @@ dic_cumplimientos_reporte = {"VANTI S.A. ESP":"VANTI S.A. ESP.",
                             'GAS NATURAL DEL ORIENTE SA ESP':'GAS NATURAL DE ORIENTE S.A. ESP.'}
 dic_estratos = mod_1.leer_archivos_json(ruta_constantes+"sector_consumo_estrato.json")["datos"]
 dic_industrias = mod_1.leer_archivos_json(ruta_constantes+"sector_consumo_industrias.json")["datos"]
+fuente_texto = font_manager.FontProperties(fname=ruta_fuentes+"Muli.ttf")
+ruta_fuente = ruta_fuentes+"Muli.ttf"
 def union_listas_df_trimestre(df):
     lista = []
     for i in range(len(df)):
@@ -134,7 +138,7 @@ def grafica_barras_trimestre_reclamos(archivo):
                 ax.bar(x[i], valores[i], color=colors[i])  # Use align='edge' and adjust x-coordinates
             for i in range(len(lista_periodos)):
                 ax.text(x[i], valores[i] + 0.15, f"{valores[i]}%", ha='center', va='bottom', fontsize=34, color=colors[0])
-            ax.set_title(f'Relación de reclamos por cada 10.000 facturas\nexpedidas {dic_filiales[filial]}', color=colors[0],fontsize=36, y=1.05)
+            ax.set_title(f'Relación de reclamos por cada 10.000 facturas\nexpedidas {dic_filiales[filial]}', color=colors[0],fontsize=36, y=1.05, fontproperties=fuente_texto)
             ax.tick_params(axis='x', colors=colors[0],labelsize=25)
             ax.tick_params(axis='y', colors=colors[0],size=0)
             for spine in ax.spines.values():
@@ -1122,7 +1126,7 @@ def mapa_tarifas(n_archivo, fecha):
             archivo_limite = mod_1.lista_a_texto(lista_archivo_limite,"\\")
             radio = 12
             tamanio = 50
-            fuente = ImageFont.truetype("arial.ttf", tamanio)
+            fuente = ImageFont.truetype(ruta_fuente, tamanio)
             largo = len(df_filial)
             seperacion = (alto-tamanio*largo)/(largo+1)
             for pos in range(largo):
@@ -1145,8 +1149,8 @@ def mapa_tarifas(n_archivo, fecha):
                         cuv_1000 = str(cuv_1000)+"0"*(3-len(str(cuv_1000)))
                     texto_cuf = f"Cuf: ${cuf//1000}.{cuf_1000}"
                     texto_cuv = f"Cuv: ${cuv//1000}.{cuv_1000}"
-                    dibujo.text((x_texto,ubi_y+tamanio+5-15), texto_cuf, fill=colors[pos], font=ImageFont.truetype("arial.ttf", 30))
-                    dibujo.text((x_texto,ubi_y+tamanio+35-15), texto_cuv, fill=colors[pos], font=ImageFont.truetype("arial.ttf", 30))
+                    dibujo.text((x_texto,ubi_y+tamanio+5-15), texto_cuf, fill=colors[pos], font=ImageFont.truetype(ruta_fuente, 30))
+                    dibujo.text((x_texto,ubi_y+tamanio+35-15), texto_cuv, fill=colors[pos], font=ImageFont.truetype(ruta_fuente, 30))
             imagen.save(archivo_copia)
             archivo_copia_apoyo = archivo_copia.replace(".png","_apoyo.png")
             background = Image.open(archivo_copia)

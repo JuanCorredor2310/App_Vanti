@@ -17,6 +17,7 @@ import archivo_creacion_json as mod_2
 import archivo_crear_carpetas as mod_3
 import archivo_busqueda_reportes as mod_4
 import archivo_graficas as mod_6
+import archivo_slides_dashboard as mod_7
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Constantes globales
@@ -1594,9 +1595,10 @@ def menu_creacion_dashboard():
     ff_2 = seleccionar_reporte_dashboard["fecha_personalizada"][1][1]
     texto_fecha = f"{fi_1}_{fi_2.upper()}_{ff_1}_{ff_2.upper()}"
     fecha = ((fi_1, fi_2),(ff_1, ff_2))
+    texto_fecha_completo = f"{fi_2}/{fi_1} - {ff_2}/{ff_1}"
     v_fecha_anterior = mod_1.fecha_anterior(ff_1, ff_2)
     print(f"\nInicio de creación del Dashboard para el periodo: ({fi_1}/{fi_2} - {ff_1}/{ff_2})\n\n")
-    lista_archivos_anuales = generar_archivos_anuales_dashboard(seleccionar_reporte_dashboard)
+    """lista_archivos_anuales = generar_archivos_anuales_dashboard(seleccionar_reporte_dashboard)
     for i in range(len(lista_archivos_anuales)):
         archivo = lista_archivos_anuales[i]
         if archivo:
@@ -1634,18 +1636,18 @@ def menu_creacion_dashboard():
     archivo = mod_1.reporte_info_reclamos(fi,ff,listas_unidas, dashboard=True, texto_fecha=texto_fecha)
     if archivo:
         mod_6.grafica_barras_trimestre_reclamos(archivo)
-    archivo = mod_1.generar_porcentaje_cumplimientos_regulatorios(dashboard=True, texto_fecha=texto_fecha)
-    if archivo:
-        mod_6.velocimetro_cumplimientos_regulatorios(archivo, v_fecha_anterior)
     archivo = mod_1.generar_porcentaje_matriz_requerimientos(dashboard=True, texto_fecha=texto_fecha)
     if archivo:
         mod_6.grafica_matriz_requerimientos(archivo)
     archivo = mod_1.gastos_AOM(dashboard=True, texto_fecha=texto_fecha)
     if archivo:
         mod_6.grafica_gastos_AOM(archivo, anio_actual-1)
-
-    # Almacenamiento de las imágenes en las gráficas
-    # Edición de imágenes para el Dashboard
+    """
+    archivo = mod_1.generar_porcentaje_cumplimientos_regulatorios(dashboard=True, texto_fecha=texto_fecha)
+    if archivo:
+        mod_6.velocimetro_cumplimientos_regulatorios(archivo, v_fecha_anterior)
+    lista_archivo = archivo.split("\\")[:-2]
+    mod_7.crear_slides(mod_1.lista_a_texto(lista_archivo,"\\"),v_fecha_anterior,texto_fecha_completo, fecha_actual)
 
     t_f = time.time()
     mod_1.mostrar_tiempo(t_f, t_i)
@@ -2164,9 +2166,6 @@ mostrar_inicio_app()
 
 
 # TODO: Pendientes
-    #Creación de mapa tarifario
-        #Creación de texto en imágenes
-
     #Edición de slides para el dashboard
         #Generar texto
         #Ubicar imágenes

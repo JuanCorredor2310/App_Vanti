@@ -822,7 +822,7 @@ def apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos, codigo_D
                             df = df.replace([np.inf, -np.inf], np.nan).dropna(subset=['Codigo_DANE'])
                             df["Codigo_DANE"] = df["Codigo_DANE"].astype(int)
                             df_codigo_DANE = df[df["Codigo_DANE"] == ele_codigo_DANE].reset_index(drop=True)
-                            if len(df_codigo_DANE) > 0:
+                            if len(df_codigo_DANE):
                                 if ele_codigo_DANE not in dic_codigo_DANE:
                                     dic_codigo_DANE[ele_codigo_DANE] = {}
                                 lista_sectores = list(df_codigo_DANE["Sector_consumo"].unique())
@@ -831,25 +831,27 @@ def apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos, codigo_D
                                         s1 = int(sector)
                                         if s1 > 0:
                                             df_sector = df_codigo_DANE[df_codigo_DANE["Sector_consumo"] == s1].reset_index(drop=True)
-                                            if s1 not in dic_codigo_DANE[ele_codigo_DANE]:
-                                                dic_dataframe[s1] = [0,0,0,0,0,0,0].copy()#cantidad_usuarios,consumo,valor_total_facturado,valor_consumo_facturado,cantidad_facturas,subsidios,contribuciones
-                                            df_sector.loc[:, 'ID_Factura'] = df_sector['ID_Factura'].str.upper()
-                                            df_facturas = df_sector[df_sector['ID_Factura'].str.startswith('F')]
-                                            cantidad_facturas = len(df_facturas)
-                                            cantidad_usuario = len(list(df_sector["ID_Factura"].unique()))
-                                            volumen = df_sector["Volumen"].sum()
-                                            valor_total_facturado = df_sector["Valor_total_facturado"].sum()
-                                            valor_consumo_facturado = df_sector["Facturacion_por_suministro"].sum()
-                                            contribuciones = df_sector["Valor_contribucion"].sum()
-                                            dic_codigo_DANE[ele_codigo_DANE][s1][0] += cantidad_usuario
-                                            dic_codigo_DANE[ele_codigo_DANE][s1][1] += volumen
-                                            dic_codigo_DANE[ele_codigo_DANE][s1][2] += valor_total_facturado
-                                            dic_codigo_DANE[ele_codigo_DANE][s1][3] += valor_consumo_facturado
-                                            dic_codigo_DANE[ele_codigo_DANE][s1][4] += cantidad_facturas
-                                            dic_codigo_DANE[ele_codigo_DANE][s1][6] += contribuciones
+                                            if len(df_sector):
+                                                if s1 not in dic_codigo_DANE[ele_codigo_DANE]:
+                                                    dic_codigo_DANE[ele_codigo_DANE][s1] = [0,0,0,0,0,0,0].copy()#cantidad_usuarios,consumo,valor_total_facturado,valor_consumo_facturado,cantidad_facturas,subsidios,contribuciones
+                                                df_sector['Composicion_usuario'] = df_sector['ID_Factura'].astype(str)+'_'+df_sector['Concepto_general_factura'].astype(str)+'_'+df_sector['Sector_consumo'].astype(str)
+                                                df_sector.loc[:, 'ID_Factura'] = df_sector['ID_Factura'].str.upper()
+                                                df_facturas = df_sector[df_sector['ID_Factura'].str.startswith('F')]
+                                                cantidad_facturas = len(df_facturas)
+                                                cantidad_usuario = len(list(df_sector['Composicion_usuario'].unique()))
+                                                volumen = df_sector["Volumen"].sum()
+                                                valor_total_facturado = df_sector["Valor_total_facturado"].sum()
+                                                valor_consumo_facturado = df_sector["Facturacion_por_suministro"].sum()
+                                                contribuciones = df_sector["Valor_contribucion"].sum()
+                                                dic_codigo_DANE[ele_codigo_DANE][s1][0] += cantidad_usuario
+                                                dic_codigo_DANE[ele_codigo_DANE][s1][1] += volumen
+                                                dic_codigo_DANE[ele_codigo_DANE][s1][2] += valor_total_facturado
+                                                dic_codigo_DANE[ele_codigo_DANE][s1][3] += valor_consumo_facturado
+                                                dic_codigo_DANE[ele_codigo_DANE][s1][4] += cantidad_facturas
+                                                dic_codigo_DANE[ele_codigo_DANE][s1][6] += contribuciones
                                     except BaseException:
                                         pass
-                    if len(dic_codigo_DANE) > 0:
+                    if len(dic_codigo_DANE):
                         lista_df_codigo_DANE = []
                         for ele_codigo_DANE, dic_dataframe in dic_codigo_DANE.items():
                             lista_columnas = ["NIT","Filial","Anio reportado","Mes reportado","Tipo de usuario","Sector de consumo","Cantidad de usuarios","Consumo m3", "Codigo DANE"]
@@ -920,7 +922,8 @@ def apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos, codigo_D
                                 df_sector = df[df["Sector_consumo"] == s1]
                                 if s1 not in dic_dataframe:
                                     dic_dataframe[s1] = [0,0,0,0,0,0,0].copy()#cantidad_usuarios,consumo,valor_total_facturado,valor_consumo_facturado,cantidad_facturas,subsidios,contribuciones
-                                cantidad = len(list(df_sector["ID_Factura"].unique()))
+                                df_sector['Composicion_usuario'] = df_sector['ID_Factura'].astype(str)+'_'+df_sector['Concepto_general_factura'].astype(str)+'_'+df_sector['Sector_consumo'].astype(str)
+                                cantidad = len(list(df_sector['Composicion_usuario'].unique()))
                                 volumen = df_sector["Volumen"].sum()
                                 valor_total = df_sector["Valor_total_facturado"].sum()
                                 df_sector.loc[:, 'ID_Factura'] = df_sector['ID_Factura'].str.upper()
