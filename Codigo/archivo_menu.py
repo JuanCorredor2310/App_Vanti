@@ -22,7 +22,7 @@ import archivo_slides_dashboard as mod_7
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Constantes globales
 # * -------------------------------------------------------------------------------------------------------
-global version, lista_meses, lista_empresas,lista_anios,dic_reportes,lista_reportes_generales,reportes_generados,lista_reportes_totales,t_i,t_f,lista_reportes_generados,cantidad_datos_estilo_excel,fecha_actual,dic_meses,dic_filiales,trimestre_mes,anio_actual
+global version, lista_meses, lista_empresas,lista_anios,dic_reportes,lista_reportes_generales,reportes_generados,lista_reportes_totales,t_i,t_f,lista_reportes_generados,cantidad_datos_estilo_excel,fecha_actual,dic_meses,dic_filiales,trimestre_mes,anio_actual,fecha_actual_texto
 version = "1.0"
 lista_anios = list(mod_2.leer_archivos_json(ruta_constantes+"anios.json")["datos"].values())
 dic_meses = mod_2.leer_archivos_json(ruta_constantes+"tabla_18.json")["datos"]
@@ -44,6 +44,7 @@ lista_reportes_generados = ["_resumen","_form_estandar", #formatos generales
 cantidad_datos_estilo_excel = 80000
 fecha_actual = datetime.now()
 anio_actual = fecha_actual.year
+fecha_actual_texto = f"{fecha_actual.day} de {lista_meses[int(fecha_actual.month)-1]} del {anio_actual}"
 
 def crear_lista_reportes_totales():
     dic = mod_2.leer_archivos_json(ruta_constantes+"/reportes_disponibles.json")["datos"]
@@ -1598,7 +1599,8 @@ def menu_creacion_dashboard():
     texto_fecha_completo = f"{fi_2}/{fi_1} - {ff_2}/{ff_1}"
     v_fecha_anterior = mod_1.fecha_anterior(ff_1, ff_2)
     print(f"\nInicio de creación del Dashboard para el periodo: ({fi_1}/{fi_2} - {ff_1}/{ff_2})\n\n")
-    """lista_archivos_anuales = generar_archivos_anuales_dashboard(seleccionar_reporte_dashboard)
+    lista_archivos_anuales = generar_archivos_anuales_dashboard(seleccionar_reporte_dashboard)
+    lista_metricas_portada = []
     for i in range(len(lista_archivos_anuales)):
         archivo = lista_archivos_anuales[i]
         if archivo:
@@ -1608,6 +1610,7 @@ def menu_creacion_dashboard():
                 mod_6.grafico_usuarios(archivo)
                 mod_6.grafica_pie_usuarios(archivo, v_fecha_anterior)
                 mod_6.grafica_tabla_sector_consumo(archivo, v_fecha_anterior)
+                lista_metricas_portada = mod_6.metricas_sector_consumo(archivo, v_fecha_anterior, lista_metricas_portada)
             elif i == 1:
                 mod_6.grafica_pie_subsidios(archivo, v_fecha_anterior)
                 mod_6.grafica_barras_contribuciones(archivo)
@@ -1617,11 +1620,9 @@ def menu_creacion_dashboard():
             elif i == 3:
                 mod_6.mapa_tarifas(archivo, v_fecha_anterior)
             elif i == 4:
-                pass
-                # Gráfica suspensiones
+                lista_metricas_portada = mod_6.metricas_suspensiones(archivo, v_fecha_anterior, lista_metricas_portada)
             elif i == 5:
-                pass
-                # Gráfica IRST
+                lista_metricas_portada = mod_6.metricas_indicadores(archivo, v_fecha_anterior, lista_metricas_portada)
             elif i == 6:
                 pass
                 mod_6.grafica_barras_indicador_tecnico_minutos(archivo)
@@ -1636,18 +1637,18 @@ def menu_creacion_dashboard():
     archivo = mod_1.reporte_info_reclamos(fi,ff,listas_unidas, dashboard=True, texto_fecha=texto_fecha)
     if archivo:
         mod_6.grafica_barras_trimestre_reclamos(archivo)
-    archivo = mod_1.generar_porcentaje_matriz_requerimientos(dashboard=True, texto_fecha=texto_fecha)
-    if archivo:
-        mod_6.grafica_matriz_requerimientos(archivo)
     archivo = mod_1.gastos_AOM(dashboard=True, texto_fecha=texto_fecha)
     if archivo:
         mod_6.grafica_gastos_AOM(archivo, anio_actual-1)
-    """
+    archivo = mod_1.generar_porcentaje_matriz_requerimientos(dashboard=True, texto_fecha=texto_fecha)
+    if archivo:
+        mod_6.grafica_matriz_requerimientos(archivo)
     archivo = mod_1.generar_porcentaje_cumplimientos_regulatorios(dashboard=True, texto_fecha=texto_fecha)
     if archivo:
         mod_6.velocimetro_cumplimientos_regulatorios(archivo, v_fecha_anterior)
     lista_archivo = archivo.split("\\")[:-2]
-    mod_7.crear_slides(mod_1.lista_a_texto(lista_archivo,"\\"),v_fecha_anterior,texto_fecha_completo, fecha_actual)
+
+    mod_7.crear_slides(mod_1.lista_a_texto(lista_archivo,"\\"),v_fecha_anterior,texto_fecha_completo, fecha_actual_texto, texto_fecha, lista_metricas_portada)
 
     t_f = time.time()
     mod_1.mostrar_tiempo(t_f, t_i)
@@ -2176,3 +2177,6 @@ mostrar_inicio_app()
     #Cambiar tabla de consumo mensual por sector de consumo
 
     #Almacenamiento de slides
+
+#TODO:
+    #Cambiar temporalidad

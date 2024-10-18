@@ -3,6 +3,8 @@ from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.font_manager as font_manager
 import matplotlib.ticker as ticker
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+from matplotlib import rcParams
+from matplotlib.font_manager import FontProperties
 import numpy as np
 import seaborn as sns
 import pandas as pd
@@ -23,7 +25,7 @@ ruta_imagenes = mod_rp.v_imagenes()
 import modulo as mod_1
 import archivo_creacion_json as mod_2
 
-global grupo_vanti, lista_filiales, dic_filiales, dic_filiales_largo, limite_facturas, porcentaje_ISRT, dic_nom_eventos,dic_sectores_consumo,dic_sectores_consumo_ordenados,dic_sectores_consumo_imagenes,dic_estratos,dic_industrias,lista_filiales_corto,fuente_texto,ruta_fuente
+global grupo_vanti, lista_filiales, dic_filiales, dic_filiales_largo, limite_facturas, porcentaje_ISRT, dic_nom_eventos,dic_sectores_consumo,dic_sectores_consumo_ordenados,dic_sectores_consumo_imagenes,dic_estratos,dic_industrias,lista_filiales_corto,fuente_texto,ruta_fuente,custom_font
 dic_sectores_consumo = mod_1.leer_archivos_json(ruta_constantes+"sectores_consumo_categoria.json")["datos"]
 dic_sectores_consumo_ordenados = {"Regulados": ["Residencial","Comercial","Industrial"],
                                 "No regulados": ["Industrial","GNCV","Comercial","Comercializadoras /\nTransportadores","Petroqu\u00edmica","Oficiales","Termoel\u00e9ctrico","Refiner\u00eda"]}
@@ -53,8 +55,9 @@ dic_cumplimientos_reporte = {"VANTI S.A. ESP":"VANTI S.A. ESP.",
                             'GAS NATURAL DEL ORIENTE SA ESP':'GAS NATURAL DE ORIENTE S.A. ESP.'}
 dic_estratos = mod_1.leer_archivos_json(ruta_constantes+"sector_consumo_estrato.json")["datos"]
 dic_industrias = mod_1.leer_archivos_json(ruta_constantes+"sector_consumo_industrias.json")["datos"]
-fuente_texto = font_manager.FontProperties(fname=ruta_fuentes+"Muli.ttf")
 ruta_fuente = ruta_fuentes+"Muli.ttf"
+custom_font = FontProperties(fname=ruta_fuente)
+
 def union_listas_df_trimestre(df):
     lista = []
     for i in range(len(df)):
@@ -111,6 +114,7 @@ def suma_listas(matriz):
     return lista
 
 def grafica_barras_trimestre_reclamos(archivo):
+    
     if os.path.exists(archivo):
         dic_grafica = {}
         df = pd.read_csv(archivo, sep=",", encoding="utf-8-sig")
@@ -138,7 +142,7 @@ def grafica_barras_trimestre_reclamos(archivo):
                 ax.bar(x[i], valores[i], color=colors[i])  # Use align='edge' and adjust x-coordinates
             for i in range(len(lista_periodos)):
                 ax.text(x[i], valores[i] + 0.15, f"{valores[i]}%", ha='center', va='bottom', fontsize=34, color=colors[0])
-            ax.set_title(f'Relación de reclamos por cada 10.000 facturas\nexpedidas {dic_filiales[filial]}', color=colors[0],fontsize=36, y=1.05, fontproperties=fuente_texto)
+            ax.set_title(f'Relación de reclamos por cada 10.000 facturas\nexpedidas {dic_filiales[filial]}', color=colors[0],fontsize=36, y=1.05)
             ax.tick_params(axis='x', colors=colors[0],labelsize=25)
             ax.tick_params(axis='y', colors=colors[0],size=0)
             for spine in ax.spines.values():
@@ -169,6 +173,7 @@ def grafica_barras_trimestre_reclamos(archivo):
             informar_imagen(n_imagen)
 
 def velocimetro_cumplimientos_regulatorios(archivo, fecha):
+    
     n_archivo = archivo
     if os.path.exists(n_archivo):
         df = pd.read_csv(n_archivo, sep=",", encoding="utf-8-sig")
@@ -203,9 +208,9 @@ def velocimetro_cumplimientos_regulatorios(archivo, fecha):
                 ax.barh(1, end - start, left=start, height=0.5, color=colors[i],edgecolor='none')
                 mid_angle = (start + end)  # Ángulo medio de cada sección
                 if value < 30:
-                    ax.text(mid_angle*0.5, 1.8, f'{value}%', ha='center', va='center', fontsize=15, color=colors[i])
+                    ax.text(mid_angle*0.5, 1.8, f'{value}%', ha='center', va='center', fontsize=18, color=colors[i])
                 else:
-                    ax.text(mid_angle*0.5, 1.5, f'{value}%', ha='center', va='center', fontsize=15, color=colors[i])
+                    ax.text(mid_angle*0.5, 1.5, f'{value}%', ha='center', va='center', fontsize=18, color=colors[i])
                 start = end
             ax.set_yticklabels([])
             ax.set_xticks([])
@@ -222,7 +227,7 @@ def velocimetro_cumplimientos_regulatorios(archivo, fecha):
             lista_archivo = archivo.split("\\")
             lista_archivo.insert(-1, "Imagenes")
             archivo_copia = mod_1.lista_a_texto(lista_archivo,"\\")
-            n_imagen = archivo_copia.replace(".csv", f"_cumplimientos_regulatorios_{dic_filiales_largo[dic_cumplimientos_reporte[filial]]}.png")
+            n_imagen = archivo_copia.replace(".csv", f"_{dic_filiales_largo[dic_cumplimientos_reporte[filial]]}.png")
             plt.savefig(n_imagen)
             plt.close()
             imagen = Image.open(n_imagen)
@@ -247,8 +252,8 @@ def grafica_matriz_requerimientos(archivo):
         plt.figure(figsize=(8.3,8))
         plt.pie(sizes, labels=labels, colors=colors, autopct=lambda p : '{:.0f}'.format(p * sum(df['Cantidad']) / 100), textprops={'fontsize': 29,'color':'white'}, wedgeprops={'linewidth': 10, 'edgecolor': 'none'},startangle=90, explode=[0.05, 0.05, 0.05, 0.05])
         plt.legend(bbox_to_anchor=(0.5, 0.01), loc='upper center',
-                                ncol=2, borderaxespad=0.0, fontsize=20)
-        plt.title("Cantidad de requerimientos solicitados \n(Acumulado año)", fontsize=25, color=colors[-1], y=0.97)
+                                ncol=2, borderaxespad=0.0, fontsize=26)
+        plt.title("Cantidad de requerimientos solicitados \n(Acumulado año)", fontsize=30, color=colors[-1], y=0.97)
         plt.gca().spines['top'].set_visible(False)
         plt.gca().spines['right'].set_visible(False)
         plt.gca().spines['bottom'].set_visible(False)
@@ -276,6 +281,7 @@ def cambio_matriz_AOM(matriz):
     return nueva_matriz
 
 def grafica_gastos_AOM(archivo, anio):
+    
     n_archivo = archivo
     if os.path.exists(n_archivo):
         lista_archivo = n_archivo.split("\\")
@@ -342,6 +348,7 @@ def grafica_gastos_AOM(archivo, anio):
             informar_imagen(n_imagen)
 
 def grafica_pie_tipo_usuario(archivo, fecha):
+    
     n_archivo = archivo
     if os.path.exists(n_archivo):
         lista_archivo = n_archivo.split("\\")
@@ -386,6 +393,7 @@ def grafica_pie_tipo_usuario(archivo, fecha):
             informar_imagen(n_imagen)
 
 def grafico_barras_consumo(archivo):
+    
     n_archivo = archivo
     if os.path.exists(n_archivo):
         lista_archivo = n_archivo.split("\\")
@@ -422,6 +430,7 @@ def grafico_barras_consumo(archivo):
         informar_imagen(n_imagen)
 
 def grafico_usuarios(archivo):
+    
     n_archivo = archivo
     if os.path.exists(n_archivo):
         lista_archivo = n_archivo.split("\\")
@@ -478,6 +487,7 @@ def grafico_usuarios(archivo):
         informar_imagen(nombre)
 
 def grafica_pie_usuarios(archivo, fecha):
+    
     n_archivo = archivo
     if os.path.exists(n_archivo):
         lista_archivo = n_archivo.split("\\")
@@ -555,6 +565,7 @@ def grafica_pie_usuarios(archivo, fecha):
             informar_imagen(n_imagen)
 
 def grafica_tabla_sector_consumo(archivo, fecha):
+    
     n_archivo = archivo
     if os.path.exists(n_archivo):
         lista_archivo = n_archivo.split("\\")
@@ -629,6 +640,7 @@ def add_image(ax, img, x, y, zoom=0.1):
     ax.add_artist(ab)
 
 def grafica_barras_compensacion(archivo):
+    
     n_archivo = archivo
     if os.path.exists(n_archivo):
         lista_archivo = n_archivo.split("\\")
@@ -732,6 +744,7 @@ def cambio_lista_cumplimientos(matriz,lista_periodos):
     return nueva_lista_periodos, nueva_matriz, v_min
 
 def grafica_barras_indicador_tecnico(archivo):
+    
     n_archivo = archivo
     if os.path.exists(n_archivo):
         lista_archivo = n_archivo.split("\\")
@@ -802,6 +815,7 @@ def grafica_barras_indicador_tecnico(archivo):
             informar_imagen(n_imagen)
 
 def grafica_pie_subsidios(archivo,fecha):
+    
     anio = int(fecha[0])
     mes = fecha[1].capitalize()
     n_archivo = archivo
@@ -842,6 +856,7 @@ def grafica_pie_subsidios(archivo,fecha):
         informar_imagen(n_imagen)
 
 def grafica_barras_subsidios(archivo):
+    
     n_archivo = archivo
     if os.path.exists(n_archivo):
         lista_archivo = n_archivo.split("\\")
@@ -900,6 +915,7 @@ def grafica_barras_subsidios(archivo):
         informar_imagen(n_imagen)
 
 def grafica_barras_contribuciones(archivo):
+    
     n_archivo = archivo
     if os.path.exists(n_archivo):
         lista_archivo = n_archivo.split("\\")
@@ -936,6 +952,7 @@ def grafica_barras_contribuciones(archivo):
         informar_imagen(n_imagen)
 
 def grafica_barras_indicador_tecnico_minutos(archivo):
+    
     n_archivo = archivo
     if os.path.exists(n_archivo):
         lista_archivo = n_archivo.split("\\")
@@ -1017,6 +1034,7 @@ def grafica_barras_indicador_tecnico_minutos(archivo):
             informar_imagen(n_imagen)
 
 def grafica_barras_indicador_tecnico_horas(archivo, fecha):
+    
     n_archivo = archivo
     if os.path.exists(n_archivo):
         lista_archivo = n_archivo.split("\\")
@@ -1100,6 +1118,7 @@ def func(pct, allvalues):
         return f'{pct:.1f}%'
 
 def mapa_tarifas(n_archivo, fecha):
+    
     x_pie = 800
     x_texto = 1150
     if os.path.exists(n_archivo):
@@ -1185,3 +1204,54 @@ def mapa_tarifas(n_archivo, fecha):
                         imagen_recortada = imagen.crop(recorte)
                         imagen_recortada.save(archivo_limite)
             informar_imagen(archivo_copia)
+
+def metricas_sector_consumo(archivo, fecha, lista_metricas_portada):
+    if os.path.exists(archivo):
+        df = pd.read_csv(archivo, sep=",", encoding="utf-8-sig")
+        df_filtro = df[(df["Anio reportado"]==int(fecha[0]))&(df["Mes reportado"]==fecha[1])&(df["Tipo de usuario"]=="Total")&(df["Filial"]==grupo_vanti)].reset_index(drop=True)
+        if len(df_filtro):
+            texto_1 = float(df_filtro["Consumo m3"][0])
+            texto_1 = f"{round(texto_1/1e6,1)} millones m³"
+            lista_metricas_portada.append(texto_1)
+            texto_1 = round(df_filtro["Diferencia Cantidad de usuarios"][0])
+            texto_1 = f"{texto_1/1e3}"
+            lista_metricas_portada.append(texto_1)
+        else:
+            lista_metricas_portada.append(None)
+            lista_metricas_portada.append(None)
+    return lista_metricas_portada
+
+def metricas_suspensiones(archivo, fecha, lista_metricas_portada):
+    if os.path.exists(archivo):
+        df = pd.read_csv(archivo, sep=",", encoding="utf-8-sig")
+        df_filtro = df[(df["Anio_reportado"]==int(fecha[0]))&(df["Mes_reportado"]==fecha[1])].reset_index(drop=True)
+        if len(df_filtro):
+            lista_metricas_portada.append(str(len(df_filtro)))
+            suma = round(df_filtro["Numero_suscriptores_afectados"].sum())
+            if suma > 1000:
+                texto_1 = f"{suma/1e3}"
+            else:
+                texto_1 = str(suma)
+            lista_metricas_portada.append(texto_1)
+        else:
+            lista_metricas_portada.append(None)
+            lista_metricas_portada.append(None)
+    return lista_metricas_portada
+
+def metricas_indicadores(archivo, fecha, lista_metricas_portada):
+    if os.path.exists(archivo):
+        df = pd.read_csv(archivo, sep=",", encoding="utf-8-sig")
+        df_filtro = df[(df["Anio_reportado"]==int(fecha[0]))&(df["Mes_reportado"]==fecha[1])&(df["Tipo_evento"]=="NO CONTROLADO")].reset_index(drop=True)
+        if len(df_filtro):
+            suma = round(df_filtro["Cantidad_eventos"].sum())
+            if suma > 1000:
+                texto_1 = f"{suma/1e3}"
+            else:
+                texto_1 = str(suma)
+            lista_metricas_portada.append(texto_1)
+            valor = str(round(df_filtro["Tiempo_promedio_llegada (min)"].mean(),1))+" min"
+            lista_metricas_portada.append(valor)
+        else:
+            lista_metricas_portada.append(None)
+            lista_metricas_portada.append(None)
+    return lista_metricas_portada

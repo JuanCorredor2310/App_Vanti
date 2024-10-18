@@ -802,8 +802,6 @@ def codigo_DANE_texto(codigo_DANE):
     else:
         return str(codigo_DANE[0])[:5]
 
-#(lista_archivos, codigo_DANE, reporte, informar, valor_facturado,filial, subsidio=False, almacenar_excel=True):
-
 def apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos, codigo_DANE, reporte, filial, valor_facturado=True, total=False, subsidio=False,facturas=False):
     for archivo in lista_archivos:
         if reporte in archivo:
@@ -3038,8 +3036,8 @@ def apoyo_generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos, fili
                 dic_horas_evento[evento] = {}
                 for hora in range(24):
                     dic_horas_evento[evento][hora] = {"< 1 día":((0,int(60*24)),[]),
-                                                    "1 - 3 días":((int(60*24),int(60*24*3)),[]),
-                                                    "> 3 dias":((int(60*24*3),float("inf")),[])}
+                                                    "1 - 2 días":((int(60*24),int(60*24*2)),[]),
+                                                    "> 2 dias":((int(60*24*2),float("inf")),[])}
             for i in range(len(df_filtro)):
                 hora = int(df_filtro["Hora_solicitud"][i])
                 for llave, tupla in dic_horas_evento[evento][hora].items():
