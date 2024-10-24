@@ -1598,9 +1598,10 @@ def menu_creacion_dashboard():
     fecha = ((fi_1, fi_2),(ff_1, ff_2))
     texto_fecha_completo = f"{fi_2}/{fi_1} - {ff_2}/{ff_1}"
     v_fecha_anterior = mod_1.fecha_anterior(ff_1, ff_2)
+    v_fecha_inicial = mod_1.fecha_anterior(fi_1, fi_2)
     print(f"\nInicio de creación del Dashboard para el periodo: ({fi_1}/{fi_2} - {ff_1}/{ff_2})\n\n")
     lista_archivos_anuales = generar_archivos_anuales_dashboard(seleccionar_reporte_dashboard)
-    lista_metricas_portada = []
+    dic_metricas = {}
     for i in range(len(lista_archivos_anuales)):
         archivo = lista_archivos_anuales[i]
         if archivo:
@@ -1608,21 +1609,22 @@ def menu_creacion_dashboard():
                 mod_6.grafica_pie_tipo_usuario(archivo, v_fecha_anterior)
                 mod_6.grafico_barras_consumo(archivo)
                 mod_6.grafico_usuarios(archivo)
-                mod_6.grafica_pie_usuarios(archivo, v_fecha_anterior)
+                dic_metricas = mod_6.grafica_pie_usuarios(archivo, v_fecha_anterior, dic_metricas)
                 mod_6.grafica_tabla_sector_consumo(archivo, v_fecha_anterior)
-                lista_metricas_portada = mod_6.metricas_sector_consumo(archivo, v_fecha_anterior, lista_metricas_portada)
+                dic_metricas = mod_6.metricas_sector_consumo(archivo, v_fecha_inicial, v_fecha_anterior, dic_metricas)
             elif i == 1:
                 mod_6.grafica_pie_subsidios(archivo, v_fecha_anterior)
                 mod_6.grafica_barras_contribuciones(archivo)
                 mod_6.grafica_barras_subsidios(archivo)
             elif i == 2:
                 mod_6.grafica_barras_compensacion(archivo)
+                dic_metricas = mod_6.metricas_compensacines(archivo, v_fecha_anterior, dic_metricas)
             elif i == 3:
                 mod_6.mapa_tarifas(archivo, v_fecha_anterior)
             elif i == 4:
-                lista_metricas_portada = mod_6.metricas_suspensiones(archivo, v_fecha_anterior, lista_metricas_portada)
+                dic_metricas = mod_6.metricas_suspensiones(archivo, v_fecha_anterior, dic_metricas)
             elif i == 5:
-                lista_metricas_portada = mod_6.metricas_indicadores(archivo, v_fecha_anterior, lista_metricas_portada)
+                dic_metricas = mod_6.metricas_indicadores(archivo, v_fecha_anterior, dic_metricas)
             elif i == 6:
                 pass
                 mod_6.grafica_barras_indicador_tecnico_minutos(archivo)
@@ -1639,7 +1641,8 @@ def menu_creacion_dashboard():
         mod_6.grafica_barras_trimestre_reclamos(archivo)
     archivo = mod_1.gastos_AOM(dashboard=True, texto_fecha=texto_fecha)
     if archivo:
-        mod_6.grafica_gastos_AOM(archivo, anio_actual-1)
+        #mod_6.grafica_gastos_AOM(archivo, anio_actual-1)
+        pass
     archivo = mod_1.generar_porcentaje_matriz_requerimientos(dashboard=True, texto_fecha=texto_fecha)
     if archivo:
         mod_6.grafica_matriz_requerimientos(archivo)
@@ -1648,7 +1651,8 @@ def menu_creacion_dashboard():
         mod_6.velocimetro_cumplimientos_regulatorios(archivo, v_fecha_anterior)
     lista_archivo = archivo.split("\\")[:-2]
 
-    mod_7.crear_slides(mod_1.lista_a_texto(lista_archivo,"\\"),v_fecha_anterior,texto_fecha_completo, fecha_actual_texto, texto_fecha, lista_metricas_portada)
+    #mod_7.crear_slides(mod_1.lista_a_texto(lista_archivo,"\\"),v_fecha_anterior,texto_fecha_completo, fecha_actual_texto, texto_fecha, lista_metricas_portada)
+    print(dic_metricas)
 
     t_f = time.time()
     mod_1.mostrar_tiempo(t_f, t_i)

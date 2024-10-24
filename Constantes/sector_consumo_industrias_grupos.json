@@ -1,0 +1,14 @@
+{
+    "descripcion": "Sector_consumo_a_industrias",
+    "datos": {
+        "Comercial": "Comercial",
+        "Comercializadoras de gas natural": "Comercializadoras / Transportadores",
+        "Transportadores de gas natural": "Comercializadoras / Transportadores",
+        "GNCV": "GNCV",
+        "Petroqu\u00edmica": "Otros",
+        "Industrial": "Industrial",
+        "Oficiales": "Otros",
+        "Termoel\u00e9ctrico": "Otros",
+        "Refiner\u00eda": "Otros"
+    }
+}

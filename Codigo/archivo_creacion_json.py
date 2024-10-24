@@ -836,6 +836,20 @@ def variables_reportes(reporte):
                 datos = {"descripcion":desc,
                         "datos":data}
                 guardar_diccionario_ruta(datos, n_archivo)
+        elif reporte == "sector_consumo_industrias_grupos":
+                desc = "Sector_consumo_a_industrias"
+                data = {"Comercial": "Comercial",
+                        "Comercializadoras de gas natural": "Comercializadoras / Transportadores",
+                        "Transportadores de gas natural": "Comercializadoras / Transportadores",
+                        "GNCV": "GNCV",
+                        "Petroqu\u00edmica": "Otros",
+                        "Industrial": "Industrial",
+                        "Oficiales": "Otros",
+                        "Termoel\u00e9ctrico": "Otros",
+                        "Refiner\u00eda": "Otros"}
+                datos = {"descripcion":desc,
+                        "datos":data}
+                guardar_diccionario_ruta(datos, n_archivo)
         elif reporte == "categoria_matriz_requerimientos":
                 desc = "Categorias_matriz_requerimientos"
                 data = {"AEGR":"Otros",
@@ -850,6 +864,17 @@ def variables_reportes(reporte):
                         "SSPD":"SSPD",
                         "UPME":"Entidades gubernamentales",
                         "VANTI ESP SA":"Otros"}
+                datos = {"descripcion":desc,
+                        "datos":data}
+                guardar_diccionario_ruta(datos, n_archivo)
+        elif reporte == "colores":
+                with open(ruta_constantes+"colores.csv", 'r') as archivo:
+                        lineas = archivo.readlines()
+                lista_colores = [(linea.replace("\n","")).split(",") for linea in lineas][1:]
+                desc = "Colores"
+                data = {}
+                for i in range(len(lista_colores)):
+                        data[lista_colores[i][0]] = lista_colores[i][1]
                 datos = {"descripcion":desc,
                         "datos":data}
                 guardar_diccionario_ruta(datos, n_archivo)
@@ -895,6 +920,8 @@ def crear_archivos_json_principales():
         variables_reportes("trimestre_mes")
         variables_reportes("sector_consumo_estrato")
         variables_reportes("sector_consumo_industrias")
+        variables_reportes("sector_consumo_industrias_grupos")
         variables_reportes("categoria_matriz_requerimientos")
         variables_reportes("sectores_consumo_categoria")
+        variables_reportes("colores")
         creacion_directorio_carpetas_principales()

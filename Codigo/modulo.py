@@ -2722,10 +2722,10 @@ def gastos_AOM(dashboard=False, texto_fecha=None):
                 df_filtro.columns = columnas
                 df_filtro = df_filtro[columnas_AOM]
                 df_filtro = df_filtro[(df_filtro["año"]>2020)&(df_filtro["aom"]=="AOM")]
+                df_filtro['negocio'] = df_filtro['negocio'].apply(lambda x: x.strip().capitalize() if isinstance(x, str) else x)
                 lista_anios = list(df_filtro["año"].unique())
                 lista_filiales = list(df_filtro["sociedad"].unique())
                 lista_negocios = list(df_filtro["negocio"].unique())
-                lista_negocios = [(x.strip()).capitalize() for x in lista_negocios]
                 for anio in lista_anios:
                     anio_str = str(anio)
                     if anio_str not in dic:
@@ -2736,7 +2736,7 @@ def gastos_AOM(dashboard=False, texto_fecha=None):
                         for negocio in lista_negocios:
                             if negocio not in dic[str(anio)][filial]:
                                 dic[anio_str][filial][negocio] = 0
-                            df_negocio = df_filtro[(df_filtro["año"]==anio)&(df_filtro["sociedad"]==filial)&(df_filtro["negocio"]==negocio)]
+                            df_negocio = df_filtro[(df_filtro["año"]==anio)&(df_filtro["sociedad"]==filial)&(df_filtro["negocio"]==negocio)].reset_index(drop=True)
                             if len(df_negocio):
                                 dic[anio_str][filial][negocio] += df_negocio[col_1].sum()
             dic_df = {"Año":[],
@@ -2762,6 +2762,22 @@ def gastos_AOM(dashboard=False, texto_fecha=None):
                         porcentaje = round((df_total["Valor"][pos]/v_total)*100,2)
                         lista_porcentaje.append(f"{porcentaje} %")
             df_AOM["Porcentaje gastos"] = lista_porcentaje
+            lista_anios_df =  list(df_AOM["Año"].unique())
+            lista_negocios = list(df_AOM["Negocio"].unique())
+            for anio in lista_anios_df:
+                df_anio = df_AOM[df_AOM["Año"]==anio].reset_index(drop=True)
+                total = df_anio["Valor"].sum()
+                for negocio in lista_negocios:
+                    lista_fila = []
+                    df_filtro = df_anio[df_anio["Negocio"]==negocio].reset_index(drop=True)
+                    lista_fila.append(anio)
+                    lista_fila.append(grupo_vanti)
+                    valor = df_filtro["Valor"].sum()
+                    lista_fila.append(valor)
+                    lista_fila.append(negocio)
+                    porcentaje = str(round((valor/total)*100,2)) + " %" 
+                    lista_fila.append(porcentaje)
+                    df_AOM.loc[len(df_AOM)] = lista_fila
             if not dashboard:
                 lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", str(anio_actual-1), "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Cumplimientos_Regulatorios"]
                 nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"Gastos_AOM_{anio_actual-1}")
@@ -2772,7 +2788,6 @@ def gastos_AOM(dashboard=False, texto_fecha=None):
                 nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"Gastos_AOM")
                 almacenar_df_csv_y_excel(df_AOM,nuevo_nombre)
                 return nuevo_nombre
-            
     elif os.path.exists(archivo):
         lista_hojas = mod_5.hojas_disponibles(archivo)
         proceso = False

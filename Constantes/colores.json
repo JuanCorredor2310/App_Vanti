@@ -1,0 +1,33 @@
+{
+    "descripcion": "Colores",
+    "datos": {
+        "amarillo_v": "#fdba03",
+        "azul_v": "#0a3354",
+        "azul_agua_v": "#2db6cf",
+        "naranja_v": "#ea7916",
+        "morado_v": "#805080",
+        "verde_v": "#4fb6a9",
+        "azul_agua_c_v": "#a8e3ec",
+        "naranja_c_v": "#f6c8a2",
+        "morado_c_v": "#d0b4d1",
+        "verde_c_v": "#b9e2dd",
+        "verde_c": "#94b734",
+        "verde_o": "#018100",
+        "rojo_c": "#db142d",
+        "rojo_o": "#9f1726",
+        "amarillo_c": "#fdb740",
+        "amarillo_o": "#f29e13",
+        "morado_c": "#a94bfe",
+        "morado_o": "#3c0175",
+        "azul_c": "#1a6eff",
+        "azul_o": "#053381",
+        "vinotinto": "#770752",
+        "azul_agua_o": "#37848a",
+        "verde_p": "#0ac22d",
+        "naranja_p": "#fd8d24",
+        "rojo_p": "#a6184b",
+        "azul_p": "#0390cf",
+        "blanco": "#fefffe",
+        "negro": "#000000"
+    }
+}
