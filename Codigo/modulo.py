@@ -802,7 +802,7 @@ def codigo_DANE_texto(codigo_DANE):
     else:
         return str(codigo_DANE[0])[:5]
 
-def apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos, codigo_DANE, reporte, filial, valor_facturado=True, total=False, subsidio=False,facturas=False):
+def apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos, codigo_DANE, reporte, filial, valor_facturado=True, total=False, subsidio=False, facturas=False, reporte_DANE=False):
     for archivo in lista_archivos:
         if reporte in archivo:
             lista_df = lectura_dataframe_chunk(archivo)
@@ -828,11 +828,15 @@ def apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos, codigo_D
                                     try:
                                         s1 = int(sector)
                                         if s1 > 0:
-                                            df_sector = df_codigo_DANE[df_codigo_DANE["Sector_consumo"] == s1].reset_index(drop=True)
+                                            df_sector = df_codigo_DANE[df_codigo_DANE["Sector_consumo"] == s1].reset_index(drop=True).copy()
                                             if len(df_sector):
                                                 if s1 not in dic_codigo_DANE[ele_codigo_DANE]:
                                                     dic_codigo_DANE[ele_codigo_DANE][s1] = [0,0,0,0,0,0,0].copy()#cantidad_usuarios,consumo,valor_total_facturado,valor_consumo_facturado,cantidad_facturas,subsidios,contribuciones
-                                                df_sector['Composicion_usuario'] = df_sector['ID_Factura'].astype(str)+'_'+df_sector['Concepto_general_factura'].astype(str)+'_'+df_sector['Sector_consumo'].astype(str)
+                                                df_sector.loc[:, 'Composicion_usuario'] = (
+                                                    df_sector['ID_Factura'].astype(str) + '_' +
+                                                    df_sector['Concepto_general_factura'].astype(str) + '_' +
+                                                    df_sector['Sector_consumo'].astype(str))
+                                                #df_sector['Composicion_usuario'] = df_sector['ID_Factura'].astype(str)+'_'+df_sector['Concepto_general_factura'].astype(str)+'_'+df_sector['Sector_consumo'].astype(str)
                                                 df_sector.loc[:, 'ID_Factura'] = df_sector['ID_Factura'].str.upper()
                                                 df_facturas = df_sector[df_sector['ID_Factura'].str.startswith('F')]
                                                 cantidad_facturas = len(df_facturas)
@@ -873,24 +877,32 @@ def apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos, codigo_D
                                 lista_columnas.append("Contribuciones")
                             for llave, valor in dic_dataframe.items():
                                 try:
-                                    valor_1 = tabla_11["datos"][str(llave)]
-                                    dic_dataframe_2["Tipo de usuario"].append("No regulados")
-                                    dic_dataframe_2["Sector de consumo"].append(valor_1)
-                                    dic_dataframe_2["Cantidad de usuarios"].append(valor[0])
-                                    dic_dataframe_2["Consumo m3"].append(round(valor[1]))
-                                    if valor_facturado:
-                                        dic_dataframe_2["Valor facturación por consumo"].append(round(valor[3]))
-                                        dic_dataframe_2["Valor total facturado"].append(round(valor[2]))
-                                    if facturas:
-                                        dic_dataframe_2["Cantidad de facturas"].append(valor[4])
-                                    if subsidio:
-                                        dic_dataframe_2["Subsidios"].append(valor[5])
-                                        dic_dataframe_2["Contribuciones"].append(valor[6])
+                                    str_llave = str(llave)
+                                    if str_llave in tabla_11["datos"]:
+                                        if reporte_DANE:
+                                            valor_1 = str_llave
+                                            dic_dataframe_2["Tipo de usuario"].append("No regulado")
+                                        else:
+                                            valor_1 = tabla_11["datos"][str(llave)]
+                                            dic_dataframe_2["Tipo de usuario"].append("No regulados")
+                                        dic_dataframe_2["Sector de consumo"].append(valor_1)
+                                        dic_dataframe_2["Cantidad de usuarios"].append(valor[0])
+                                        dic_dataframe_2["Consumo m3"].append(round(valor[1]))
+                                        if valor_facturado:
+                                            dic_dataframe_2["Valor facturación por consumo"].append(round(valor[3]))
+                                            dic_dataframe_2["Valor total facturado"].append(round(valor[2]))
+                                        if facturas:
+                                            dic_dataframe_2["Cantidad de facturas"].append(valor[4])
+                                        if subsidio:
+                                            dic_dataframe_2["Subsidios"].append(valor[5])
+                                            dic_dataframe_2["Contribuciones"].append(valor[6])
                                 except BaseException:
                                     pass
                             df_codigo_DANE_gen = pd.DataFrame(dic_dataframe_2)
                             df_codigo_DANE_gen["Codigo DANE"] = ele_codigo_DANE
                             df_codigo_DANE_gen["Anio reportado"] = anio_reportado
+                            if reporte_DANE:
+                                mes_reportado = lista_meses.index(mes_reportado)+1
                             df_codigo_DANE_gen["Mes reportado"] = mes_reportado
                             df_codigo_DANE_gen["Filial"] = dic_filiales[filial]
                             df_codigo_DANE_gen["NIT"] = dic_nit[dic_filiales[filial]]
@@ -903,7 +915,11 @@ def apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos, codigo_D
                             if subsidio:
                                 lista_nombre[-1] = lista_nombre[-1].replace("_resumen.csv", f"_reporte_consumo_{str(v_codigo_DANE_texto)}_subsidio.csv")
                             else:
-                                lista_nombre[-1] = lista_nombre[-1].replace("_resumen.csv", f"_reporte_consumo_{str(v_codigo_DANE_texto)}.csv")
+                                if reporte_DANE:
+                                    lista_nombre[-2] = "09. DANE"
+                                    lista_nombre[-1] = lista_nombre[-1].replace("_resumen.csv", f"_reporte_DANE_{str(v_codigo_DANE_texto)}.csv")
+                                else:
+                                    lista_nombre[-1] = lista_nombre[-1].replace("_resumen.csv", f"_reporte_consumo_{str(v_codigo_DANE_texto)}.csv")
                             nombre = lista_a_texto(lista_nombre,"\\")
                             return df_codigo_DANE_gen_tot, nombre
                         else:
@@ -917,10 +933,14 @@ def apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos, codigo_D
                         for sector in lista_sectores:
                             try:
                                 s1 = int(sector)
-                                df_sector = df[df["Sector_consumo"] == s1]
+                                df_sector = df[df["Sector_consumo"] == s1].copy()
                                 if s1 not in dic_dataframe:
                                     dic_dataframe[s1] = [0,0,0,0,0,0,0].copy()#cantidad_usuarios,consumo,valor_total_facturado,valor_consumo_facturado,cantidad_facturas,subsidios,contribuciones
-                                df_sector['Composicion_usuario'] = df_sector['ID_Factura'].astype(str)+'_'+df_sector['Concepto_general_factura'].astype(str)+'_'+df_sector['Sector_consumo'].astype(str)
+                                #df_sector['Composicion_usuario'] = df_sector['ID_Factura'].astype(str)+'_'+df_sector['Concepto_general_factura'].astype(str)+'_'+df_sector['Sector_consumo'].astype(str)
+                                df_sector.loc[:, 'Composicion_usuario'] = (
+                                    df_sector['ID_Factura'].astype(str) + '_' +
+                                    df_sector['Concepto_general_factura'].astype(str) + '_' +
+                                    df_sector['Sector_consumo'].astype(str))
                                 cantidad = len(list(df_sector['Composicion_usuario'].unique()))
                                 volumen = df_sector["Volumen"].sum()
                                 valor_total = df_sector["Valor_total_facturado"].sum()
@@ -965,35 +985,47 @@ def apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos, codigo_D
                         lista_columnas.append("Contribuciones")
                     for llave, valor in dic_dataframe.items():
                         try:
-                            valor_1 = tabla_11["datos"][str(llave)]
-                            dic_dataframe_2["Tipo de usuario"].append("No regulados")
-                            dic_dataframe_2["Sector de consumo"].append(valor_1)
-                            dic_dataframe_2["Cantidad de usuarios"].append(valor[0])
-                            dic_dataframe_2["Consumo m3"].append(round(valor[1]))
-                            if valor_facturado:
-                                dic_dataframe_2["Valor facturación por consumo"].append(round(valor[3]))
-                                dic_dataframe_2["Valor total facturado"].append(round(valor[2]))
-                            if facturas:
-                                dic_dataframe_2["Cantidad de facturas"].append(valor[4])
-                            if subsidio:
-                                dic_dataframe_2["Subsidios"].append(valor[5])
-                                dic_dataframe_2["Contribuciones"].append(valor[6])
+                            str_llave = str(llave)
+                            if str_llave in tabla_11["datos"]:
+                                if reporte_DANE:
+                                    valor_1 = str_llave
+                                    dic_dataframe_2["Tipo de usuario"].append("No regulado")
+                                else:
+                                    valor_1 = tabla_11["datos"][str(llave)]
+                                    dic_dataframe_2["Tipo de usuario"].append("No regulados")
+                                dic_dataframe_2["Sector de consumo"].append(valor_1)
+                                dic_dataframe_2["Cantidad de usuarios"].append(valor[0])
+                                dic_dataframe_2["Consumo m3"].append(round(valor[1]))
+                                if valor_facturado:
+                                    dic_dataframe_2["Valor facturación por consumo"].append(round(valor[3]))
+                                    dic_dataframe_2["Valor total facturado"].append(round(valor[2]))
+                                if facturas:
+                                    dic_dataframe_2["Cantidad de facturas"].append(valor[4])
+                                if subsidio:
+                                    dic_dataframe_2["Subsidios"].append(valor[5])
+                                    dic_dataframe_2["Contribuciones"].append(valor[6])
                         except BaseException:
                             pass
                     df1 = pd.DataFrame(dic_dataframe_2)
                     df1["Filial"] = dic_filiales[filial]
                     df1["NIT"] = dic_nit[dic_filiales[filial]]
                     df1["Anio reportado"] = anio_reportado
+                    if reporte_DANE:
+                        mes_reportado = lista_meses.index(mes_reportado)+1
                     df1["Mes reportado"] = mes_reportado
                     lista_nombre = archivo.split("\\")
                     if subsidio:
                         lista_nombre[-1] = lista_nombre[-1].replace("_resumen.csv", "_reporte_consumo_subsidio.csv")
                     else:
-                        lista_nombre[-1] = lista_nombre[-1].replace("_resumen.csv", "_reporte_consumo.csv")
+                        if reporte_DANE:
+                            lista_nombre[-2] = "09. DANE"
+                            lista_nombre[-1] = lista_nombre[-1].replace("_resumen.csv", "_reporte_DANE.csv")
+                        else:
+                            lista_nombre[-1] = lista_nombre[-1].replace("_resumen.csv", "_reporte_consumo.csv")
                     nombre = lista_a_texto(lista_nombre, "\\")
                     if len(df1) > 0:
                         df1 = df1[lista_columnas]
-                        if total and not codigo_DANE:
+                        if total and not codigo_DANE and not reporte_DANE:
                             if not valor_facturado:
                                 del dic["Valor total facturado"]
                                 del dic["Valor facturación por consumo"]
@@ -1050,7 +1082,7 @@ def buscar_NIU(lista_NIU, dic_NIU, subsidio=False, rango=20):
                 cantidad_facturas += valor[3]
     return cantidad_usuario, volumen, valor_total_facturado,valor_consumo_facturado,cantidad_facturas,v_subsidios,v_contribuciones
 
-def busqueda_sector_GRTT2(lista_archivos, dic_NIU, codigo_DANE, reporte, filial, nombre, valor_facturado=True, subsidio=False, facturas=False, rango=20):
+def busqueda_sector_GRTT2(lista_archivos, dic_NIU, codigo_DANE, reporte, filial, nombre, valor_facturado=True, subsidio=False, facturas=False, reporte_DANE=False, rango=20):
     for archivo in lista_archivos:
         if reporte in archivo:
             lista_df = lectura_dataframe_chunk(archivo)
@@ -1133,24 +1165,32 @@ def busqueda_sector_GRTT2(lista_archivos, dic_NIU, codigo_DANE, reporte, filial,
                                 lista_columnas.append("Contribuciones")
                             for llave, valor in dic_dataframe.items():
                                 try:
-                                    valor_1 = tabla_3["datos"][str(llave)]
-                                    dic_dataframe_2["Tipo de usuario"].append("Regulados")
-                                    dic_dataframe_2["Sector de consumo"].append(valor_1)
-                                    dic_dataframe_2["Cantidad de usuarios"].append(valor[0])
-                                    dic_dataframe_2["Consumo m3"].append(round(valor[1]))
-                                    if valor_facturado:
-                                        dic_dataframe_2["Valor facturación por consumo"].append(round(valor[3]))
-                                        dic_dataframe_2["Valor total facturado"].append(round(valor[2]))
-                                    if facturas:
-                                        dic_dataframe_2["Cantidad de facturas"].append(valor[4])
-                                    if subsidio:
-                                        dic_dataframe_2["Subsidios"].append(valor[5])
-                                        dic_dataframe_2["Contribuciones"].append(valor[6])
+                                    str_llave = str(llave)
+                                    if str_llave in tabla_3["datos"]:
+                                        if reporte_DANE:
+                                            valor_1 = str_llave
+                                            dic_dataframe_2["Tipo de usuario"].append("Regulado")
+                                        else:
+                                            valor_1 = tabla_3["datos"][str(llave)]
+                                            dic_dataframe_2["Tipo de usuario"].append("Regulados")
+                                        dic_dataframe_2["Sector de consumo"].append(valor_1)
+                                        dic_dataframe_2["Cantidad de usuarios"].append(valor[0])
+                                        dic_dataframe_2["Consumo m3"].append(round(valor[1]))
+                                        if valor_facturado:
+                                            dic_dataframe_2["Valor facturación por consumo"].append(round(valor[3]))
+                                            dic_dataframe_2["Valor total facturado"].append(round(valor[2]))
+                                        if facturas:
+                                            dic_dataframe_2["Cantidad de facturas"].append(valor[4])
+                                        if subsidio:
+                                            dic_dataframe_2["Subsidios"].append(valor[5])
+                                            dic_dataframe_2["Contribuciones"].append(valor[6])
                                 except BaseException:
                                     pass
                             df_codigo_DANE_gen = pd.DataFrame(dic_dataframe_2)
                             df_codigo_DANE_gen["Codigo DANE"] = ele_codigo_DANE
                             df_codigo_DANE_gen["Anio reportado"] = anio_reportado
+                            if reporte_DANE:
+                                mes_reportado = lista_meses.index(mes_reportado)+1
                             df_codigo_DANE_gen["Mes reportado"] = mes_reportado
                             df_codigo_DANE_gen["Filial"] = dic_filiales[filial]
                             df_codigo_DANE_gen["NIT"] = dic_nit[dic_filiales[filial]]
@@ -1163,7 +1203,11 @@ def busqueda_sector_GRTT2(lista_archivos, dic_NIU, codigo_DANE, reporte, filial,
                             if subsidio:
                                 lista_nombre[-1] = lista_nombre[-1].replace("_resumen.csv", f"_reporte_consumo_{str(v_codigo_DANE_texto)}_subsidio.csv")
                             else:
-                                lista_nombre[-1] = lista_nombre[-1].replace("_resumen.csv", f"_reporte_consumo_{str(v_codigo_DANE_texto)}.csv")
+                                if reporte_DANE:
+                                    lista_nombre[-2] = "09. DANE"
+                                    lista_nombre[-1] = lista_nombre[-1].replace("_resumen.csv", f"_reporte_DANE_{str(v_codigo_DANE_texto)}.csv")
+                                else:
+                                    lista_nombre[-1] = lista_nombre[-1].replace("_resumen.csv", f"_reporte_consumo_{str(v_codigo_DANE_texto)}.csv")
                             nombre = lista_a_texto(lista_nombre,"\\")
                             return df_codigo_DANE_gen_tot, nombre
                         else:
@@ -1231,23 +1275,31 @@ def busqueda_sector_GRTT2(lista_archivos, dic_NIU, codigo_DANE, reporte, filial,
                         lista_columnas.append("Contribuciones")
                     for llave, valor in dic_dataframe.items():
                         try:
-                            valor_1 = tabla_3["datos"][str(llave)]
-                            dic_dataframe_2["Tipo de usuario"].append("Regulados")
-                            dic_dataframe_2["Sector de consumo"].append(valor_1)
-                            dic_dataframe_2["Cantidad de usuarios"].append(valor[0])
-                            dic_dataframe_2["Consumo m3"].append(round(valor[1]))
-                            if valor_facturado:
-                                dic_dataframe_2["Valor facturación por consumo"].append(round(valor[3]))
-                                dic_dataframe_2["Valor total facturado"].append(round(valor[2]))
-                            if facturas:
-                                dic_dataframe_2["Cantidad de facturas"].append(valor[4])
-                            if subsidio:
-                                dic_dataframe_2["Subsidios"].append(valor[5])
-                                dic_dataframe_2["Contribuciones"].append(valor[6])
+                            str_llave = str(llave)
+                            if str_llave in tabla_3["datos"]:
+                                if reporte_DANE:
+                                    valor_1 = str_llave
+                                    dic_dataframe_2["Tipo de usuario"].append("Regulado")
+                                else:
+                                    valor_1 = tabla_3["datos"][str_llave]
+                                    dic_dataframe_2["Tipo de usuario"].append("Regulados")
+                                dic_dataframe_2["Sector de consumo"].append(valor_1)
+                                dic_dataframe_2["Cantidad de usuarios"].append(valor[0])
+                                dic_dataframe_2["Consumo m3"].append(round(valor[1]))
+                                if valor_facturado:
+                                    dic_dataframe_2["Valor facturación por consumo"].append(round(valor[3]))
+                                    dic_dataframe_2["Valor total facturado"].append(round(valor[2]))
+                                if facturas:
+                                    dic_dataframe_2["Cantidad de facturas"].append(valor[4])
+                                if subsidio:
+                                    dic_dataframe_2["Subsidios"].append(valor[5])
+                                    dic_dataframe_2["Contribuciones"].append(valor[6])
                         except BaseException:
                             pass
                     df1 = pd.DataFrame(dic_dataframe_2)
                     df1["Anio reportado"] = anio_reportado
+                    if reporte_DANE:
+                        mes_reportado = lista_meses.index(mes_reportado)+1
                     df1["Mes reportado"] = mes_reportado
                     df1["Filial"] = dic_filiales[filial]
                     df1["NIT"] = dic_nit[dic_filiales[filial]]
@@ -1256,13 +1308,17 @@ def busqueda_sector_GRTT2(lista_archivos, dic_NIU, codigo_DANE, reporte, filial,
                     if subsidio:
                         lista_nombre[-1] = lista_nombre[-1].replace("_resumen.csv", "_reporte_consumo_subsidio.csv")
                     else:
-                        lista_nombre[-1] = lista_nombre[-1].replace("_resumen.csv", "_reporte_consumo.csv")
+                        if reporte_DANE:
+                            lista_nombre[-2] = "09. DANE"
+                            lista_nombre[-1] = lista_nombre[-1].replace("_resumen.csv", "_reporte_DANE.csv")
+                        else:
+                            lista_nombre[-1] = lista_nombre[-1].replace("_resumen.csv", "_reporte_consumo.csv")
                     nombre = lista_a_texto(lista_nombre,"\\")
                     return df1, nombre
             return None, None
     return None, None
 
-def apoyo_reporte_comercial_sector_consumo_regulados(lista_archivos, codigo_DANE, reporte, valor_facturado,filial, subsidio=False, total=False, facturas=False):
+def apoyo_reporte_comercial_sector_consumo_regulados(lista_archivos, codigo_DANE, reporte, valor_facturado,filial, subsidio=False, total=False, facturas=False, reporte_DANE=False):
     for archivo in lista_archivos:
         if reporte in archivo:
             lista_df = lectura_dataframe_chunk(archivo)
@@ -1302,8 +1358,8 @@ def apoyo_reporte_comercial_sector_consumo_regulados(lista_archivos, codigo_DANE
                                     dic_1[elemento][5] += subsidio_contribuciones
                         except BaseException:
                             pass
-                df1, nombre = busqueda_sector_GRTT2(lista_archivos, dic_1, codigo_DANE, "GRTT2", filial, archivo, valor_facturado, subsidio, facturas)
-                if total and not codigo_DANE:
+                df1, nombre = busqueda_sector_GRTT2(lista_archivos, dic_1, codigo_DANE, "GRTT2", filial, archivo, valor_facturado, subsidio, facturas, reporte_DANE)
+                if total and not codigo_DANE and not reporte_DANE:
                     dic["Cantidad de usuarios"] = len(dic_1)
                     if not valor_facturado:
                         del dic["Valor total facturado"]
@@ -1362,7 +1418,7 @@ def apoyo_reporte_comercial_sector_consumo(df1, n1, df2, n2, informar=True):
         return df3, n2
     return None, None
 
-def reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=None, valor_facturado=True, subsidio=False, almacenar_excel=True, total=False, facturas=False):
+def reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=None, valor_facturado=True, subsidio=False, almacenar_excel=True, total=False, facturas=False, reporte_DANE=True):
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for fecha, lista_archivos in dic_archivos.items():
         lista_df_filiales = []
@@ -1377,14 +1433,21 @@ def reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar
                 if filial in archivo:
                     lista_archivos_filial.append(archivo)
             if len(lista_archivos_filial):
-                df1, n1 = apoyo_reporte_comercial_sector_consumo_regulados(lista_archivos_filial, codigo_DANE, "GRC1", valor_facturado, filial, subsidio, total, facturas)
-                df2, n2 = apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos_filial, codigo_DANE, "GRC2", filial, valor_facturado, total, subsidio, facturas)
+                df1, n1 = apoyo_reporte_comercial_sector_consumo_regulados(lista_archivos_filial, codigo_DANE, "GRC1", valor_facturado, filial, subsidio, total, facturas, reporte_DANE)
+                df2, n2 = apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos_filial, codigo_DANE, "GRC2", filial, valor_facturado, total, subsidio, facturas, reporte_DANE)
                 df,nombre = apoyo_reporte_comercial_sector_consumo(df1, n1, df2, n2, informar)
                 if nombre:
+                    if reporte_DANE:
+                        df["ESTABLECIMIENTO"] = " "
+                        df["No_Orden"] = list(range(1,len(df)+1))
+                        df = df[['NIT', 'Filial', 'Anio reportado', 'Mes reportado', 'Tipo de usuario', 'Sector de consumo', 'Consumo m3', 'Valor total facturado', "ESTABLECIMIENTO", "No_Orden"]]
+                        df.columns = ['NIT', 'RAZON SOCIAL', 'AÑO', 'MES', 'TIPO DE MERCADO', 'SECTOR DE CONSUMO', 'VOLUMEN M3 FACTURADO', 'VALOR FACTURADO', "ESTABLECIMIENTO", "No_Orden"]
+                        df = df[["No_Orden", 'NIT', 'RAZON SOCIAL', "ESTABLECIMIENTO", 'TIPO DE MERCADO', 'SECTOR DE CONSUMO', 'AÑO', 'MES', 'VALOR FACTURADO','VOLUMEN M3 FACTURADO']]
                     lista_df_filiales.append(df)
                     nombre_compilado = nombre
         if len(lista_df_filiales) and len(lista_filiales_archivo) == 4:
             df_total = pd.concat(lista_df_filiales)
+            df_total["No_Orden"] = list(range(1,len(df_total)+1))
             lista_nombre = nombre_compilado.split("\\")
             lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
             lista_nombre[-5] = "05. REPORTES_GENERADOS_APLICATIVO"
@@ -1396,6 +1459,89 @@ def reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar
                     df_total = df_total_suma.copy()
                     nuevo_nombre = nuevo_nombre.replace(".csv","_sumatoria.csv")
             almacenar_df_csv_y_excel(df_total, nuevo_nombre, informar, almacenar_excel)
+
+def reporte_SH(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=[]):
+    lista_filiales_archivo = seleccionar_reporte["filial"]
+    for fecha, lista_archivos in dic_archivos.items():
+        lista_df_filiales = []
+        for filial in lista_filiales_archivo:
+            lista_archivos_filial = []
+            for archivo in lista_archivos:
+                if filial in archivo:
+                    lista_archivos_filial.append(archivo)
+            apoyo_reporte_SH(lista_archivos_filial, codigo_DANE)
+
+def apoyo_reporte_SH(lista_archivos_filial, codigo_DANE):
+    ele_codigo_DANE = codigo_DANE[0]
+    bool_GRC1 = False
+    bool_GRTT2 = False
+    for archivo in lista_archivos_filial:
+        if "GRC1" in archivo:
+            lista_df = lectura_dataframe_chunk(archivo)
+            if lista_df:
+                dic_GRC1 = {}
+                nombre = archivo
+                bool_GRC1 = True
+                for i in range(len(lista_df)):
+                    df = lista_df[i].copy()
+                    for j in range(len(df)):
+                        v_NIU = df["NIU"][j]
+                        if v_NIU not in dic_GRC1:
+                            dic_GRC1[v_NIU] = [0,0,0,0,0] #consumo,valor_sub_con,cargo_aplicado,valor_otros,valor_total
+                        try:
+                            consumo = float(df["Consumo"][j])
+                            valor_sub_con = float(df["Valor_subsidio_contribucion"][j])
+                            cargo_aplicado = float(df["Cuv_cargo_aplicado_consumo"][j])
+                            valor_otros = float(df["Valor_otros_conceptos"][j])
+                            valor_total = float(df["Valor_total_facturado"][j])
+                            dic_GRC1[v_NIU][0] += consumo
+                            dic_GRC1[v_NIU][1] += valor_sub_con
+                            dic_GRC1[v_NIU][2] += cargo_aplicado
+                            dic_GRC1[v_NIU][3] += valor_otros
+                            dic_GRC1[v_NIU][4] += valor_total
+                        except BaseException:
+                            pass
+        if "GRTT2" in archivo:
+            lista_df = lectura_dataframe_chunk(archivo)
+            if len(lista_df):
+                bool_GRTT2 = True
+            dic_GRTT2 = {}
+            for i in range(len(lista_df)):
+                df = lista_df[i].copy()
+                df = df.replace([np.inf, -np.inf], np.nan).dropna(subset=['Codigo_DANE'])
+                df["Codigo_DANE"] = df["Codigo_DANE"].astype(int)
+                df_codigo_DANE = df[df["Codigo_DANE"] == ele_codigo_DANE].reset_index(drop=True)
+                for j in range(len(df_codigo_DANE)):
+                    v_NIU = df["NIU"][j]
+                    if v_NIU not in dic_GRTT2:
+                        dic_GRTT2[v_NIU] = [df_codigo_DANE["Estrato"][j], df_codigo_DANE["Direccion"][j]] #Estrato, Dirección
+    if bool_GRC1 and bool_GRTT2:
+        dic_df = {"NIU":[],
+                    "ESTRATO":[],
+                    "DIRECCION":[],
+                    "CONSUMO":[],
+                    "VALOR DEL SUBSIDIO O CONTRIBUCION":[],
+                    "CARGO APLICADO POR CONSUMO":[],
+                    "VALOR OTROS CONCEPTOS":[],
+                    "VALOR TOTAL FACTURADO":[],
+                    "CODIGO DANE":[]}
+        for v_NIU, lista_datos in dic_GRC1.items():
+            if v_NIU in dic_GRTT2:
+                dic_df["NIU"].append(v_NIU)
+                dic_df["ESTRATO"].append(dic_GRTT2[v_NIU][0])
+                dic_df["DIRECCION"].append(dic_GRTT2[v_NIU][1])
+                dic_df["CONSUMO"].append(lista_datos[0])
+                dic_df["VALOR DEL SUBSIDIO O CONTRIBUCION"].append(lista_datos[1])
+                dic_df["CARGO APLICADO POR CONSUMO"].append(lista_datos[2])
+                dic_df["VALOR OTROS CONCEPTOS"].append(lista_datos[3])
+                dic_df["VALOR TOTAL FACTURADO"].append(lista_datos[4])
+                dic_df["CODIGO DANE"].append(ele_codigo_DANE)
+        df_SH = pd.DataFrame(dic_df)
+        lista_nombre = nombre.split("\\")
+        lista_nombre[-2] = "10. SH"
+        lista_nombre[-1] = "SH_"+lista_nombre[-1].split("_")[2]+"_"+lista_nombre[-1].split("_")[3]+".csv"
+        nombre = lista_a_texto(lista_nombre,"\\")
+        almacenar_df_csv_y_excel(df_SH, nombre, almacenar_excel=False)
 
 def diferencia_columnas_dataframe(df_actual, df_anterior):
     df_actual = df_actual.copy().reset_index(drop=True)

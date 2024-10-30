@@ -42,7 +42,9 @@
             "GRC5",
             "GRC6",
             "RSGN",
-            "GRC8"
+            "GRC8",
+            "DANE",
+            "SH"
         ],
         "Tarifario": [
             "GRT1",

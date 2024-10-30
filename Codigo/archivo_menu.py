@@ -35,7 +35,7 @@ lista_reportes_generales = mod_2.leer_archivos_json(ruta_constantes+"carpetas_1.
 reportes_generados = mod_2.leer_archivos_json(ruta_constantes+"carpetas_1.json")["carpeta_4"]
 trimestre_mes = mod_2.leer_archivos_json(ruta_constantes+"trimestre_mes.json")["datos"]
 lista_reportes_generados = ["_resumen","_form_estandar", #formatos generales
-                            "_reporte_consumo","_CLD","_PRD","_porcentaje_comparacion_SAP","_total_comparacion_SAP",
+                            "_reporte_consumo","_CLD","_PRD","_porcentaje_comparacion_SAP","_total_comparacion_SAP","SH","DANE","_reporte_DANE",
                             "_comparacion_iguales","_comparacion_diferentes","_subsidio","_info_comercial","_reporte_compensacion","_compilado_compensacion", #formatos comerciales
                             "_reporte_tarifario", #formatos tarifarios
                             "_indicador_tecnico","_reporte_suspension","_indicador_tecnico_IRST","_indicador_tecnico_IRST_minutos","_indicador_tecnico_IRST_horas", #formatos tecnicos
@@ -1179,6 +1179,62 @@ def menu_comercial_compensaciones(option,valor):
         t_f = time.time()
         mod_1.mostrar_tiempo(t_f, t_i)
 
+def menu_reportes_DANE(option,valor):
+    #? Generación de reportes DANE mensual
+    if option == "1":
+        seleccionar_reporte = funcion_seleccionar_reportes("reporte_comercial_mensual")
+        op_add = anadir_opciones(regenerar=True, codigo_DANE=True)
+        regenerar = op_add[1]
+        codigo_DANE = op_add[2]
+        t_i = time.time()
+        print(f"\nInicio de procesamiento para: {valor}\n\n")
+        if regenerar:
+            proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False)
+        proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, False, continuar=False, mostrar_dic=True)
+        if proceso:
+            mod_1.reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=codigo_DANE, valor_facturado=True, reporte_DANE=True)
+        t_f = time.time()
+        mod_1.mostrar_tiempo(t_f, t_i)
+    #? Generación de reportes DANE anual
+    elif option == "2":
+        """seleccionar_reporte = funcion_seleccionar_reportes("reporte_comercial_anual")
+        print(seleccionar_reporte)
+        reporte = "_compilado_compensacion.csv"
+        op_add = anadir_opciones(True, reportes_mensuales=True,texto_regenerar_mensuales=reporte, inventario=True)
+        t_i = time.time()
+        regenerar = op_add[1]
+        regenerar_reportes_mensuales = op_add[6]
+        inventario = op_add[7]
+        print(f"\nInicio de procesamiento para: {valor}\n\n")
+        if regenerar:
+            proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False)
+        if regenerar_reportes_mensuales:
+            proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, False, continuar=True, mostrar_dic=True)
+            if proceso:
+                mod_1.generar_reporte_compensacion_mensual(dic_archivos, seleccionar_reporte, True, inventario)
+        proceso,dic_archivos_anual = generar_archivos_extra_anual(seleccionar_reporte, reporte)
+        if proceso:
+            mod_1.union_archivos_mensuales_anual(dic_archivos_anual, seleccionar_reporte, True)"""
+        t_f = time.time()
+        mod_1.mostrar_tiempo(t_f, t_i)
+
+def menu_reportes_SH():
+    valor = "Reporte comercial Secretaria de Hacienda de Bogotá D.C."
+    seleccionar_reporte = funcion_seleccionar_reportes("reporte_SH_mensual")
+    op_add = anadir_opciones(regenerar=True)
+    regenerar = op_add[1]
+    codigo_DANE = [11001000]
+    t_i = time.time()
+    print(f"\nInicio de procesamiento para: {valor}\n\n")
+    if regenerar:
+        proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False)
+    proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, False, continuar=False, mostrar_dic=True)
+    if proceso:
+        mod_1.reporte_SH(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=codigo_DANE)
+        t_f = time.time()
+        mod_1.mostrar_tiempo(t_f, t_i)
+
+
 def menu_comercial_trimestral(option,valor):
     #? Generación de información para el comportamiento patrimonial
     if option == "2":
@@ -1361,8 +1417,18 @@ def menu_comercial(option,valor):
                     "Regresar al menú inicial"]
         option,valor = opcion_menu_valida(lista_menu, "Información comercial para información de usuarios únicos")
         menu_comercial_analisis_previo(option,valor)
-    #? "Análisis previo para comprobar la calidad de la información
+    #? Reportes DANE
     elif option == "4":
+        lista_menu = ["Generación de reportes DANE mensual",
+                    "Generación de reportes DANE anual",
+                    "Regresar al menú inicial"]
+        option,valor = opcion_menu_valida(lista_menu, "Reportes DANE")
+        menu_reportes_DANE(option,valor)
+    #? Reportes SH (Secretaria de Hacienda)
+    elif option == "5":
+        menu_reportes_SH()
+    #? "Análisis previo para comprobar la calidad de la información
+    elif option == "6":
         lista_menu = ["Generación de reporte de comparación Certificación - Calidad - Producción (GRC1-SAP)", #Op1
                     "Generación de reporte de comparación Certificación - Calidad (GRC1-SAP)", #Op2
                     "Generación de reporte de comparación Certificación - Producción (GRC1-SAP)", #Op3
@@ -1614,8 +1680,8 @@ def menu_creacion_dashboard():
                 dic_metricas = mod_6.metricas_sector_consumo(archivo, v_fecha_inicial, v_fecha_anterior, dic_metricas)
             elif i == 1:
                 mod_6.grafica_pie_subsidios(archivo, v_fecha_anterior)
-                mod_6.grafica_barras_contribuciones(archivo)
-                mod_6.grafica_barras_subsidios(archivo)
+                #mod_6.grafica_barras_contribuciones(archivo)
+                dic_metricas = mod_6.grafica_barras_subsidios(archivo, dic_metricas)
             elif i == 2:
                 mod_6.grafica_barras_compensacion(archivo)
                 dic_metricas = mod_6.metricas_compensacines(archivo, v_fecha_anterior, dic_metricas)
@@ -1641,8 +1707,7 @@ def menu_creacion_dashboard():
         mod_6.grafica_barras_trimestre_reclamos(archivo)
     archivo = mod_1.gastos_AOM(dashboard=True, texto_fecha=texto_fecha)
     if archivo:
-        #mod_6.grafica_gastos_AOM(archivo, anio_actual-1)
-        pass
+        mod_6.grafica_gastos_AOM(archivo, anio_actual-1)
     archivo = mod_1.generar_porcentaje_matriz_requerimientos(dashboard=True, texto_fecha=texto_fecha)
     if archivo:
         mod_6.grafica_matriz_requerimientos(archivo)
@@ -1652,7 +1717,7 @@ def menu_creacion_dashboard():
     lista_archivo = archivo.split("\\")[:-2]
 
     #mod_7.crear_slides(mod_1.lista_a_texto(lista_archivo,"\\"),v_fecha_anterior,texto_fecha_completo, fecha_actual_texto, texto_fecha, lista_metricas_portada)
-    print(dic_metricas)
+    #print(dic_metricas)
 
     t_f = time.time()
     mod_1.mostrar_tiempo(t_f, t_i)
@@ -1688,6 +1753,8 @@ def menu_inicial(lista, nombre):
         lista_menu = ["Información comercial por sector de consumo",
                         "Información comercial para compensaciones",
                         "Análisis previo para comprobar la calidad de la información",
+                        "Reportes DANE",
+                        "Reportes SH (Secretaria de Hacienda de Bogotá D.C.)",
                         "Comparación entre archivos de certificación, calidad (CLD) y/o producción (PRD)",
                         "Regresar al menú inicial"]
         option,valor = opcion_menu_valida(lista_menu, "Reportes de Información Comercial", False)
@@ -1806,6 +1873,13 @@ def funcion_seleccionar_reportes(tipo):
                 seleccionar_reportes["clasificacion"] = lista_reportes_totales
         return seleccionar_reportes
     #? Reportes comerciales
+    elif tipo == "reporte_SH_mensual":
+        seleccionar_reportes["ubicacion"] = ["Reportes Nuevo SUI"]
+        seleccionar_reportes["tipo"] = ["Comercial"]
+        seleccionar_reportes["clasificacion"] = ["GRTT2","GRC1"]
+        seleccionar_reportes["filial"] = [lista_filiales[0]]
+        seleccionar_reportes = eleccion_fecha_personalizada(seleccionar_reportes, True)
+        return seleccionar_reportes
     elif tipo == "inventario_suscriptores_mensual":
         seleccionar_reportes["ubicacion"] = ["Reportes Nuevo SUI"]
         seleccionar_reportes["tipo"] = ["Comercial"]
@@ -2169,18 +2243,7 @@ mostrar_inicio_app()
     # Revisión reportes anuales de calidad de la info
     # Generar un archivo CSV en la comparación del GRC1/CLD/PRD si la cantidad de NIU no encontrados es mayor al 1% de la muestra total
 
-
 # TODO: Pendientes
-    #Edición de slides para el dashboard
-        #Generar texto
-        #Ubicar imágenes
-    #Calcular constantes de portada de manera automática
-
     #Creación de mapa de suspensiones
 
-    #Cambiar tabla de consumo mensual por sector de consumo
-
-    #Almacenamiento de slides
-
-#TODO:
-    #Cambiar temporalidad
+    #Cambiar valores para formato DANE

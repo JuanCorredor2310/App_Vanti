@@ -46,7 +46,7 @@ def creacion_directorio_carpetas_principales():
                                 "Octubre",
                                 "Noviembre",
                                 "Diciembre"], # Separación por meses
-                        "carpeta_6":{"Comercial":["GRTT2","GRC1","GRC2","GRC3","GRC4","GRC5","GRC6","RSGN","GRC8"],
+                        "carpeta_6":{"Comercial":["GRTT2","GRC1","GRC2","GRC3","GRC4","GRC5","GRC6","RSGN","GRC8","DANE","SH"],
                                 "Tarifario":["GRT1","GRT2","GRT3"],
                                 "Tecnico":["GRS1", "GRCS1", "GRCS2", "GRCS3", "GRCS4", "GRCS5", "GRCS6",
                                                 "GRCS7", "GRCS8","GRCS9"]}} # Tipos de reporte
