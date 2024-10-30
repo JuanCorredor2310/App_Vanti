@@ -1,0 +1,9 @@
+{
+    "descripcion": [
+        "Tipo de Tarifa"
+    ],
+    "datos": {
+        "1": "Regulada",
+        "2": "No Regulada"
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "descripcion": [
+        "Periodo Facturaci\u00f3n"
+    ],
+    "datos": {
+        "1": "Mensual",
+        "2": "Bimestral",
+        "3": "Trimestral"
+    }
+}

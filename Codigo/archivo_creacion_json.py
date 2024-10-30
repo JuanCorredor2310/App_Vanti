@@ -878,6 +878,80 @@ def variables_reportes(reporte):
                 datos = {"descripcion":desc,
                         "datos":data}
                 guardar_diccionario_ruta(datos, n_archivo)
+        elif reporte == "indicador_SUI":
+                desc = "indicador_SUI"
+                data = {"VANTI":"488",
+                        "GNCB":"2225",
+                        "GNCR":"525",
+                        "GOR":"526"}
+                datos = {"descripcion":desc,
+                        "datos":data}
+                guardar_diccionario_ruta(datos, n_archivo)
+        elif reporte == "tabla_2_DS":
+                desc = "Servicio",
+                data = {"4":"Energía Eléctrica",
+                        "5":"Gas Combustible por redes"}
+                datos = {"descripcion":desc,
+                        "datos":data}
+                guardar_diccionario_ruta(datos, n_archivo)
+        elif reporte == "tabla_3_DS":
+                desc = "Servicio",
+                data = {"1":"Bajo - bajo",
+                        "2":"Bajo",
+                        "3":"Medio - bajo",
+                        "4":"Medio",
+                        "5":"Meio - alto",
+                        "6":"Alto",
+                        "7":"Industrial",
+                        "8":"Comercial",
+                        "9":"Oficial",
+                        "10":"Provisional",
+                        "11":"Alumbrado Público",
+                        "12":"Especial Asistencial - EA",
+                        "13":"Especial Educativo - ED",
+                        "14":"Usuario Exento - UE",
+                        "15":"Industrial Exento - IE",
+                        "16":"Zonas comunes",
+                        "17":"Distrito de riego"}
+                datos = {"descripcion":desc,
+                        "datos":data}
+                guardar_diccionario_ruta(datos, n_archivo)
+        elif reporte == "tabla_4_DS":
+                desc = "Tipo de Tarifa",
+                data = {"1":"Regulada",
+                        "2":"No Regulada"}
+                datos = {"descripcion":desc,
+                        "datos":data}
+                guardar_diccionario_ruta(datos, n_archivo)
+        elif reporte == "tabla_5_DS":
+                desc = "Tipo Determinador",
+                data = {"1":"Prestador (Analítica)",
+                        "2":"Usuario (Declaración)"}
+                datos = {"descripcion":desc,
+                        "datos":data}
+                guardar_diccionario_ruta(datos, n_archivo)
+        elif reporte == "tabla_6_DS":
+                desc = "Periodo Facturación",
+                data = {"1":"Mensual",
+                        "2":"Bimestral",
+                        "3":"Trimestral"}
+                datos = {"descripcion":desc,
+                        "datos":data}
+                guardar_diccionario_ruta(datos, n_archivo)
+        elif reporte == "Resultado Final Visita":
+                desc = "Servicio",
+                data = {"1":"Consumos reales",
+                        "2":"Error de lectura",
+                        "3":"Error de medición",
+                        "4":"Falla en la instalación",
+                        "5":"Sin acceso al predio",
+                        "6":"Predio desocupado / abandonado / demolido",
+                        "7":"Equipo de medición en prueba laboratorio",
+                        "8":"No realizó visita por programación",
+                        "9":"Otra"}
+                datos = {"descripcion":desc,
+                        "datos":data}
+                guardar_diccionario_ruta(datos, n_archivo)
 
 def crear_archivos_json_principales():
         variables_reportes("GRT1")
@@ -924,4 +998,11 @@ def crear_archivos_json_principales():
         variables_reportes("categoria_matriz_requerimientos")
         variables_reportes("sectores_consumo_categoria")
         variables_reportes("colores")
+        variables_reportes("indicador_SUI")
+        variables_reportes("tabla_2_DS")
+        variables_reportes("tabla_3_DS")
+        variables_reportes("tabla_4_DS")
+        variables_reportes("tabla_5_DS")
+        variables_reportes("tabla_6_DS")
+        variables_reportes("tabla_8_DS")
         creacion_directorio_carpetas_principales()
