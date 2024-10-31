@@ -1,0 +1,39 @@
+{
+    "generales": {
+        "SERVICIO": "SERVICIO",
+        "ID_EMPRESA": "ID_EMPRESA",
+        "NIU": "NIU",
+        "ID_MERCADO": "ID_MERCADO",
+        "ESTRATO_SECTOR": "ESTRATO_SECTOR",
+        "TIPO_TARIFA": "TIPO_TARIFA",
+        "ID_FACTURA_INICIAL": "ID_FACTURA_INICIAL",
+        "CODIGO_DANE_NIU": "CODIGO_DANE_NIU",
+        "DETERMINADOR": "DETERMINADOR"
+    },
+    "generales_no_float": [
+        "SERVICIO",
+        "ID_EMPRESA",
+        "NIU",
+        "ID_MERCADO",
+        "ESTRATO_SECTOR",
+        "TIPO_TARIFA",
+        "ID_FACTURA_INICIAL",
+        "CODIGO_DANE_NIU",
+        "DETERMINADOR"
+    ],
+    "generales_float": [],
+    "generales_hora": [],
+    "generales_fecha": [],
+    "seleccionados": [
+        "SERVICIO",
+        "ID_EMPRESA",
+        "NIU",
+        "ID_MERCADO",
+        "ESTRATO_SECTOR",
+        "TIPO_TARIFA",
+        "ID_FACTURA_INICIAL",
+        "CODIGO_DANE_NIU",
+        "DETERMINADOR"
+    ],
+    "cantidad_columnas": 9
+}

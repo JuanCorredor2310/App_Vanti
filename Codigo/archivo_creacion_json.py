@@ -46,7 +46,8 @@ def creacion_directorio_carpetas_principales():
                                 "Octubre",
                                 "Noviembre",
                                 "Diciembre"], # Separación por meses
-                        "carpeta_6":{"Comercial":["GRTT2","GRC1","GRC2","GRC3","GRC4","GRC5","GRC6","RSGN","GRC8","DANE","SH"],
+                        "carpeta_6":{"Comercial":["GRTT2","GRC1","GRC2","GRC3","GRC4","GRC5",
+                                                        "GRC6","RSGN","GRC8","DANE","SH","DS"],
                                 "Tarifario":["GRT1","GRT2","GRT3"],
                                 "Tecnico":["GRS1", "GRCS1", "GRCS2", "GRCS3", "GRCS4", "GRCS5", "GRCS6",
                                                 "GRCS7", "GRCS8","GRCS9"]}} # Tipos de reporte
@@ -467,6 +468,65 @@ def variables_reportes(reporte):
                         "seleccionados": seleccionados,
                         "cantidad_columnas":total}
                 guardar_diccionario_ruta(datos, n_archivo)
+        elif reporte == "DS56":
+                generales_carga = ["SERVICIO","ID_EMPRESA","NIU","ID_MERCADO","ESTRATO_SECTOR","TIPO_TARIFA","ID_FACTURA_INICIAL","CODIGO_DANE_NIU","DETERMINADOR"]
+                generales_presentacion = generales_carga.copy()
+                generales_no_float = generales_carga.copy()
+                generales_float = []
+                generales_hora = []
+                generales_fecha = []
+                seleccionados = generales_carga.copy()
+                total = len(generales_float)+len(generales_no_float)+len(generales_hora)+len(generales_fecha)
+                datos = {"generales":dict(zip(generales_carga, generales_presentacion)),
+                        "generales_no_float":generales_no_float,
+                        "generales_float":generales_float,
+                        "generales_hora":generales_hora,
+                        "generales_fecha":generales_fecha,
+                        "seleccionados": seleccionados,
+                        "cantidad_columnas":total}
+                guardar_diccionario_ruta(datos, n_archivo)
+        elif reporte == "DS57":
+                generales_carga = ["SERVICIO","ID_EMPRESA","NIU","ID_MERCADO","CODIGO_DANE_NIU","ESTRATO_SECTOR",
+                                        "TIPO_TARIFA","PERIODO_FACTURACION","ID_FACTURA_INICIAL","CONSUMO_USUARIO",
+                                        "DIAS_FACTURADOS","PROM_CONS_NORMALIZADO_12M","CONSUMO_NORMALIZADO","RAZON",
+                                        "DESVIACION_ESTANDAR","LIMITE_SUPERIOR","LIMITE_INFERIOR","REQUIERE_VISITA",
+                                        "REALIZO_VISITA","FECHA_VISITA","RESULTADO_FINAL_VISITA","OBSERVACION"]
+                generales_presentacion = generales_carga.copy()
+                generales_no_float = ["SERVICIO","ID_EMPRESA","NIU","ID_MERCADO","CODIGO_DANE_NIU","ESTRATO_SECTOR",
+                                        "TIPO_TARIFA","PERIODO_FACTURACION","ID_FACTURA_INICIAL","CONSUMO_USUARIO",
+                                        "DIAS_FACTURADOS","REQUIERE_VISITA",
+                                        "REALIZO_VISITA","RESULTADO_FINAL_VISITA","OBSERVACION"]
+                generales_float = ["PROM_CONS_NORMALIZADO_12M","CONSUMO_NORMALIZADO","RAZON",
+                                        "DESVIACION_ESTANDAR","LIMITE_SUPERIOR","LIMITE_INFERIOR"]
+                generales_hora = []
+                generales_fecha = ["FECHA_VISITA"]
+                seleccionados = generales_carga.copy()
+                total = len(generales_float)+len(generales_no_float)+len(generales_hora)+len(generales_fecha)
+                datos = {"generales":dict(zip(generales_carga, generales_presentacion)),
+                        "generales_no_float":generales_no_float,
+                        "generales_float":generales_float,
+                        "generales_hora":generales_hora,
+                        "generales_fecha":generales_fecha,
+                        "seleccionados": seleccionados,
+                        "cantidad_columnas":total}
+                guardar_diccionario_ruta(datos, n_archivo)
+        elif reporte == "DS58":
+                generales_carga = ["SERVICIO","ID_EMPRESA","NIU","ID_MERCADO","CODIGO_DANE_NIU","ESTRATO_SECTOR","ID_FACTURA_INICIAL","REALIZO_VISITA","FECHA_VISITA","RESULTADO_FINAL_VISITA","OBSERVACION"]
+                generales_presentacion = generales_carga.copy()
+                generales_no_float = ["SERVICIO","ID_EMPRESA","NIU","ID_MERCADO","CODIGO_DANE_NIU","ESTRATO_SECTOR","ID_FACTURA_INICIAL","REALIZO_VISITA","RESULTADO_FINAL_VISITA","OBSERVACION"]
+                generales_float = []
+                generales_hora = []
+                generales_fecha = ["FECHA_VISITA"]
+                seleccionados = generales_carga.copy()
+                total = len(generales_float)+len(generales_no_float)+len(generales_hora)+len(generales_fecha)
+                datos = {"generales":dict(zip(generales_carga, generales_presentacion)),
+                        "generales_no_float":generales_no_float,
+                        "generales_float":generales_float,
+                        "generales_hora":generales_hora,
+                        "generales_fecha":generales_fecha,
+                        "seleccionados": seleccionados,
+                        "cantidad_columnas":total}
+                guardar_diccionario_ruta(datos, n_archivo)
         elif reporte == "reportes_disponibles":
                 desc = reporte
                 data = {"Tarifario":["GRT1",
@@ -475,7 +535,10 @@ def variables_reportes(reporte):
                                 "GRC1",
                                 "GRC2",
                                 "GRC3",
-                                "GRTT2"],
+                                "GRTT2",
+                                "DS56",
+                                "DS57",
+                                "DS58"],
                         "Tecnico":["GRCS1",
                                 "GRCS2",
                                 "GRCS3",
@@ -1005,4 +1068,7 @@ def crear_archivos_json_principales():
         variables_reportes("tabla_5_DS")
         variables_reportes("tabla_6_DS")
         variables_reportes("tabla_8_DS")
+        variables_reportes("DS56")
+        variables_reportes("DS57")
+        variables_reportes("DS58")
         creacion_directorio_carpetas_principales()

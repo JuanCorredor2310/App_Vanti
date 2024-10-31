@@ -44,7 +44,8 @@
             "RSGN",
             "GRC8",
             "DANE",
-            "SH"
+            "SH",
+            "DS"
         ],
         "Tarifario": [
             "GRT1",

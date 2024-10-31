@@ -677,7 +677,6 @@ def almacenar_archivos(ruta_guardar_archivos,informar):
     lista_archivos = retirar_archivos_fallidos(lista_archivos, lista_fallidos)
     lista_archivos = cantidad_minima_info_archivo(lista_archivos)
     for archivo in lista_archivos:
-        print(archivo)
         try:
             nombre_archivo = archivo.split("\\")[-1].replace(" ","_")
             for i in range(9):

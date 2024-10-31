@@ -2232,18 +2232,24 @@ def mostrar_inicio_app():
 
 mostrar_inicio_app()
 
+# TODO: Pendientes Urgentes
+    #Automatizar proceso de Desviaciones Sinificativas
+    #Revisión de Reporte DANE (tipos de datos al generar Excel) (Archivos anuales y mensuales)
+    #Terminar slides Canva
+    #Automatizar almacenamiento de sides
+    #Crear variables globales con funciones
+    #Creación de mapa de suspensiones
+    #Almacenamiento de archivos json como Excel
+    #Crear figma aplicativo
+    #Generar aplicativo
 
-# TODO Pendientes:
-    #Revisar llamado de todas las funciones
-
-# TODO Aplicativo:
-    # Incluir tiempo estimado promedio por mes para la documentación de explicación
+# TODO Documento:
+    #Incluir tiempo estimado promedio por mes para la documentación de explicación
+    #Pruebas de tiempo con otros dispositivos
 
 # TODO Opcionales:
     # Revisión reportes anuales de calidad de la info
     # Generar un archivo CSV en la comparación del GRC1/CLD/PRD si la cantidad de NIU no encontrados es mayor al 1% de la muestra total
 
-# TODO: Pendientes
-    #Creación de mapa de suspensiones
-
-    #Cambiar valores para formato DANE
+# TODO Pendientes NO Urgentes:
+    #Revisar llamado de todas las funciones
