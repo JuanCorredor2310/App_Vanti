@@ -1001,7 +1001,7 @@ def variables_reportes(reporte):
                 datos = {"descripcion":desc,
                         "datos":data}
                 guardar_diccionario_ruta(datos, n_archivo)
-        elif reporte == "Resultado Final Visita":
+        elif reporte == "tabla_8_DS":
                 desc = "Servicio",
                 data = {"1":"Consumos reales",
                         "2":"Error de lectura",

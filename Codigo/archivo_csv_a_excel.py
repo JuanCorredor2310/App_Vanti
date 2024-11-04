@@ -8,14 +8,14 @@ color_ele = "56affe"
 # *                                             Almacenamiento excel básico
 # * -------------------------------------------------------------------------------------------------------
 
-def almacenar_csv_en_excel(df, archivo_xlsx, nombre_hoja):
+def almacenar_csv_en_excel(df, archivo_xlsx, nombre_hoja, reporte_DANE=False):
     try:
         df.to_excel(archivo_xlsx, sheet_name=nombre_hoja, index=False)
         book = load_workbook(archivo_xlsx)
         sheet = book[nombre_hoja]
         generar_borde_simple(sheet)
         generar_borde_grueso(sheet)
-        definir_tipo_texto(sheet)
+        definir_tipo_texto(sheet, reporte_DANE=reporte_DANE)
         ajustar_ancho_columna(sheet)
         centrar_informacion(sheet)
         book.save(archivo_xlsx)
@@ -74,21 +74,41 @@ def cambio_columnas(sheet):
             else:
                 celda.value = str(lista_valor[0].replace("\'",""))
 
-def definir_tipo_texto(sheet):
+def definir_tipo_texto(sheet, reporte_DANE=False):
     for fila in sheet.iter_rows(min_row=2, max_row=sheet.max_row):
         for celda in fila:
             valor = celda.value
+            columna = celda.column
             try:
-                if isinstance(valor, int):
-                    celda.value = int(str(int(celda.value)).replace("np.int64","").replace("np.float64",""))
-                    celda.number_format = "0"
-                elif isinstance(valor, float):
-                    celda.value = float(str(float(celda.value)).replace("np.int64","").replace("np.float64",""))
-                    celda.number_format = "0.00"
+                if reporte_DANE:
+                    if columna == 9:
+                        celda.value = float(str(float(celda.value)).replace("np.int64","").replace("np.float64",""))
+                        celda.number_format = '"$" #,##0'
+                    elif columna == 10:
+                        celda.value = int(str(int(celda.value)).replace("np.int64","").replace("np.float64",""))
+                        celda.number_format = '#,##0'
+                    else:
+                        if isinstance(valor, int):
+                            celda.value = int(str(int(celda.value)).replace("np.int64","").replace("np.float64",""))
+                            celda.number_format = "0"
+                        elif isinstance(valor, float):
+                            celda.value = float(str(float(celda.value)).replace("np.int64","").replace("np.float64",""))
+                            celda.number_format = "0.00"
+                        else:
+                            valor = str(valor).replace("np.int64","").replace("np.float64","")
+                            celda.value = valor
+                            celda.number_format = "General"
                 else:
-                    valor = str(valor).replace("np.int64","").replace("np.float64","")
-                    celda.value = valor
-                    celda.number_format = "General"
+                    if isinstance(valor, int):
+                        celda.value = int(str(int(celda.value)).replace("np.int64","").replace("np.float64",""))
+                        celda.number_format = "0"
+                    elif isinstance(valor, float):
+                        celda.value = float(str(float(celda.value)).replace("np.int64","").replace("np.float64",""))
+                        celda.number_format = "0.00"
+                    else:
+                        valor = str(valor).replace("np.int64","").replace("np.float64","")
+                        celda.value = valor
+                        celda.number_format = "General"
             except ValueError:
                 valor = str(valor).replace("np.int64","").replace("np.float64","")
                 celda.value = valor
@@ -97,6 +117,17 @@ def definir_tipo_texto(sheet):
                 valor = str(valor).replace("np.int64","").replace("np.float64","")
                 celda.value = valor
                 celda.number_format = "General"
+"""for row in range(2, ws.max_row + 1):
+        # Formato para la columna A (cantidad de dinero)
+        celda_a = ws.cell(row=row, column=1)
+        # Usar formato de moneda con separador de miles y sin decimales
+        celda_a.number_format = '_("$"* #,##0_);_("$"* (#,##0);_("$"* "-"??_);_(@_)'
+        
+        # Formato para la columna B (números)
+        celda_b = ws.cell(row=row, column=2)
+        # Usar formato de número con separador de miles y sin decimales
+        celda_b.number_format = '#,##0'"""
+
 
 def ajustar_ancho_columna(sheet):
     for column in sheet.columns:

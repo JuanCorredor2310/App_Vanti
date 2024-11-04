@@ -22,7 +22,7 @@ import archivo_slides_dashboard as mod_7
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Constantes globales
 # * -------------------------------------------------------------------------------------------------------
-global version, lista_meses, lista_empresas,lista_anios,dic_reportes,lista_reportes_generales,reportes_generados,lista_reportes_totales,t_i,t_f,lista_reportes_generados,cantidad_datos_estilo_excel,fecha_actual,dic_meses,dic_filiales,trimestre_mes,anio_actual,fecha_actual_texto
+global version, lista_meses, lista_empresas,lista_anios,dic_reportes,lista_reportes_generales,reportes_generados,lista_reportes_totales,t_i,t_f,lista_reportes_generados,cantidad_datos_estilo_excel,fecha_actual,dic_meses,dic_filiales,trimestre_mes,anio_actual,fecha_actual_texto,lista_archivo_desviaciones
 version = "1.0"
 lista_anios = list(mod_2.leer_archivos_json(ruta_constantes+"anios.json")["datos"].values())
 dic_meses = mod_2.leer_archivos_json(ruta_constantes+"tabla_18.json")["datos"]
@@ -36,7 +36,7 @@ reportes_generados = mod_2.leer_archivos_json(ruta_constantes+"carpetas_1.json")
 trimestre_mes = mod_2.leer_archivos_json(ruta_constantes+"trimestre_mes.json")["datos"]
 lista_reportes_generados = ["_resumen","_form_estandar", #formatos generales
                             "_reporte_consumo","_CLD","_PRD","_porcentaje_comparacion_SAP","_total_comparacion_SAP","SH","DANE","_reporte_DANE",
-                            "_comparacion_iguales","_comparacion_diferentes","_subsidio","_info_comercial","_reporte_compensacion","_compilado_compensacion", #formatos comerciales
+                            "_comparacion_iguales","_comparacion_diferentes","_subsidio","_info_comercial","_reporte_compensacion","_compilado_compensacion","_compilado_DS", #formatos comerciales
                             "_reporte_tarifario", #formatos tarifarios
                             "_indicador_tecnico","_reporte_suspension","_indicador_tecnico_IRST","_indicador_tecnico_IRST_minutos","_indicador_tecnico_IRST_horas", #formatos tecnicos
                             "_inventario_suscriptores","_usuarios_unicos","_reporte_facturacion",#calidad de la información
@@ -45,6 +45,7 @@ cantidad_datos_estilo_excel = 80000
 fecha_actual = datetime.now()
 anio_actual = fecha_actual.year
 fecha_actual_texto = f"{fecha_actual.day} de {lista_meses[int(fecha_actual.month)-1]} del {anio_actual}"
+lista_archivo_desviaciones = ["DS56","DS57","DS58"]
 
 def crear_lista_reportes_totales():
     dic = mod_2.leer_archivos_json(ruta_constantes+"/reportes_disponibles.json")["datos"]
@@ -1179,6 +1180,24 @@ def menu_comercial_compensaciones(option,valor):
         t_f = time.time()
         mod_1.mostrar_tiempo(t_f, t_i)
 
+def menu_comercial_desviaciones_significativas(option,valor):
+    #? Generación de reportes de desviaciones significativas mensual
+    if option == "1":
+        seleccionar_reporte = funcion_seleccionar_reportes("reportes_DS_mensual")
+        op_add = anadir_opciones(regenerar=True, reportes_mensuales=None)
+        regenerar = op_add[1]
+        t_i = time.time()
+        print(f"\nInicio de procesamiento para: {valor}\n\n")
+        if regenerar:
+            proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False)
+        proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, False, continuar=False, mostrar_dic=True)
+        if proceso:
+            mod_1.generar_reporte_desviaciones_mensual(dic_archivos, seleccionar_reporte)
+            t_f = time.time()
+            mod_1.mostrar_tiempo(t_f, t_i)
+    #? Generación de reportes de desviaciones significativas anual
+
+
 def menu_reportes_DANE(option,valor):
     #? Generación de reportes DANE mensual
     if option == "1":
@@ -1408,8 +1427,15 @@ def menu_comercial(option,valor):
                     "Regresar al menú inicial"]
         option,valor = opcion_menu_valida(lista_menu, "Información comercial para compensaciones")
         menu_comercial_compensaciones(option,valor)
-    #? Análisis previo para comprobar la calidad de la información
+    #? Información de desviaciones significativas
     elif option == "3":
+        lista_menu = ["Generación de reportes de desviaciones significativas mensual",
+                    "Generación de reportes de desviaciones significativas anual",
+                    "Regresar al menú inicial"]
+        option,valor = opcion_menu_valida(lista_menu, "Información comercial para desviaciones significativas")
+        menu_comercial_desviaciones_significativas(option,valor)
+    #? Análisis previo para comprobar la calidad de la información
+    elif option == "4":
         lista_menu = ["Generación de información para el inventrario de suscriptores mensual",
                     "Generación de información para el inventrario de suscriptores anual",
                     "Generación de información de facturación para usuarios regulados / no regulados mensual",
@@ -1418,17 +1444,17 @@ def menu_comercial(option,valor):
         option,valor = opcion_menu_valida(lista_menu, "Información comercial para información de usuarios únicos")
         menu_comercial_analisis_previo(option,valor)
     #? Reportes DANE
-    elif option == "4":
+    elif option == "5":
         lista_menu = ["Generación de reportes DANE mensual",
                     "Generación de reportes DANE anual",
                     "Regresar al menú inicial"]
         option,valor = opcion_menu_valida(lista_menu, "Reportes DANE")
         menu_reportes_DANE(option,valor)
     #? Reportes SH (Secretaria de Hacienda)
-    elif option == "5":
+    elif option == "6":
         menu_reportes_SH()
     #? "Análisis previo para comprobar la calidad de la información
-    elif option == "6":
+    elif option == "7":
         lista_menu = ["Generación de reporte de comparación Certificación - Calidad - Producción (GRC1-SAP)", #Op1
                     "Generación de reporte de comparación Certificación - Calidad (GRC1-SAP)", #Op2
                     "Generación de reporte de comparación Certificación - Producción (GRC1-SAP)", #Op3
@@ -1752,6 +1778,7 @@ def menu_inicial(lista, nombre):
     elif option == "3":
         lista_menu = ["Información comercial por sector de consumo",
                         "Información comercial para compensaciones",
+                        "Información de desviaciones significativas",
                         "Análisis previo para comprobar la calidad de la información",
                         "Reportes DANE",
                         "Reportes SH (Secretaria de Hacienda de Bogotá D.C.)",
@@ -1960,6 +1987,20 @@ def funcion_seleccionar_reportes(tipo):
         seleccionar_reportes["ubicacion"] = ["Reportes Nuevo SUI"]
         seleccionar_reportes["tipo"] = ["Comercial"]
         seleccionar_reportes["clasificacion"] = ["GRC3","GRTT2"]
+        seleccionar_reportes = eleccion_rango_anual(seleccionar_reportes)
+        seleccionar_reportes = eleccion_elemento(seleccionar_reportes, lista_filiales.copy(), "Seleccionar todas las filiales", "Elección filial", "filial", False)
+        return seleccionar_reportes
+    elif tipo == "reportes_DS_mensual":
+        seleccionar_reportes["ubicacion"] = ["Reportes Nuevo SUI"]
+        seleccionar_reportes["tipo"] = ["Comercial"]
+        seleccionar_reportes["clasificacion"] = ["DS"]
+        seleccionar_reportes = eleccion_fecha_personalizada(seleccionar_reportes, True)
+        seleccionar_reportes = eleccion_elemento(seleccionar_reportes, lista_filiales.copy(), "Seleccionar todas las filiales", "Elección filial", "filial", False)
+        return seleccionar_reportes
+    elif tipo == "reportes_DS_anual":
+        seleccionar_reportes["ubicacion"] = ["Reportes Nuevo SUI"]
+        seleccionar_reportes["tipo"] = ["Comercial"]
+        seleccionar_reportes["clasificacion"] = ["DS"]
         seleccionar_reportes = eleccion_rango_anual(seleccionar_reportes)
         seleccionar_reportes = eleccion_elemento(seleccionar_reportes, lista_filiales.copy(), "Seleccionar todas las filiales", "Elección filial", "filial", False)
         return seleccionar_reportes
@@ -2234,7 +2275,7 @@ mostrar_inicio_app()
 
 # TODO: Pendientes Urgentes
     #Automatizar proceso de Desviaciones Sinificativas
-    #Revisión de Reporte DANE (tipos de datos al generar Excel) (Archivos anuales y mensuales)
+    #Revisión de Reporte DANE (Archivos anuales y mensuales)
     #Terminar slides Canva
     #Automatizar almacenamiento de sides
     #Crear variables globales con funciones
@@ -2253,3 +2294,6 @@ mostrar_inicio_app()
 
 # TODO Pendientes NO Urgentes:
     #Revisar llamado de todas las funciones
+
+
+

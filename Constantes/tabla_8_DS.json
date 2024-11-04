@@ -1,0 +1,16 @@
+{
+    "descripcion": [
+        "Servicio"
+    ],
+    "datos": {
+        "1": "Consumos reales",
+        "2": "Error de lectura",
+        "3": "Error de medici\u00f3n",
+        "4": "Falla en la instalaci\u00f3n",
+        "5": "Sin acceso al predio",
+        "6": "Predio desocupado / abandonado / demolido",
+        "7": "Equipo de medici\u00f3n en prueba laboratorio",
+        "8": "No realiz\u00f3 visita por programaci\u00f3n",
+        "9": "Otra"
+    }
+}

@@ -520,16 +520,21 @@ def grafico_usuarios(archivo):
         fig, ax = plt.subplots(figsize=(18, 12))
         x = range(12)
         bar_width = 0.75
-        #line1, = ax.plot(lista_periodos, lista_usuarios, marker='o', label='Porcentaje de crecimiento', color="#e78c13")
-        line2, = ax.plot(lista_periodos, lista_usuarios, marker='o', label='Nuevos usuarios', color="#0f9324")
-        line3, = ax.plot(lista_periodos, lista_usuarios, marker='o', label='Cantidad de usuarios (millones)', color="#1b0fa8")
+        #lista_colores = [dic_colores["verde_c_v"], dic_colores["azul_v"]]
+        lista_colores = [dic_colores["azul_v"], "white"]
+        #line2, = ax.plot(lista_periodos, lista_usuarios, marker='o', label='Nuevos usuarios', color=dic_colores["verde_c_v"])
+        #line3, = ax.plot(lista_periodos, lista_usuarios, marker='o', label='Cantidad de usuarios (millones)', color=dic_colores["azul_v"])
+        line2, = ax.plot(lista_periodos, lista_usuarios, marker='o', label='Nuevos usuarios', color=dic_colores["azul_v"])
+        line3, = ax.plot(lista_periodos, lista_usuarios, marker='o', label='Cantidad de usuarios (millones)', color="white")
         for i in range(len(lista_periodos)):
             ax.annotate(f'{lista_usuarios_millones[i]}', xy=(i, lista_usuarios[i]+v_cambio), xytext=(0, 10),
-                        textcoords='offset points', ha='center', va='bottom', color="#1b0fa8", fontsize=24)
+                        textcoords='offset points', ha='center', va='bottom', color=lista_colores[1], fontsize=24)
             ax.annotate(f'{lista_usuarios_nuevos[i]}', xy=(i, lista_usuarios[i] - v_cambio*12), xytext=(0, 10),
-                        textcoords='offset points', ha='center', va='bottom', color="#0f9324", fontsize=24)
-        ax.tick_params(axis='x', colors="#1b0fa8",labelsize=15)
-        ax.tick_params(axis='y', colors="#1b0fa8",size=0)
+                        textcoords='offset points', ha='center', va='bottom', color=lista_colores[0], fontsize=24)
+        #ax.tick_params(axis='x', colors=dic_colores["azul_v"],labelsize=15)
+        #ax.tick_params(axis='y', colors=dic_colores["azul_v"],size=0)
+        ax.tick_params(axis='x', colors="white",labelsize=15)
+        ax.tick_params(axis='y', colors="white",size=0)
         ax.set_ylim(v_min, v_max)
         for spine in ax.spines.values():
             spine.set_visible(False)
@@ -540,7 +545,6 @@ def grafico_usuarios(archivo):
         ax.tick_params(axis='x', labelrotation=35)
         ax.set_xticklabels(lista_periodos, fontsize=22)
         lista = ["Nuevos usuarios", "Cantidad de usuarios (millones)"]
-        lista_colores = ["#0f9324","#1b0fa8"]
         legend_handles = [plt.Line2D([0], [0], marker='o', color='w', label=str(lista[i]),
                                             markerfacecolor=lista_colores[i], markersize=18)
                                     for i in range(len(lista))]

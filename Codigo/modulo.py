@@ -15,6 +15,7 @@ import math
 import csv
 import googlemaps
 import shutil
+import calendar
 import ruta_principal as mod_rp
 global ruta_principal, ruta_codigo, ruta_constantes, ruta_nuevo_sui, ruta_archivos
 ruta_principal = mod_rp.v_ruta_principal()
@@ -24,6 +25,7 @@ ruta_codigo = mod_rp.v_codigo()
 ruta_archivos = mod_rp.v_archivos()
 sys.path.append(os.path.abspath(ruta_codigo))
 import archivo_csv_a_excel as mod_5
+import archivo_df_a_doc as mod_8
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Archivos json
@@ -41,7 +43,7 @@ def leer_archivos_json(archivo):
 # *                                             Constantes globales
 # * -------------------------------------------------------------------------------------------------------
 
-global lista_meses, lista_empresas, lista_anios, dic_reportes, lista_reportes_generales, reportes_generados, lista_reportes_totales,chunksize,llaves_dic_reporte, dic_carpetas, dic_filiales,antidad_datos_excel, dic_nit, cantidad_datos_estilo_excel,grupo_vanti,mercado_relevante,mercado_relevante_resumen,tabla_3,tabla_11,fecha_actual,lista_trimestres, dic_meses_abre,lista_clasi_reportes,categoria_matriz_requerimientos
+global lista_meses, lista_empresas, lista_anios, dic_reportes, lista_reportes_generales, reportes_generados, lista_reportes_totales,chunksize,llaves_dic_reporte, dic_carpetas, dic_filiales,antidad_datos_excel, dic_nit, cantidad_datos_estilo_excel,grupo_vanti,mercado_relevante,mercado_relevante_resumen,tabla_3,tabla_11,fecha_actual,lista_trimestres, dic_meses_abre,lista_clasi_reportes,categoria_matriz_requerimientos,lista_archivo_desviaciones,tabla_2_DS,tabla_3_DS,tabla_4_DS,tabla_5_DS,tabla_6_DS,tabla_8_DS,indicador_SUI,tabla_30
 grupo_vanti = "Grupo Vanti"
 dic_carpetas = leer_archivos_json(ruta_constantes+"carpetas.json")
 lista_anios = list(leer_archivos_json(ruta_constantes+"anios.json")["datos"].values())
@@ -63,6 +65,15 @@ llaves_dic_reporte = ["generales_no_float","generales_float","generales_fecha","
 tabla_3 = leer_archivos_json(ruta_constantes+"tabla_3.json")
 tabla_11 = leer_archivos_json(ruta_constantes+"/tabla_11.json")
 categoria_matriz_requerimientos = leer_archivos_json(ruta_constantes+"categoria_matriz_requerimientos.json")["datos"]
+lista_archivo_desviaciones = ["DS56","DS57","DS58"]
+tabla_2_DS = leer_archivos_json(ruta_constantes+"/tabla_2_DS.json")["datos"]
+tabla_3_DS = leer_archivos_json(ruta_constantes+"/tabla_3_DS.json")["datos"]
+tabla_4_DS = leer_archivos_json(ruta_constantes+"/tabla_4_DS.json")["datos"]
+tabla_5_DS = leer_archivos_json(ruta_constantes+"/tabla_5_DS.json")["datos"]
+tabla_6_DS = leer_archivos_json(ruta_constantes+"/tabla_6_DS.json")["datos"]
+tabla_8_DS = leer_archivos_json(ruta_constantes+"/tabla_8_DS.json")["datos"]
+tabla_30 = leer_archivos_json(ruta_constantes+"/tabla_30.json")["datos"]
+indicador_SUI = leer_archivos_json(ruta_constantes+"/indicador_SUI.json")["datos"]
 def crear_lista_reportes_totales():
     dic = leer_archivos_json(ruta_constantes+"reportes_disponibles.json")["datos"]
     lista = []
@@ -127,10 +138,6 @@ def fecha_siguiente(anio, mes):
         return str(int(anio)+1), lista_meses[0]
     else:
         return str(anio), lista_meses[pos_mes+1]
-
-
-
-
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Manejo DataFrames
@@ -481,7 +488,7 @@ def acortar_nombre(nombre, cantidad=6):
     largo = len(lista_nombre)
     if largo > cantidad:
         texto = ("...\\"+lista_a_texto(lista_nombre[largo-cantidad:], "\\", False)).replace("\\\\","\\")
-    else: 
+    else:
         texto = texto.replace("\\\\","\\")
     return texto
 
@@ -677,6 +684,7 @@ def almacenar_archivos(ruta_guardar_archivos,informar):
     lista_archivos = retirar_archivos_fallidos(lista_archivos, lista_fallidos)
     lista_archivos = cantidad_minima_info_archivo(lista_archivos)
     for archivo in lista_archivos:
+        bool_DS = False
         try:
             nombre_archivo = archivo.split("\\")[-1].replace(" ","_")
             for i in range(9):
@@ -690,19 +698,32 @@ def almacenar_archivos(ruta_guardar_archivos,informar):
             ext_archivo = nombre_archivo.split("_")
             ext_archivo[-1] = ext_archivo[-1].split(".")[0]
             ext_archivo = formato_ext_archivo(ext_archivo)
-            categoria = encontrar_categoria_reporte(ext_archivo[0])
+            tipo = ext_archivo[0]
+            if tipo in lista_archivo_desviaciones:
+                tipo = "DS"
+                ext_archivo[4] = ext_archivo[4].upper()
+                bool_DS = True
+            categoria = encontrar_categoria_reporte(tipo)
             ext_archivo[3] = ext_archivo[3].lower().capitalize()
             ext_archivo.append(categoria)
             if None not in ext_archivo:
                 if comprobar_info_nombre_archivo(ext_archivo):
                     ubi_1 = encontrar_nueva_ubi_archivo(ubi, ext_archivo)
                     nueva_ubi = ubi_1+"\\"+nombre_archivo
+                    if bool_DS:
+                        lista_nueva_ubi = nueva_ubi.split("\\")
+                        valor = lista_nueva_ubi[-1]
+                        lista_nueva_ubi[-1] = "11. DS"
+                        lista_nueva_ubi.append(valor)
+                        nueva_ubi = lista_a_texto(lista_nueva_ubi, "\\")
                     shutil.move(archivo, nueva_ubi)
                     if informar:
                         informar_archivo_creado(nueva_ubi, informar)
         except FileNotFoundError:
             pass
         except PermissionError:
+            pass
+        except BaseException:
             pass
 
 def conversion_archivos_CSV(lista_archivos, lista_fallidos=[]):
@@ -728,10 +749,14 @@ def regenerar_archivos_necesarios(lista_archivos, evitar):
     elif evitar == "_form_estandar":
         estandarizacion_archivos(lista_regenerar,True)
 
+def fun_tamanio_archivos(archivo):
+    file_size_bytes = os.path.getsize(archivo)
+    return file_size_bytes
+
 def tamanio_archivos(lista_archivos):
     suma = 0
     for archivo in lista_archivos:
-        file_size_bytes = os.path.getsize(archivo)
+        file_size_bytes = fun_tamanio_archivos(archivo)
         suma += float(round(file_size_bytes/(1024*1024),2))
     texto = f"{round(suma,2)} MB"
     return texto
@@ -766,13 +791,13 @@ def comprimir_archivos(lista_archivos, informar=True):
                     print(f"\nSe recomienda almacenar la carpeta {llave} en un ubicación externa. \nLos archivos de la carpeta comprimida pesan {v_tamanio_archivos}\n")
                 eliminar_archivos(tupla[0])
 
-def almacenar_df_csv_y_excel(df, nombre, informar=True, almacenar_excel=True):
+def almacenar_df_csv_y_excel(df, nombre, informar=True, almacenar_excel=True, reporte_DANE=False):
     df.to_csv(nombre, index=False, encoding="utf-8-sig")
     if informar:
         informar_archivo_creado(nombre, True)
     if almacenar_excel:
         df = leer_dataframe_utf_8(nombre)
-        almacenar = mod_5.almacenar_csv_en_excel(df, nombre.replace(".csv",".xlsx"),"Datos")
+        almacenar = mod_5.almacenar_csv_en_excel(df, nombre.replace(".csv",".xlsx"),"Datos", reporte_DANE=reporte_DANE)
         if informar and almacenar:
             informar_archivo_creado(nombre.replace(".csv",".xlsx"), True)
 
@@ -950,6 +975,7 @@ def apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos, codigo_D
                                 contribuciones = df_sector["Valor_contribucion"].sum()
                                 dic_dataframe[s1][0] += cantidad
                                 dic_dataframe[s1][1] += volumen
+                                dic_dataframe[s1][2] += valor_total
                                 dic_dataframe[s1][3] += valor_consumo_facturado
                                 dic_dataframe[s1][4] += cantidad_facturas
                                 dic_dataframe[s1][6] += contribuciones
@@ -959,9 +985,7 @@ def apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos, codigo_D
                                 dic["Valor consumo facturado"] += valor_consumo_facturado
                                 dic["Cantidad de facturas"] += cantidad_facturas
                                 dic["Contribuciones"] += contribuciones
-                            except ValueError:
-                                pass
-                            except TypeError:
+                            except BaseException:
                                 pass
                     dic_dataframe = dict(sorted(dic_dataframe.items()))
                     dic_dataframe_2 = {"Tipo de usuario":[],
@@ -1385,7 +1409,7 @@ def apoyo_reporte_comercial_sector_consumo_regulados(lista_archivos, codigo_DANE
                 return None, None
     return None, None
 
-def apoyo_reporte_comercial_sector_consumo(df1, n1, df2, n2, informar=True):
+def apoyo_reporte_comercial_sector_consumo(df1, n1, df2, n2, informar=True,reporte_DANE=False):
     if n1 and n2:
         lista_n1 = n1.split("\\")
         nombre_1 = lista_n1[-1].split("_")[1:]
@@ -1396,8 +1420,9 @@ def apoyo_reporte_comercial_sector_consumo(df1, n1, df2, n2, informar=True):
         lista_n2[-1] = lista_a_texto(nombre_2, "_", False)
         n2 = lista_a_texto(lista_n2, "\\", False)
         df3 = pd.concat([df1, df2])
-        almacenar_df_csv_y_excel(df3, n1, informar)
-        almacenar_df_csv_y_excel(df3, n2, informar)
+        almacenar_df_csv_y_excel(df3, n1, informar, reporte_DANE=reporte_DANE)
+        if not reporte_DANE:
+            almacenar_df_csv_y_excel(df3, n2, informar)
         return df3, n1
     elif n1:
         lista_n1 = n1.split("\\")
@@ -1405,7 +1430,7 @@ def apoyo_reporte_comercial_sector_consumo(df1, n1, df2, n2, informar=True):
         lista_n1[-1] = lista_a_texto(nombre_1, "_", False)
         n1 = lista_a_texto(lista_n1, "\\", False)
         df3 = df1.copy()
-        almacenar_df_csv_y_excel(df3, n1, informar)
+        almacenar_df_csv_y_excel(df3, n1, informar, reporte_DANE=reporte_DANE)
         return df3, n1
     elif n2:
         lista_n2 = n2.split("\\")
@@ -1413,7 +1438,7 @@ def apoyo_reporte_comercial_sector_consumo(df1, n1, df2, n2, informar=True):
         lista_n2[-1] = lista_a_texto(nombre_2, "_", False)
         n2 = lista_a_texto(lista_n2, "\\", False)
         df3 = df2.copy()
-        almacenar_df_csv_y_excel(df3, n2, informar)
+        almacenar_df_csv_y_excel(df3, n2, informar, reporte_DANE=reporte_DANE)
         return df3, n2
     return None, None
 
@@ -1434,7 +1459,7 @@ def reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar
             if len(lista_archivos_filial):
                 df1, n1 = apoyo_reporte_comercial_sector_consumo_regulados(lista_archivos_filial, codigo_DANE, "GRC1", valor_facturado, filial, subsidio, total, facturas, reporte_DANE)
                 df2, n2 = apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos_filial, codigo_DANE, "GRC2", filial, valor_facturado, total, subsidio, facturas, reporte_DANE)
-                df,nombre = apoyo_reporte_comercial_sector_consumo(df1, n1, df2, n2, informar)
+                df,nombre = apoyo_reporte_comercial_sector_consumo(df1, n1, df2, n2, informar, reporte_DANE)
                 if nombre:
                     if reporte_DANE:
                         df["ESTABLECIMIENTO"] = " "
@@ -1457,7 +1482,7 @@ def reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar
                 if proceso:
                     df_total = df_total_suma.copy()
                     nuevo_nombre = nuevo_nombre.replace(".csv","_sumatoria.csv")
-            almacenar_df_csv_y_excel(df_total, nuevo_nombre, informar, almacenar_excel)
+            almacenar_df_csv_y_excel(df_total, nuevo_nombre, informar, almacenar_excel, reporte_DANE=reporte_DANE)
 
 def reporte_SH(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=[]):
     lista_filiales_archivo = seleccionar_reporte["filial"]
@@ -2388,6 +2413,494 @@ def generar_reporte_compensacion_mensual(dic_archivos, seleccionar_reporte, info
             nuevo_nombre = lista_a_texto(lista_nombre,"\\")
             nuevo_nombre = nuevo_nombre.replace("_resumen","_compilado_compensacion")
             almacenar_df_csv_y_excel(df_total_compilado,nuevo_nombre, informar)
+
+def apoyo_generar_reporte_desviaciones_mensual_DS56(lista_archivos,filial,fecha,filas_minimas,reporte,informar=True):
+    lista_reporte = []
+    indicador_SUI_filial = indicador_SUI[filial]
+    conteo_error_t = 0
+    for archivo in lista_archivos:
+        if "HC" in archivo or "GC" in archivo:
+            conteo_error = 0
+            dic_error = {}
+            lista_df = lectura_dataframe_chunk(archivo)
+            if lista_df:
+                df = pd.concat(lista_df, ignore_index=True)
+                columnas = list(df.columns)[:-2]
+                df = df[columnas]
+                for col in columnas:
+                    if col == 'SERVICIO':
+                        lista = list(df[col].unique())
+                        if len(lista) > 1:
+                            conteo_error += 1
+                            texto = f"Error en la columna {col}. El valor de columna debe ser {5} ({tabla_2_DS[str(5)]}) (Tabla_2_DS)"
+                            lista.remove(5)
+                            lista_df_error = []
+                            for elemento in lista:
+                                df_error = df[df[col]==elemento].reset_index(drop=True)
+                                if len(df_error):
+                                    lista_df_error.append(df_error)
+                            df_error = pd.concat(lista_df_error, ignore_index=True)
+                            dic_error[col] = [texto, df_error]
+                    elif col == 'ID_EMPRESA':
+                        lista = list(df[col].unique())
+                        if len(lista) > 1:
+                            conteo_error += 1
+                            texto = f"Error en la columna {col}. El valor de columna debe ser {int(indicador_SUI)} (Indicador SUI {filial})"
+                            lista.remove(int(indicador_SUI_filial))
+                            lista_df_error = []
+                            for elemento in lista:
+                                df_error = df[df[col]==elemento].reset_index(drop=True)
+                                if len(df_error):
+                                    lista_df_error.append(df_error)
+                            df_error = pd.concat(lista_df_error, ignore_index=True)
+                            dic_error[col] = [texto, df_error]
+                    elif col == 'NIU':
+                        lista = list(df[col].unique())
+                        if "" in lista or " " in lista:
+                            conteo_error += 1
+                            texto = f"Error en la columna {col}. El valor de columna NO debe ser vacío"
+                            lista_df_error = []
+                            for elemento in lista:
+                                df_error = df[df[col]==""].reset_index(drop=True)
+                                if len(df_error):
+                                    df_error = df[df[col]==" "].reset_index(drop=True)
+                                if len(df_error):
+                                    lista_df_error.append(df_error)
+                            df_error = pd.concat(lista_df_error, ignore_index=True)
+                            dic_error[col] = [texto, df_error]
+                    elif col == 'ID_MERCADO':
+                        lista = list(df[col].unique())
+                        #TODO: Revisar si el valor de NIU esta en la filial
+                    elif col == 'ESTRATO_SECTOR':
+                        lista = list(df[col].unique())
+                        if 11 in lista:
+                            conteo_error += 1
+                            texto = f"Error en la columna {col}. El valor de columna NO debe ser {11} ({tabla_3_DS[str(11)]}) (Tabla_3_DS)"
+                            lista_df_error = []
+                            df_error = df[df[col]==11].reset_index(drop=True)
+                            if len(df_error):
+                                df_error = df[df[col]==" "].reset_index(drop=True)
+                            df_error = pd.concat(lista_df_error, ignore_index=True)
+                            dic_error[col+"_"+str(11)] = [texto, df_error]
+                            lista.remove(11)
+                        lista_df_error = []
+                        for elemento in lista:
+                            if str(elemento) not in tabla_3_DS:
+                                df_error = df[df[col]==elemento].reset_index(drop=True)
+                                if len(df_error):
+                                    lista_df_error.append(df_error)
+                        if len(lista_df_error):
+                            conteo_error += 1
+                            texto = f"Error en la columna {col}. Los valores no se encuentran en la Tabla_3_DS"
+                            df_error = pd.concat(lista_df_error, ignore_index=True)
+                            dic_error[col] = [texto, df_error]
+                    elif col == 'TIPO_TARIFA':
+                        lista = list(df[col].unique())
+                        for elemento in lista:
+                            if str(elemento) not in tabla_4_DS:
+                                df_error = df[df[col]==elemento].reset_index(drop=True)
+                                if len(df_error):
+                                    lista_df_error.append(df_error)
+                        if len(lista_df_error):
+                            conteo_error += 1
+                            texto = f"Error en la columna {col}. Los valores no se encuentran en la Tabla_4_DS"
+                            df_error = pd.concat(lista_df_error, ignore_index=True)
+                            dic_error[col] = [texto, df_error]
+                    elif col == 'ID_FACTURA_INICIAL':
+                        lista = list(df[col].unique())
+                        if "" in lista or " " in lista:
+                            conteo_error += 1
+                            texto = f"Error en la columna {col}. El valor de columna NO debe ser vacío"
+                            lista_df_error = []
+                            for elemento in lista:
+                                df_error = df[df[col]==""].reset_index(drop=True)
+                                if len(df_error):
+                                    df_error = df[df[col]==" "].reset_index(drop=True)
+                                if len(df_error):
+                                    lista_df_error.append(df_error)
+                            df_error = pd.concat(lista_df_error, ignore_index=True)
+                            dic_error[col] = [texto, df_error]
+                    elif col == 'CODIGO_DANE_NIU':
+                        lista = list(df[col].unique())
+                        #TODO: Revisar si el valor de CODIGO_DANE_NIU esta en la filial
+                    elif col == 'DETERMINADOR':
+                        lista = list(df[col].unique())
+                        for elemento in lista:
+                            if str(elemento) not in tabla_5_DS:
+                                df_error = df[df[col]==elemento].reset_index(drop=True)
+                                if len(df_error):
+                                    lista_df_error.append(df_error)
+                        if len(lista_df_error):
+                            conteo_error += 1
+                            texto = f"Error en la columna {col}. Los valores no se encuentran en la Tabla_5_DS"
+                            df_error = pd.concat(lista_df_error, ignore_index=True)
+                            dic_error[col] = [texto, df_error]
+                nombre = archivo.replace("_HC","").replace("_GC","")
+                conteo_error_t += conteo_error
+                if conteo_error == 0:
+                    lista_reporte.append(df)
+                else:
+                    print(conteo_error)
+                    print(dic_error)
+                    #TODO: Generar reporte de error
+    if len(lista_reporte) and conteo_error_t == 0:
+        df_reporte = pd.concat(lista_reporte, ignore_index=True)
+        lista_fecha = fecha.split(" - ")
+        v_fecha_anterior = fecha_anterior(lista_fecha[0], lista_fecha[1])
+        pos_mes = lista_meses.index(v_fecha_anterior[1])+1
+        if pos_mes < 10:
+            pos_mes = "0" + str(pos_mes)
+        else:
+            pos_mes = str(pos_mes)
+        ext = f"Desviaciones_{indicador_SUI_filial}_56_{pos_mes}{v_fecha_anterior[0]}.csv"
+        lista_nombre = nombre.split("\\")
+        carpeta = lista_nombre[-1]
+        lista_nombre[-1] = ext
+        nombre_1 = lista_a_texto(lista_nombre, "\\")
+        almacenar_df_csv_y_excel(df_reporte, nombre_1)
+        v_fun_tamanio_archivos = fun_tamanio_archivos(nombre_1)/(1024**2)
+        if v_fun_tamanio_archivos >= 25:
+            archivo_zip = os.path.join(carpeta, ext.replace(".csv", ".zip"))
+            with zipfile.ZipFile(archivo_zip, 'w') as zipf:
+                zipf.write(nombre_1, arcname=os.path.basename(nombre_1))
+        return df_reporte, nombre
+    else:
+        return None, None
+
+def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,filas_minimas,reporte,informar=True):
+    lista_reporte = []
+    lista_fecha = fecha.split(" - ")
+    v_fecha_anterior = fecha_anterior(lista_fecha[0], lista_fecha[1])
+    mes = v_fecha_anterior[1]
+    anio = v_fecha_anterior[0]
+    ultimo_dia = calendar.monthrange(int(anio), lista_meses.index(mes)+1)[1]
+    pos_mes = lista_meses.index(mes)+1
+    if pos_mes < 10:
+        pos_mes = "0" + str(pos_mes)
+    else:
+        pos_mes = str(pos_mes)
+    inicio_mes = f"01-{pos_mes}-{anio}"
+    fin_mes = f"{ultimo_dia}-{pos_mes}-{anio}"
+    inicio_mes_dt = pd.to_datetime(inicio_mes, dayfirst=True)
+    inicio_mes_str = inicio_mes_dt.strftime('%d-%m-%Y')
+    fin_mes_dt = pd.to_datetime(fin_mes, dayfirst=True)
+    fin_mes_str = fin_mes_dt.strftime('%d-%m-%Y')
+    indicador_SUI_filial = indicador_SUI[filial]
+    conteo_error_t = 0
+    for archivo in lista_archivos:
+        if "HC" in archivo or "GC" in archivo:
+            conteo_error = 0
+            dic_error = {}
+            lista_df = lectura_dataframe_chunk(archivo)
+            if lista_df:
+                df = pd.concat(lista_df, ignore_index=True)
+                columnas = list(df.columns)[:-2]
+                df = df[columnas]
+                for col in columnas:
+                    if col == 'SERVICIO':
+                        lista = list(df[col].unique())
+                        if len(lista) > 1:
+                            conteo_error += 1
+                            texto = f"Error en la columna {col}. El valor de columna debe ser {5} ({tabla_2_DS[str(5)]}) (Tabla_2_DS)"
+                            lista.remove(5)
+                            lista_df_error = []
+                            for elemento in lista:
+                                df_error = df[df[col]==elemento].reset_index(drop=True)
+                                if len(df_error):
+                                    lista_df_error.append(df_error)
+                            df_error = pd.concat(lista_df_error, ignore_index=True)
+                            filas_minimas_c = filas_minimas.copy()
+                            filas_minimas_c.append(col)
+                            df_error = df_error[filas_minimas_c]
+                            dic_error[col] = [texto, df_error]
+                    elif col == 'ID_EMPRESA':
+                        lista = list(df[col].unique())
+                        if len(lista) > 1:
+                            conteo_error += 1
+                            texto = f"Error en la columna {col}. El valor de columna debe ser {int(indicador_SUI)} (Indicador SUI {filial})"
+                            lista.remove(int(indicador_SUI_filial))
+                            lista_df_error = []
+                            for elemento in lista:
+                                df_error = df[df[col]==elemento].reset_index(drop=True)
+                                if len(df_error):
+                                    lista_df_error.append(df_error)
+                            df_error = pd.concat(lista_df_error, ignore_index=True)
+                            filas_minimas_c = filas_minimas.copy()
+                            df_error = df_error[filas_minimas_c]
+                            dic_error[col] = [texto, df_error]
+                    elif col == 'NIU':
+                        lista = list(df[col].unique())
+                        if "" in lista or " " in lista:
+                            conteo_error += 1
+                            texto = f"Error en la columna {col}. El valor de columna NO debe ser vacío"
+                            lista_df_error = []
+                            for elemento in lista:
+                                df_error = df[df[col]==""].reset_index(drop=True)
+                                if len(df_error):
+                                    df_error = df[df[col]==" "].reset_index(drop=True)
+                                if len(df_error):
+                                    lista_df_error.append(df_error)
+                            df_error = pd.concat(lista_df_error, ignore_index=True)
+                            filas_minimas_c = filas_minimas.copy()
+                            df_error = df_error[filas_minimas_c]
+                            dic_error[col] = [texto, df_error]
+                    elif col == 'ID_MERCADO':
+                        lista = list(df[col].unique())
+                        #TODO: Revisar si el valor de NIU esta en la filial
+
+                        """
+                        filas_minimas_c = filas_minimas.copy()
+                        df_error = df_error[filas_minimas_c]
+                        """
+                    elif col == 'CODIGO_DANE_NIU':
+                        lista = list(df[col].unique())
+                        #TODO: Revisar si el valor de CODIGO_DANE_NIU esta en la filial
+                        """
+                        filas_minimas_c = filas_minimas.copy()
+                        filas_minimas_c.append(col)
+                        df_error = df_error[filas_minimas_c]
+                        """
+                    elif col == 'ESTRATO_SECTOR':
+                        lista = list(df[col].unique())
+                        if 11 in lista:
+                            conteo_error += 1
+                            texto = f"Error en la columna {col}. El valor de columna NO debe ser {11} ({tabla_3_DS[str(11)]}) (Tabla_3_DS)"
+                            lista_df_error = []
+                            df_error = df[df[col]==11].reset_index(drop=True)
+                            if len(df_error):
+                                df_error = df[df[col]==" "].reset_index(drop=True)
+                            df_error = pd.concat(lista_df_error, ignore_index=True)
+                            filas_minimas_c = filas_minimas.copy()
+                            filas_minimas_c.append(col)
+                            df_error = df_error[filas_minimas_c]
+                            dic_error[col+"_"+str(11)] = [texto, df_error]
+                            lista.remove(11)
+                        lista_df_error = []
+                        for elemento in lista:
+                            if str(elemento) not in tabla_3_DS:
+                                df_error = df[df[col]==elemento].reset_index(drop=True)
+                                if len(df_error):
+                                    lista_df_error.append(df_error)
+                        if len(lista_df_error):
+                            conteo_error += 1
+                            texto = f"Error en la columna {col}. Los valores no se encuentran en la Tabla_3_DS"
+                            df_error = pd.concat(lista_df_error, ignore_index=True)
+                            filas_minimas_c = filas_minimas.copy()
+                            filas_minimas_c.append(col)
+                            df_error = df_error[filas_minimas_c]
+                            dic_error[col] = [texto, df_error]
+                    elif col == 'TIPO_TARIFA':
+                        lista = list(df[col].unique())
+                        for elemento in lista:
+                            if str(elemento) not in tabla_4_DS:
+                                df_error = df[df[col]==elemento].reset_index(drop=True)
+                                if len(df_error):
+                                    lista_df_error.append(df_error)
+                        if len(lista_df_error):
+                            conteo_error += 1
+                            texto = f"Error en la columna {col}. Los valores no se encuentran en la Tabla_4_DS"
+                            df_error = pd.concat(lista_df_error, ignore_index=True)
+                            filas_minimas_c = filas_minimas.copy()
+                            filas_minimas_c.append(col)
+                            df_error = df_error[filas_minimas_c]
+                            dic_error[col] = [texto, df_error]
+                    elif col == 'PERIODO_FACTURACION':
+                        lista = list(df[col].unique())
+                        for elemento in lista:
+                            if str(elemento) not in tabla_6_DS:
+                                df_error = df[df[col]==elemento].reset_index(drop=True)
+                                if len(df_error):
+                                    lista_df_error.append(df_error)
+                        if len(lista_df_error):
+                            conteo_error += 1
+                            texto = f"Error en la columna {col}. Los valores no se encuentran en la Tabla_6_DS"
+                            df_error = pd.concat(lista_df_error, ignore_index=True)
+                            filas_minimas_c = filas_minimas.copy()
+                            filas_minimas_c.append(col)
+                            df_error = df_error[filas_minimas_c]
+                            dic_error[col] = [texto, df_error]
+                    elif col == 'ID_FACTURA_INICIAL':
+                        lista = list(df[col].unique())
+                        if "" in lista or " " in lista:
+                            conteo_error += 1
+                            texto = f"Error en la columna {col}. El valor de columna NO debe ser vacío"
+                            lista_df_error = []
+                            for elemento in lista:
+                                df_error = df[df[col]==""].reset_index(drop=True)
+                                if len(df_error):
+                                    df_error = df[df[col]==" "].reset_index(drop=True)
+                                if len(df_error):
+                                    lista_df_error.append(df_error)
+                            df_error = pd.concat(lista_df_error, ignore_index=True)
+                            filas_minimas_c = filas_minimas.copy()
+                            filas_minimas_c.append(col)
+                            df_error = df_error[filas_minimas_c]
+                            dic_error[col] = [texto, df_error]
+                    elif col == "CONSUMO_USUARIO":
+                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
+                        df_filtro = df[df[col] < 0].reset_index(drop=True)
+                        if len(df_filtro):
+                            conteo_error += 1
+                            texto = f"Error en la columna {col}. Los valores de la columna deben ser positivos"
+                            filas_minimas_c = filas_minimas.copy()
+                            filas_minimas_c.append(col)
+                            df_filtro = df_filtro[filas_minimas_c]
+                            dic_error[col] = [texto, df_filtro]
+                    elif col == "DIAS_FACTURADOS":
+                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
+                        df_filtro = df[(df[col] < 0)|((df[col] > 40))].reset_index(drop=True)
+                        if len(df_filtro):
+                            conteo_error += 1
+                            texto = f"Error en la columna {col}. Los valores de la columna deben ser positivos y menores a 40"
+                            filas_minimas_c = filas_minimas.copy()
+                            filas_minimas_c.append(col)
+                            df_filtro = df_filtro[filas_minimas_c]
+                            dic_error[col] = [texto, df_filtro]
+                    elif col in ["PROM_CONS_NORMALIZADO_12M","CONSUMO_NORMALIZADO","RAZON","DESVIACION_ESTANDAR","LIMITE_SUPERIOR","LIMITE_INFERIOR"]:
+                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0.00).round(2)
+                        df_filtro = df[df[col] < 0].reset_index(drop=True)
+                        if len(df_filtro):
+                            conteo_error += 1
+                            texto = f"Error en la columna {col}. Los valores de la columna deben ser positivos"
+                            filas_minimas_c = filas_minimas.copy()
+                            filas_minimas_c.append(col)
+                            df_filtro = df_filtro[filas_minimas_c]
+                            dic_error[col] = [texto, df_filtro]
+                    elif col in ['REQUIERE_VISITA',"REALIZO_VISITA"]:
+                        df.loc[df[col] == 2, 'FECHA_VISITA'] = ''
+                        df.loc[df[col] == 2, 'RESULTADO_FINAL_VISITA'] = 9
+                        lista = list(df[col].unique())
+                        for elemento in lista:
+                            if str(elemento) not in tabla_30:
+                                df_error = df[df[col]==elemento].reset_index(drop=True)
+                                if len(df_error):
+                                    lista_df_error.append(df_error)
+                        if len(lista_df_error):
+                            conteo_error += 1
+                            texto = f"Error en la columna {col}. Los valores no se encuentran en la Tabla_30"
+                            df_error = pd.concat(lista_df_error, ignore_index=True)
+                            filas_minimas_c = filas_minimas.copy()
+                            filas_minimas_c.append(col)
+                            df_error = df_error[filas_minimas_c]
+                            dic_error[col] = [texto, df_error]
+                    elif col == "FECHA_VISITA":
+                        df['FECHA_VISITA'] = pd.to_datetime(df['FECHA_VISITA'], errors='coerce', dayfirst=True)
+                        a = pd.to_datetime("10-10-2024", dayfirst=True)
+                        b = pd.to_datetime("10-09-2024", dayfirst=True)
+                        df_filtro = df[(df['FECHA_VISITA']<inicio_mes_dt)|(df["FECHA_VISITA"]>fin_mes_dt)].reset_index(drop=True)
+                        if len(df_filtro):
+                            texto = f"Error en la columna {col}. Las fechas no se encuentran en el rango de fecha {inicio_mes_str} a {fin_mes_str}"
+                            conteo_error += 1
+                            df_filtro['FECHA_VISITA'] = pd.to_datetime(df_filtro['FECHA_VISITA'], errors='coerce', dayfirst=True).dt.strftime('%d-%m-%Y')
+                            filas_minimas_c = filas_minimas.copy()
+                            filas_minimas_c.append(col)
+                            df_filtro = df_filtro[filas_minimas_c]
+                            dic_error[col] = [texto, df_filtro]
+                        else:
+                            df['FECHA_VISITA'] = pd.to_datetime(df['FECHA_VISITA'], errors='coerce', dayfirst=True).dt.strftime('%d-%m-%Y')
+                    elif col == "RESULTADO_FINAL_VISITA":
+                        df.loc[df[col] == 9, 'OBSERVACION'] = "No realizo visita"
+                        lista = list(df[col].unique())
+                        for elemento in lista:
+                            if str(elemento) not in tabla_8_DS:
+                                df_error = df[df[col]==elemento].reset_index(drop=True)
+                                if len(df_error):
+                                    lista_df_error.append(df_error)
+                        if len(lista_df_error):
+                            conteo_error += 1
+                            texto = f"Error en la columna {col}. Los valores no se encuentran en la Tabla_8_DS"
+                            df_error = pd.concat(lista_df_error, ignore_index=True)
+                            filas_minimas_c = filas_minimas.copy()
+                            filas_minimas_c.append(col)
+                            df_error = df_error[filas_minimas_c]
+                            dic_error[col] = [texto, df_error]
+                    elif col == "OBSERVACION":
+                        df.loc[df[col] == "", 'OBSERVACION'] = "NA"
+                        df.loc[df[col] == " ", 'OBSERVACION'] = "NA"
+                nombre = archivo.replace("_HC","").replace("_GC","")
+                conteo_error_t += conteo_error
+                if conteo_error == 0:
+                    lista_reporte.append(df)
+                else:
+                    lista_archivo = archivo.split("\\")
+                    lista_archivo[-1] = "log_errores_"+lista_archivo[-1]
+                    nombre_error = lista_a_texto(lista_archivo, "\\").replace("_resumen","")
+                    nombre_error_doc = nombre_error.replace(".csv",".docx")
+                    nombre_error_pdf = nombre_error.replace(".csv",".pdf")
+                    largo = 0
+                    for valor in dic_error.values():
+                        largo += len(valor[1])
+                    op = mod_8.almacenar_errores(dic_error, filial, indicador_SUI[filial], mes, anio, nombre_error_doc, largo, reporte[2:])
+                    if op:
+                        informar_archivo_creado(nombre_error_pdf, True)
+                    else:
+                        print(f"No es posible acceder al archivo {acortar_nombre(nombre_error_pdf)}")
+    if len(lista_reporte) and conteo_error_t == 0:
+        df_reporte = pd.concat(lista_reporte, ignore_index=True)
+        lista_fecha = fecha.split(" - ")
+        v_fecha_anterior = fecha_anterior(lista_fecha[0], lista_fecha[1])
+        pos_mes = lista_meses.index(v_fecha_anterior[1])+1
+        if pos_mes < 10:
+            pos_mes = "0" + str(pos_mes)
+        else:
+            pos_mes = str(pos_mes)
+        ext = f"Desviaciones_{indicador_SUI_filial}_56_{pos_mes}{v_fecha_anterior[0]}.csv"
+        lista_nombre = nombre.split("\\")
+        carpeta = lista_nombre[-1]
+        lista_nombre[-1] = ext
+        nombre_1 = lista_a_texto(lista_nombre, "\\")
+        almacenar_df_csv_y_excel(df_reporte, nombre_1)
+        v_fun_tamanio_archivos = fun_tamanio_archivos(nombre_1)/(1024**2)
+        if v_fun_tamanio_archivos >= 25:
+            archivo_zip = os.path.join(carpeta, ext.replace(".csv", ".zip"))
+            with zipfile.ZipFile(archivo_zip, 'w') as zipf:
+                zipf.write(nombre_1, arcname=os.path.basename(nombre_1))
+        return df_reporte, nombre
+    else:
+        return None, None
+
+def apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos,filial,fecha,filas_minimas,reporte,informar=True):
+    conteo_error = 0
+
+    return None, None
+
+def generar_reporte_desviaciones_mensual(dic_archivos, seleccionar_reporte, informar=True):
+    filas_minimas = ["ID_EMPRESA","NIU","ID_MERCADO"]
+    lista_filiales_archivo = seleccionar_reporte["filial"]
+    for fecha, lista_archivos in dic_archivos.items():
+        for reporte in lista_archivo_desviaciones:
+            lista_df_filiales = []
+            for filial in lista_filiales_archivo:
+                lista_archivos_filial = []
+                for archivo in lista_archivos:
+                    if filial in archivo and reporte in archivo:
+                        lista_archivos_filial.append(archivo)
+                if len(lista_archivos_filial):
+                    if reporte == "DS56":
+                        df1,nombre = apoyo_generar_reporte_desviaciones_mensual_DS56(lista_archivos_filial,filial,fecha, filas_minimas, reporte)
+                        if nombre:
+                            lista_df_filiales.append(df1)
+                    elif reporte == "DS57":
+                        df1,nombre = apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos_filial,filial,fecha, filas_minimas, reporte)
+                        if nombre:
+                            lista_df_filiales.append(df1)
+                    elif reporte == "DS58":
+                        df1,nombre = apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos_filial,filial,fecha, filas_minimas, reporte)
+                        if nombre:
+                            lista_df_filiales.append(df1)
+            if len(lista_df_filiales) and len(lista_filiales_archivo) == 4:
+                df_total_compilado = pd.concat(lista_df_filiales, ignore_index=True)
+                # Metricas DataFrame
+                lista_nombre = nombre.split("\\")
+                valor = lista_nombre[-1].split("_")
+                valor.pop(1)
+                lista_nombre[-1] = lista_a_texto(valor,"_")
+                lista_nombre[-5] = "05. REPORTES_GENERADOS_APLICATIVO"
+                lista_nombre.pop(-2)
+                nuevo_nombre = lista_a_texto(lista_nombre,"\\")
+                nuevo_nombre = nuevo_nombre.replace("_resumen","_compilado_DS")
+                almacenar_df_csv_y_excel(df_total_compilado,nuevo_nombre, informar)
+
 
 def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, almacenar_excel=True):
     proceso_GRC1 = False
