@@ -2598,6 +2598,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                 df = df[columnas]
                 for col in columnas:
                     if col == 'SERVICIO':
+                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
                         lista = list(df[col].unique())
                         if len(lista) > 1:
                             conteo_error += 1
@@ -2614,10 +2615,11 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                             df_error = df_error[filas_minimas_c]
                             dic_error[col] = [texto, df_error]
                     elif col == 'ID_EMPRESA':
+                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
                         lista = list(df[col].unique())
                         if len(lista) > 1:
                             conteo_error += 1
-                            texto = f"Error en la columna {col}. El valor de columna debe ser {int(indicador_SUI)} (Indicador SUI {filial})"
+                            texto = f"Error en la columna {col}. El valor de columna debe ser {indicador_SUI[filial]} (Indicador SUI {filial})"
                             lista.remove(int(indicador_SUI_filial))
                             lista_df_error = []
                             for elemento in lista:
@@ -2629,6 +2631,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                             df_error = df_error[filas_minimas_c]
                             dic_error[col] = [texto, df_error]
                     elif col == 'NIU':
+                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
                         lista = list(df[col].unique())
                         if "" in lista or " " in lista:
                             conteo_error += 1
@@ -2645,6 +2648,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                             df_error = df_error[filas_minimas_c]
                             dic_error[col] = [texto, df_error]
                     elif col == 'ID_MERCADO':
+                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
                         lista = list(df[col].unique())
                         #TODO: Revisar si el valor de NIU esta en la filial
 
@@ -2653,6 +2657,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                         df_error = df_error[filas_minimas_c]
                         """
                     elif col == 'CODIGO_DANE_NIU':
+                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
                         lista = list(df[col].unique())
                         #TODO: Revisar si el valor de CODIGO_DANE_NIU esta en la filial
                         """
@@ -2661,6 +2666,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                         df_error = df_error[filas_minimas_c]
                         """
                     elif col == 'ESTRATO_SECTOR':
+                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
                         lista = list(df[col].unique())
                         if 11 in lista:
                             conteo_error += 1
@@ -2690,6 +2696,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                             df_error = df_error[filas_minimas_c]
                             dic_error[col] = [texto, df_error]
                     elif col == 'TIPO_TARIFA':
+                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
                         lista = list(df[col].unique())
                         for elemento in lista:
                             if str(elemento) not in tabla_4_DS:
@@ -2705,6 +2712,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                             df_error = df_error[filas_minimas_c]
                             dic_error[col] = [texto, df_error]
                     elif col == 'PERIODO_FACTURACION':
+                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
                         lista = list(df[col].unique())
                         for elemento in lista:
                             if str(elemento) not in tabla_6_DS:
@@ -2767,9 +2775,11 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                             df_filtro = df_filtro[filas_minimas_c]
                             dic_error[col] = [texto, df_filtro]
                     elif col in ['REQUIERE_VISITA',"REALIZO_VISITA"]:
+                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
                         df.loc[df[col] == 2, 'FECHA_VISITA'] = ''
                         df.loc[df[col] == 2, 'RESULTADO_FINAL_VISITA'] = 9
                         lista = list(df[col].unique())
+                        lista_df_error = []
                         for elemento in lista:
                             if str(elemento) not in tabla_30:
                                 df_error = df[df[col]==elemento].reset_index(drop=True)
@@ -2781,6 +2791,18 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                             df_error = pd.concat(lista_df_error, ignore_index=True)
                             filas_minimas_c = filas_minimas.copy()
                             filas_minimas_c.append(col)
+                            df_error = df_error[filas_minimas_c]
+                            dic_error[col] = [texto, df_error]
+                        df['FECHA_VISITA'] = pd.to_datetime(df['FECHA_VISITA'], errors='coerce', dayfirst=True)
+                        df['FECHA_VISITA'] = df['FECHA_VISITA'].fillna("")
+                        df['FECHA_VISITA'] = df['FECHA_VISITA'].apply(lambda x: x.strftime('%d/%m/%Y') if pd.notnull(x) else "")
+                        df_error = df[(df[col]==1)&(df['FECHA_VISITA']=="")].reset_index(drop=True)
+                        if len(df_error):
+                            conteo_error += 1
+                            texto = f"Error en la columna {col}. Cuando el valor de {col} se 1, los valores de FECHA_VISITA no deben ser vacios"
+                            filas_minimas_c = filas_minimas.copy()
+                            filas_minimas_c.append(col)
+                            filas_minimas_c.append("FECHA_VISITA")
                             df_error = df_error[filas_minimas_c]
                             dic_error[col] = [texto, df_error]
                     elif col == "FECHA_VISITA":
@@ -2799,6 +2821,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                         else:
                             df['FECHA_VISITA'] = pd.to_datetime(df['FECHA_VISITA'], errors='coerce', dayfirst=True).dt.strftime('%d-%m-%Y')
                     elif col == "RESULTADO_FINAL_VISITA":
+                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
                         df.loc[df[col] == 9, 'OBSERVACION'] = "No realizo visita"
                         lista = list(df[col].unique())
                         for elemento in lista:
@@ -2900,7 +2923,6 @@ def generar_reporte_desviaciones_mensual(dic_archivos, seleccionar_reporte, info
                 nuevo_nombre = lista_a_texto(lista_nombre,"\\")
                 nuevo_nombre = nuevo_nombre.replace("_resumen","_compilado_DS")
                 almacenar_df_csv_y_excel(df_total_compilado,nuevo_nombre, informar)
-
 
 def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, almacenar_excel=True):
     proceso_GRC1 = False

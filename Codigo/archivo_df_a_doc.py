@@ -16,7 +16,7 @@ def add_horizontal_line(doc):
     paragraph.paragraph_format.space_before = Pt(6)
     paragraph.paragraph_format.space_after = Pt(6)
     paragraph.border_bottom = True
-    run.text = "-"*2700
+    run.text = "-"*2850
     run.font.size = Pt(1)
 
 def almacenar_errores(dic_errores, filial, c_filial, mes, anio, nombre, largo, num):

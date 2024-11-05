@@ -1668,7 +1668,6 @@ def menu_creacion_dashboard():
         if regenerar:
             proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False)
         generar_archivos_mensuales_dashboard(seleccionar_reporte, False, continuar=True, mostrar_dic=True)
-
     elif option == "2":
         seleccionar_reporte = seleccionar_reporte_dashboard.copy()
         seleccionar_reporte["anios"] = [seleccionar_reporte_dashboard["fecha_personalizada"][1][0]]
