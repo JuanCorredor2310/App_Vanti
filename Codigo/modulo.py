@@ -7,7 +7,7 @@ import time
 import json
 import zipfile
 import glob
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
 import chardet
@@ -141,6 +141,18 @@ def fecha_siguiente(anio, mes):
         return str(int(anio)+1), lista_meses[0]
     else:
         return str(anio), lista_meses[pos_mes+1]
+
+def ultimos_12_meses(anio, mes):
+    meses = []
+    fecha = datetime(anio, mes, 1)
+    for _ in range(12):
+        meses.append((fecha.year, fecha.month))
+        fecha = fecha.replace(day=1) - timedelta(days=1)
+    return meses
+
+def meses_anio_actual(anio, mes):
+    meses = [(anio, i) for i in range(1, mes + 1)]
+    return meses
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Manejo DataFrames
@@ -3632,7 +3644,7 @@ def gastos_AOM(dashboard=False, texto_fecha=None):
         print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
         return None
 
-def contribuciones_MME():
+def contribuciones_MME(dashboard=False, texto_fecha=None):
     nombre = "subsidios"
     anio_actual = fecha_actual.year
     mes_actual = lista_meses[fecha_actual.month-1]
@@ -3643,22 +3655,79 @@ def contribuciones_MME():
         lista_df = lectura_dataframe_chunk(archivo_csv)
         if lista_df:
             df = pd.concat(lista_df, ignore_index=True)
-            lista = ["Fecha","Mes","Anio","Filial","Causado","Causado_acumulado","Deuda","Promedio","KPI"]
+            lista = ["Fecha","Mes","Anio","Filial","Causado","Causado_acumulado","Pagado","Deuda","Promedio","KPI"]
             df.columns = lista
-            print(df)
-            print(v_fecha_anterior[0], v_fecha_anterior[1])
-            pos_mes = lista_meses.index(v_fecha_anterior[1])+1
-
-            #TODO: Realizar una lista de 12 tuplas para tener los ultimos 12 meses
-            #TODO: Obtener el promedio del KPI del año actual
-            #TODO: Generar un df con filial, mes, anio, deuda y pagado de los ultimos 12 meses
-            return None
+            df_filtro = df[(df["Filial"]=="GRUPO")]
+            if len(df_filtro):
+                mes = int(lista_meses.index(v_fecha_anterior[1])+1)
+                anio = int(v_fecha_anterior[0])
+                v_ultimos_12_meses = ultimos_12_meses(anio, mes)
+                v_ultimos_12_meses.reverse()
+                v_meses_anio_actual = meses_anio_actual(anio, mes)
+                dic_df_12_meses = {"Filial":[],
+                                    "Mes":[],
+                                    "Anio":[],
+                                    "Causado":[],
+                                    "Pagado":[],
+                                    "Promedio":[],
+                                    "KPI":[]}
+                for elemento in v_ultimos_12_meses:
+                    df_periodo = df_filtro[(df_filtro["Anio"]==elemento[0]) & (df_filtro["Mes"]==elemento[1])]
+                    if len(df_periodo):
+                        dic_df_12_meses["Filial"].append(grupo_vanti)
+                        dic_df_12_meses["Mes"].append(lista_meses[int(elemento[1])-1])
+                        dic_df_12_meses["Anio"].append(elemento[0])
+                        dic_df_12_meses["Causado"].append(df_periodo["Causado"].iloc[0])
+                        dic_df_12_meses["Pagado"].append(df_periodo["Pagado"].iloc[0])
+                        dic_df_12_meses["Promedio"].append(df_periodo["Promedio"].iloc[0])
+                        dic_df_12_meses["KPI"].append(df_periodo["KPI"].iloc[0])
+                df_12_meses = pd.DataFrame(dic_df_12_meses)
+                dic_df_meses_anio = {"Filial":[],
+                                    "Mes":[],
+                                    "Anio":[],
+                                    "Causado":[],
+                                    "Pagado":[],
+                                    "Promedio":[],
+                                    "KPI":[]}
+                for elemento in v_meses_anio_actual:
+                    df_periodo_1 = df_12_meses[(df_12_meses["Anio"]==elemento[0]) & (df_12_meses["Mes"]==lista_meses[int(elemento[1])-1])]
+                    if len(df_periodo_1):
+                        dic_df_meses_anio["Filial"].append(grupo_vanti)
+                        dic_df_meses_anio["Mes"].append(lista_meses[int(elemento[1])-1])
+                        dic_df_meses_anio["Anio"].append(elemento[0])
+                        dic_df_meses_anio["Causado"].append(df_periodo_1["Causado"].iloc[0])
+                        dic_df_meses_anio["Pagado"].append(df_periodo_1["Pagado"].iloc[0])
+                        dic_df_meses_anio["Promedio"].append(df_periodo_1["Promedio"].iloc[0])
+                        dic_df_meses_anio["KPI"].append(df_periodo_1["KPI"].iloc[0])
+                df_meses_anio = pd.DataFrame(dic_df_meses_anio)
+                if len(df_12_meses) and len(df_meses_anio):
+                    if not dashboard:
+                        lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Cumplimientos_Regulatorios"]
+                        nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"subsidios_KPI")
+                        almacenar_df_csv_y_excel(df_12_meses,nuevo_nombre)
+                        lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", str(anio_actual), "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Cumplimientos_Regulatorios"]
+                        nuevo_nombre_1 = encontrar_ubi_archivo(lista_ubi, f"subsidios_KPI_anio")
+                        almacenar_df_csv_y_excel(df_meses_anio,nuevo_nombre_1)
+                        return nuevo_nombre, nuevo_nombre_1
+                    else:
+                        lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", texto_fecha, "Cumplimientos_Regulatorios"]
+                        nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"subsidios_KPI")
+                        almacenar_df_csv_y_excel(df_12_meses,nuevo_nombre)
+                        lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", str(anio_actual), "REPORTES_GENERADOS_APLICATIVO", "Compilado", texto_fecha, "Cumplimientos_Regulatorios"]
+                        nuevo_nombre_1 = encontrar_ubi_archivo(lista_ubi, f"subsidios_KPI_anio")
+                        almacenar_df_csv_y_excel(df_meses_anio,nuevo_nombre_1)
+                        return nuevo_nombre, nuevo_nombre_1
+                else:
+                    return None, None
+            else:
+                print("No hay datos disponibles para la filial GRUPO.")
+                return None, None
         else:
             print(f"No es posible a acceder al archivo {archivo_csv}, revisar la estructura del mismo.")
-            return None
+            return None, None
     else:
         print(f"No existe el archivo {archivo_csv}. No es posible generar el reporte.")
-        return None
+        return None, None
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Reportes Tarifarios

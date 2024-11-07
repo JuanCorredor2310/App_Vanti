@@ -28,6 +28,13 @@
         "rojo_p": "#a6184b",
         "azul_p": "#0390cf",
         "blanco": "#fefffe",
-        "negro": "#000000"
+        "negro": "#000000",
+        "rosa_p1": "#C00081",
+        "azul_p1": "#3162AF",
+        "rosa_p2": "#92003D",
+        "azul_p2": "#0E71D1",
+        "morado_p1": "#5E06AF",
+        "naranja_p2": "#FF8900",
+        "verde_p1": "#00DE3A"
     }
 }

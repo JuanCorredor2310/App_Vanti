@@ -1687,7 +1687,6 @@ def menu_creacion_dashboard():
                 dic_metricas = mod_6.metricas_sector_consumo(archivo, v_fecha_inicial, v_fecha_anterior, dic_metricas)
             elif i == 1:
                 mod_6.grafica_pie_subsidios(archivo, v_fecha_anterior)
-                #mod_6.grafica_barras_contribuciones(archivo)
                 dic_metricas = mod_6.grafica_barras_subsidios(archivo, dic_metricas)
             elif i == 2:
                 mod_6.grafica_barras_compensacion(archivo)
@@ -1699,15 +1698,11 @@ def menu_creacion_dashboard():
             elif i == 5:
                 dic_metricas = mod_6.metricas_indicadores(archivo, v_fecha_anterior, dic_metricas)
             elif i == 6:
-                pass
                 mod_6.grafica_barras_indicador_tecnico_minutos(archivo)
             elif i == 7:
-                pass
                 mod_6.grafica_barras_indicador_tecnico_horas(archivo, fecha)
             elif i == 8:
-                pass
                 mod_6.grafica_barras_indicador_tecnico(archivo)
-
     fi,ff,listas_unidas = eleccion_rango_trimestral([(fi_1, fi_2),(ff_1, ff_2)])
     archivo = mod_1.reporte_info_reclamos(fi,ff,listas_unidas, dashboard=True, texto_fecha=texto_fecha)
     if archivo:
@@ -1721,6 +1716,11 @@ def menu_creacion_dashboard():
     archivo = mod_1.generar_porcentaje_cumplimientos_regulatorios(dashboard=True, texto_fecha=texto_fecha)
     if archivo:
         mod_6.velocimetro_cumplimientos_regulatorios(archivo, v_fecha_anterior)
+    archivo, archivo_1 = mod_1.contribuciones_MME(dashboard=True, texto_fecha=texto_fecha)
+    if archivo and archivo_1:
+        pass
+        # Gráfico subsidios
+        #mod_6.velocimetro_cumplimientos_regulatorios(archivo, v_fecha_anterior)
     lista_archivo = archivo.split("\\")[:-2]
 
     #mod_7.crear_slides(mod_1.lista_a_texto(lista_archivo,"\\"),v_fecha_anterior,texto_fecha_completo, fecha_actual_texto, texto_fecha, lista_metricas_portada)
