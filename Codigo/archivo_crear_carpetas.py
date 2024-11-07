@@ -55,11 +55,37 @@ def iniciar_funcion_crear_carpetas():
     funcion_creacion_carpetas("carpetas_3")
     df = mod_1.leer_dataframe(ruta_constantes+"mercado_relevante.csv")
     dic_DANE = {}
+    dic_mercado_rele_id = {}
+    dic_mercado_rele_DANE = {}
     for i in range(len(df)):
-        dic_DANE[str(df["Codigo_DANE"][i])] = {"Id_mercado":str(df["Id_mercado"][i]),
-                                                "Id_empresa":str(df["Id_empresa"][i]),
-                                                "Nombre_municipio":str(df["Nombre_municipio"][i])}
+        id_mercado = str(df["Id_mercado"][i])
+        id_empresa = str(df["Id_empresa"][i])
+        codigo_DANE = str(df["Codigo_DANE"][i])
+        if len(codigo_DANE) == 7:
+            codigo_DANE = "0" + codigo_DANE
+        dic_DANE[codigo_DANE] = {"Id_mercado":id_empresa,
+                                "Id_empresa":id_empresa,
+                                "Nombre_municipio":str(df["Nombre_municipio"][i])}
+        if id_empresa not in dic_mercado_rele_id:
+            dic_mercado_rele_id[id_empresa] = {}
+        if id_mercado not in dic_mercado_rele_id[id_empresa]:
+            dic_mercado_rele_id[id_empresa][id_mercado] = {}
+        if codigo_DANE not in dic_mercado_rele_id[id_empresa][id_mercado]:
+            dic_mercado_rele_id[id_empresa][id_mercado][codigo_DANE] = []
+        dic_mercado_rele_id[id_empresa][id_mercado][codigo_DANE].append({"Nombre_mercado":str(df["Nombre_mercado"][i]),
+                                                                        "Nombre_municipio":str(df["Nombre_municipio"][i]),
+                                                                        "Nombre_empresa":str(df["Nombre_empresa"][i])})
+        if id_empresa not in dic_mercado_rele_DANE:
+            dic_mercado_rele_DANE[id_empresa] = {}
+        if codigo_DANE not in dic_mercado_rele_DANE[id_empresa]:
+            dic_mercado_rele_DANE[id_empresa][codigo_DANE] = []
+        dic_mercado_rele_DANE[id_empresa][codigo_DANE].append({"Id_mercado":id_mercado,
+                                                                "Nombre_mercado":str(df["Nombre_mercado"][i]),
+                                                                "Nombre_municipio":str(df["Nombre_municipio"][i]),
+                                                                "Nombre_empresa":str(df["Nombre_empresa"][i])})
     mod_2.almacenar_json(dic_DANE, ruta_constantes+"mercado_relevante.json")
+    mod_2.almacenar_json(dic_mercado_rele_id, ruta_constantes+"mercado_relevante_id.json")
+    mod_2.almacenar_json(dic_mercado_rele_DANE, ruta_constantes+"mercado_relevante_DANE.json")
     df = mod_1.leer_dataframe(ruta_constantes+"mercado_relevante_resumen.csv")
     dic_mercado_rele = {}
     for i in range(len(df)):
@@ -69,4 +95,3 @@ def iniciar_funcion_crear_carpetas():
                                                 "Latitud":str(df["Latitud"][i]),
                                                 "Longitud":str(df["Longitud"][i])}
     mod_2.almacenar_json(dic_mercado_rele, ruta_constantes+"mercado_relevante_resumen.json")
-

@@ -9,7 +9,6 @@ ruta_nuevo_sui = mod_rp.v_nuevo_sui()
 ruta_codigo = mod_rp.v_codigo()
 ruta_archivos = mod_rp.v_archivos()
 sys.path.append(os.path.abspath(ruta_codigo))
-import modulo as mod_1
 
 def almacenar_json(diccionario, nombre_archivo):
         with open(nombre_archivo, 'w') as file:
@@ -950,6 +949,13 @@ def variables_reportes(reporte):
                 datos = {"descripcion":desc,
                         "datos":data}
                 guardar_diccionario_ruta(datos, n_archivo)
+                data_1 = {"488":"VANTI",
+                        "2225":"GNCB",
+                        "525":"GNCR",
+                        "526":"GOR"}
+                datos_1 = {"descripcion":desc,
+                        "datos":data_1}
+                guardar_diccionario_ruta(datos_1, "empresa_indicador_SUI")
         elif reporte == "tabla_2_DS":
                 desc = "Servicio",
                 data = {"4":"Energía Eléctrica",

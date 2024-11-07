@@ -1198,44 +1198,23 @@ def menu_comercial_desviaciones_significativas(option,valor):
     #? Generación de reportes de desviaciones significativas anual
 
 
-def menu_reportes_DANE(option,valor):
+def menu_reportes_DANE(valor):
     #? Generación de reportes DANE mensual
-    if option == "1":
-        seleccionar_reporte = funcion_seleccionar_reportes("reporte_comercial_mensual")
-        op_add = anadir_opciones(regenerar=True, codigo_DANE=True)
-        regenerar = op_add[1]
-        codigo_DANE = op_add[2]
-        t_i = time.time()
-        print(f"\nInicio de procesamiento para: {valor}\n\n")
-        if regenerar:
-            proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False)
-        proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, False, continuar=False, mostrar_dic=True)
-        if proceso:
-            mod_1.reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=codigo_DANE, valor_facturado=True, reporte_DANE=True)
-        t_f = time.time()
-        mod_1.mostrar_tiempo(t_f, t_i)
-    #? Generación de reportes DANE anual
-    elif option == "2":
-        """seleccionar_reporte = funcion_seleccionar_reportes("reporte_comercial_anual")
-        print(seleccionar_reporte)
-        reporte = "_compilado_compensacion.csv"
-        op_add = anadir_opciones(True, reportes_mensuales=True,texto_regenerar_mensuales=reporte, inventario=True)
-        t_i = time.time()
-        regenerar = op_add[1]
-        regenerar_reportes_mensuales = op_add[6]
-        inventario = op_add[7]
-        print(f"\nInicio de procesamiento para: {valor}\n\n")
-        if regenerar:
-            proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False)
-        if regenerar_reportes_mensuales:
-            proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, False, continuar=True, mostrar_dic=True)
-            if proceso:
-                mod_1.generar_reporte_compensacion_mensual(dic_archivos, seleccionar_reporte, True, inventario)
-        proceso,dic_archivos_anual = generar_archivos_extra_anual(seleccionar_reporte, reporte)
-        if proceso:
-            mod_1.union_archivos_mensuales_anual(dic_archivos_anual, seleccionar_reporte, True)"""
-        t_f = time.time()
-        mod_1.mostrar_tiempo(t_f, t_i)
+    seleccionar_reporte = funcion_seleccionar_reportes("reporte_comercial_mensual")
+    op_add = anadir_opciones(regenerar=True, codigo_DANE=True)
+    regenerar = op_add[1]
+    codigo_DANE = op_add[2]
+    t_i = time.time()
+    print(f"\nInicio de procesamiento para: {valor}\n\n")
+    if regenerar:
+        proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False)
+    proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, False, continuar=False, mostrar_dic=True)
+    if proceso:
+        mod_1.reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=codigo_DANE, valor_facturado=True, reporte_DANE=True)
+    t_f = time.time()
+    mod_1.mostrar_tiempo(t_f, t_i)
+    t_f = time.time()
+    mod_1.mostrar_tiempo(t_f, t_i)
 
 def menu_reportes_SH():
     valor = "Reporte comercial Secretaria de Hacienda de Bogotá D.C."
@@ -1445,11 +1424,7 @@ def menu_comercial(option,valor):
         menu_comercial_analisis_previo(option,valor)
     #? Reportes DANE
     elif option == "5":
-        lista_menu = ["Generación de reportes DANE mensual",
-                    "Generación de reportes DANE anual",
-                    "Regresar al menú inicial"]
-        option,valor = opcion_menu_valida(lista_menu, "Reportes DANE")
-        menu_reportes_DANE(option,valor)
+        menu_reportes_DANE("Reportes DANE")
     #? Reportes SH (Secretaria de Hacienda)
     elif option == "6":
         menu_reportes_SH()
@@ -1638,17 +1613,24 @@ def menu_cumplimientos_reportes(option, valor):
         option,valor = opcion_menu_valida(lista_menu, "Información comercial para información de usuarios únicos")
         menu_comercial_trimestral(option,valor)
     #? Información para matriz de requerimientos
-    if option == "3":
+    elif option == "3":
         t_i = time.time()
         print(f"\nInicio de procesamiento para: {valor}\n\n")
         mod_1.generar_porcentaje_matriz_requerimientos()
         t_f = time.time()
         mod_1.mostrar_tiempo(t_f, t_i)
     #? Gastos AOM
-    if option == "4":
+    elif option == "4":
         t_i = time.time()
         print(f"\nInicio de procesamiento para: {valor}\n\n")
         mod_1.gastos_AOM()
+        t_f = time.time()
+        mod_1.mostrar_tiempo(t_f, t_i)
+    #? Pagos contribuciones MME
+    elif option == "5":
+        t_i = time.time()
+        print(f"\nInicio de procesamiento para: {valor}\n\n")
+        mod_1.contribuciones_MME()
         t_f = time.time()
         mod_1.mostrar_tiempo(t_f, t_i)
 
@@ -1806,6 +1788,7 @@ def menu_inicial(lista, nombre):
                     "Información comercial para reportes trimestrales",
                     "Información para matriz de requerimientos",
                     "Gastos AOM (Administrativos, Operativos y Mantenimiento)",
+                    "Pagos contribuciones MME",
                     "Regresar al menú inicial"]
         option,valor = opcion_menu_valida(lista_menu, "Cumplimientos Regulatorios", False)
         menu_cumplimientos_reportes(option,valor)
@@ -2273,8 +2256,6 @@ def mostrar_inicio_app():
 mostrar_inicio_app()
 
 # TODO: Pendientes Urgentes
-    #Automatizar proceso de Desviaciones Sinificativas
-    #Revisión de Reporte DANE (Archivos anuales y mensuales)
     #Terminar slides Canva
     #Automatizar almacenamiento de sides
     #Crear variables globales con funciones
@@ -2293,6 +2274,3 @@ mostrar_inicio_app()
 
 # TODO Pendientes NO Urgentes:
     #Revisar llamado de todas las funciones
-
-
-

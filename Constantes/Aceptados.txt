@@ -12,3 +12,4 @@ gncv.png
 transporte.png
 otros.png
 electrico.png
+subsidios.csv

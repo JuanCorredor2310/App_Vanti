@@ -1,0 +1,898 @@
+{
+    "526": {
+        "05893000": [
+            {
+                "Id_mercado": "16",
+                "Nombre_mercado": "Santander-Antioquia",
+                "Nombre_municipio": "CASABE",
+                "Nombre_empresa": "GAS NATURAL DEL ORIENTE"
+            }
+        ],
+        "13160000": [
+            {
+                "Id_mercado": "11",
+                "Nombre_mercado": "Santander-Sur Bol\u00edvar",
+                "Nombre_municipio": "CANTAGALLO",
+                "Nombre_empresa": "GAS NATURAL DEL ORIENTE"
+            }
+        ],
+        "13670000": [
+            {
+                "Id_mercado": "11",
+                "Nombre_mercado": "Santander-Sur Bol\u00edvar",
+                "Nombre_municipio": "SAN PABLO",
+                "Nombre_empresa": "GAS NATURAL DEL ORIENTE"
+            }
+        ],
+        "68001000": [
+            {
+                "Id_mercado": "11",
+                "Nombre_mercado": "Santander-Sur Bol\u00edvar",
+                "Nombre_municipio": "BUCARAMANGA",
+                "Nombre_empresa": "GAS NATURAL DEL ORIENTE"
+            }
+        ],
+        "68010000": [
+            {
+                "Id_mercado": "11",
+                "Nombre_mercado": "Santander-Sur Bol\u00edvar",
+                "Nombre_municipio": "VEREDAS",
+                "Nombre_empresa": "GAS NATURAL DEL ORIENTE"
+            }
+        ],
+        "68081000": [
+            {
+                "Id_mercado": "16",
+                "Nombre_mercado": "Santander-Antioquia",
+                "Nombre_municipio": "BARRANCABERMEJA",
+                "Nombre_empresa": "GAS NATURAL DEL ORIENTE"
+            }
+        ],
+        "68081002": [
+            {
+                "Id_mercado": "16",
+                "Nombre_mercado": "Santander-Antioquia",
+                "Nombre_municipio": "EL LLANITO",
+                "Nombre_empresa": "GAS NATURAL DEL ORIENTE"
+            }
+        ],
+        "68276000": [
+            {
+                "Id_mercado": "9",
+                "Nombre_mercado": "Floridablanca",
+                "Nombre_municipio": "FLORIDABLANCA",
+                "Nombre_empresa": "GAS NATURAL DEL ORIENTE"
+            }
+        ],
+        "68307000": [
+            {
+                "Id_mercado": "11",
+                "Nombre_mercado": "Santander-Sur Bol\u00edvar",
+                "Nombre_municipio": "GIRON",
+                "Nombre_empresa": "GAS NATURAL DEL ORIENTE"
+            }
+        ],
+        "68406000": [
+            {
+                "Id_mercado": "11",
+                "Nombre_mercado": "Santander-Sur Bol\u00edvar",
+                "Nombre_municipio": "LEBRIJA",
+                "Nombre_empresa": "GAS NATURAL DEL ORIENTE"
+            }
+        ],
+        "68547000": [
+            {
+                "Id_mercado": "11",
+                "Nombre_mercado": "Santander-Sur Bol\u00edvar",
+                "Nombre_municipio": "PIEDECUESTA",
+                "Nombre_empresa": "GAS NATURAL DEL ORIENTE"
+            }
+        ],
+        "68575000": [
+            {
+                "Id_mercado": "11",
+                "Nombre_mercado": "Santander-Sur Bol\u00edvar",
+                "Nombre_municipio": "PUERTO WILCHES",
+                "Nombre_empresa": "GAS NATURAL DEL ORIENTE"
+            }
+        ],
+        "68575007": [
+            {
+                "Id_mercado": "16",
+                "Nombre_mercado": "Santander-Antioquia",
+                "Nombre_municipio": "EL PEDRAL",
+                "Nombre_empresa": "GAS NATURAL DEL ORIENTE"
+            }
+        ],
+        "68575015": [
+            {
+                "Id_mercado": "16",
+                "Nombre_mercado": "Santander-Antioquia",
+                "Nombre_municipio": "PUENTE SOGAMOSO",
+                "Nombre_empresa": "GAS NATURAL DEL ORIENTE"
+            }
+        ],
+        "68655000": [
+            {
+                "Id_mercado": "11",
+                "Nombre_mercado": "Santander-Sur Bol\u00edvar",
+                "Nombre_municipio": "SABANA DE TORRES",
+                "Nombre_empresa": "GAS NATURAL DEL ORIENTE"
+            }
+        ]
+    },
+    "488": {
+        "11001000": [
+            {
+                "Id_mercado": "23",
+                "Nombre_mercado": "Bogot\u00e1-Centro Cundinamarca",
+                "Nombre_municipio": "BOGOTA, D.C.",
+                "Nombre_empresa": "VANTI SA ESP"
+            }
+        ],
+        "25035000": [
+            {
+                "Id_mercado": "149",
+                "Nombre_mercado": "LA MESA Y ANOLAIMA",
+                "Nombre_municipio": "ANAPOIMA",
+                "Nombre_empresa": "VANTI SA ESP"
+            }
+        ],
+        "25245000": [
+            {
+                "Id_mercado": "149",
+                "Nombre_mercado": "LA MESA Y ANOLAIMA",
+                "Nombre_municipio": "EL COLEGIO",
+                "Nombre_empresa": "VANTI SA ESP"
+            }
+        ],
+        "25260000": [
+            {
+                "Id_mercado": "139",
+                "Nombre_mercado": "El Rosal",
+                "Nombre_municipio": "EL ROSAL",
+                "Nombre_empresa": "VANTI SA ESP"
+            }
+        ],
+        "25377000": [
+            {
+                "Id_mercado": "113",
+                "Nombre_mercado": "La Calera",
+                "Nombre_municipio": "LA CALERA",
+                "Nombre_empresa": "VANTI SA ESP"
+            }
+        ],
+        "25386000": [
+            {
+                "Id_mercado": "149",
+                "Nombre_mercado": "LA MESA Y ANOLAIMA",
+                "Nombre_municipio": "LA MESA",
+                "Nombre_empresa": "VANTI SA ESP"
+            }
+        ],
+        "25740000": [
+            {
+                "Id_mercado": "23",
+                "Nombre_mercado": "Bogot\u00e1-Centro Cundinamarca",
+                "Nombre_municipio": "SIBATE",
+                "Nombre_empresa": "VANTI SA ESP"
+            }
+        ],
+        "25754000": [
+            {
+                "Id_mercado": "23",
+                "Nombre_mercado": "Bogot\u00e1-Centro Cundinamarca",
+                "Nombre_municipio": "SOACHA",
+                "Nombre_empresa": "VANTI SA ESP"
+            }
+        ],
+        "25878000": [
+            {
+                "Id_mercado": "149",
+                "Nombre_mercado": "LA MESA Y ANOLAIMA",
+                "Nombre_municipio": "VIOTA",
+                "Nombre_empresa": "VANTI SA ESP"
+            }
+        ]
+    },
+    "2225": {
+        "15001000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "TUNJA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15087000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "BELEN",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15106000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "BRICENO",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15131000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "CALDAS",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15162000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "CERINZA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15176000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "CHIQUINQUIRA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15204000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "COMBITA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15224000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "CUCAITA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15238000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "DUITAMA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15276000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "FLORESTA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15407000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "VILLA DE LEYVA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15464000": [
+            {
+                "Id_mercado": "1825",
+                "Nombre_mercado": "MONGUA",
+                "Nombre_municipio": "MONGUA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15466000": [
+            {
+                "Id_mercado": "1825",
+                "Nombre_mercado": "MONGUA",
+                "Nombre_municipio": "MONGU\u00cd",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15476000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "MOTAVITA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15491000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "NOBSA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15491007": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "NAZARETH",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15500000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "OICATA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15516000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "PAIPA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15600000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "RAQUIRA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15638000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "SACHICA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15646000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "SAMACA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15693000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "SANTA ROSA DE VITERBO",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15696000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "SANTA SOFIA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15759000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "SOGAMOSO",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15762000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "SORA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15776000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "SUTAMARCHAN",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15806000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "TIBASOSA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15808000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "TINJACA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15820000": [
+            {
+                "Id_mercado": "1825",
+                "Nombre_mercado": "MONGUA",
+                "Nombre_municipio": "T\u00d3PAGA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15832000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "TUNUNGUA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "15837000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "TUTA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25099000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "BOJACA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25126000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "CAJICA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25175000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "CHIA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25178000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "CHIPAQUE",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25200000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "COGUA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25214000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "COTA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25224000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "CUCUNUBA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25269000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "FACATATIVA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25286000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "FUNZA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25288000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "FUQUENE",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25288001": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "CAPELLANIA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25295000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "GACHANCIPA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25430000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "MADRID",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25473000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "MOSQUERA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25486000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "NEMOCON",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25745000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "SIMIJACA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25758000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "SOPO",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25769000": [
+            {
+                "Id_mercado": "106",
+                "Nombre_mercado": "Subachoque",
+                "Nombre_municipio": "SUBACHOQUE",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25779000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "SUSA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25781000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "SUTATAUSA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25785000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "TABIO",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25793000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "TAUSA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25799000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "TENJO",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25817000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "TOCANCIPA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25843000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "VILLA DE SAN DIEGO DE UBATE",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25843001": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "GUATANCUY",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25898000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "ZIPACON",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "25899000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "ZIPAQUIRA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "68020000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "ALBANIA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "68271000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "FLORIAN",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ],
+        "68377000": [
+            {
+                "Id_mercado": "169",
+                "Nombre_mercado": "ASE - Altiplano Cundiboyacense",
+                "Nombre_municipio": "LA BELLEZA",
+                "Nombre_empresa": "GAS NATURAL CUNDIBOYACENSE"
+            }
+        ]
+    },
+    "525": {
+        "20011000": [
+            {
+                "Id_mercado": "21",
+                "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+                "Nombre_municipio": "AGUACHICA",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ],
+        "20013000": [
+            {
+                "Id_mercado": "21",
+                "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+                "Nombre_municipio": "AGUSTIN CODAZZI",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ],
+        "20013002": [
+            {
+                "Id_mercado": "21",
+                "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+                "Nombre_municipio": "CASACAZA",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ],
+        "20045000": [
+            {
+                "Id_mercado": "21",
+                "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+                "Nombre_municipio": "BECERRIL",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ],
+        "20178000": [
+            {
+                "Id_mercado": "21",
+                "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+                "Nombre_municipio": "CHIRIGUANA",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ],
+        "20178008": [
+            {
+                "Id_mercado": "21",
+                "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+                "Nombre_municipio": "RINCON HONDO",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ],
+        "20228000": [
+            {
+                "Id_mercado": "21",
+                "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+                "Nombre_municipio": "CURUMANI",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ],
+        "20228001": [
+            {
+                "Id_mercado": "21",
+                "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+                "Nombre_municipio": "SABANAGRANDE",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ],
+        "20228002": [
+            {
+                "Id_mercado": "21",
+                "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+                "Nombre_municipio": "SAN ROQUE",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ],
+        "20295000": [
+            {
+                "Id_mercado": "21",
+                "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+                "Nombre_municipio": "GAMARRA",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ],
+        "20383000": [
+            {
+                "Id_mercado": "21",
+                "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+                "Nombre_municipio": "LA GLORIA",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ],
+        "20383001": [
+            {
+                "Id_mercado": "21",
+                "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+                "Nombre_municipio": "AYACUCHO",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ],
+        "20383005": [
+            {
+                "Id_mercado": "21",
+                "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+                "Nombre_municipio": "SIMANA",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ],
+        "20383010": [
+            {
+                "Id_mercado": "21",
+                "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+                "Nombre_municipio": "LA MATA",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ],
+        "20400000": [
+            {
+                "Id_mercado": "21",
+                "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+                "Nombre_municipio": "LA JAGUA DE IBIRICO",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ],
+        "20400001": [
+            {
+                "Id_mercado": "21",
+                "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+                "Nombre_municipio": "LAS PALMITAS",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ],
+        "20517000": [
+            {
+                "Id_mercado": "21",
+                "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+                "Nombre_municipio": "PAILITAS",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ],
+        "20517006": [
+            {
+                "Id_mercado": "21",
+                "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+                "Nombre_municipio": "EL BURRO",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ],
+        "20550000": [
+            {
+                "Id_mercado": "21",
+                "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+                "Nombre_municipio": "PELAYA",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ],
+        "20710000": [
+            {
+                "Id_mercado": "21",
+                "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+                "Nombre_municipio": "SAN ALBERTO",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ],
+        "20750000": [
+            {
+                "Id_mercado": "21",
+                "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+                "Nombre_municipio": "SAN DIEGO",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ],
+        "20750002": [
+            {
+                "Id_mercado": "21",
+                "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+                "Nombre_municipio": "MEDIA LUNA",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ],
+        "20770000": [
+            {
+                "Id_mercado": "80",
+                "Nombre_mercado": "San Martin-Cesar",
+                "Nombre_municipio": "SAN MARTIN",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ],
+        "20787000": [
+            {
+                "Id_mercado": "21",
+                "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+                "Nombre_municipio": "TAMALAMEQUE",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ],
+        "47245000": [
+            {
+                "Id_mercado": "21",
+                "Nombre_mercado": "Cesar-Magdalena-Norte Santander",
+                "Nombre_municipio": "EL BANCO",
+                "Nombre_empresa": "GAS NATURAL CESAR"
+            }
+        ]
+    }
+}

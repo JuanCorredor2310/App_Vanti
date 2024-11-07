@@ -1,556 +1,556 @@
 {
-    "5893000": {
-        "Id_mercado": "16",
+    "05893000": {
+        "Id_mercado": "526",
         "Id_empresa": "526",
         "Nombre_municipio": "CASABE"
     },
     "11001000": {
-        "Id_mercado": "23",
+        "Id_mercado": "488",
         "Id_empresa": "488",
         "Nombre_municipio": "BOGOTA, D.C."
     },
     "13160000": {
-        "Id_mercado": "11",
+        "Id_mercado": "526",
         "Id_empresa": "526",
         "Nombre_municipio": "CANTAGALLO"
     },
     "13670000": {
-        "Id_mercado": "11",
+        "Id_mercado": "526",
         "Id_empresa": "526",
         "Nombre_municipio": "SAN PABLO"
     },
     "15001000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "TUNJA"
     },
     "15087000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "BELEN"
     },
     "15106000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "BRICENO"
     },
     "15131000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "CALDAS"
     },
     "15162000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "CERINZA"
     },
     "15176000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "CHIQUINQUIRA"
     },
     "15204000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "COMBITA"
     },
     "15224000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "CUCAITA"
     },
     "15238000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "DUITAMA"
     },
     "15276000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "FLORESTA"
     },
     "15407000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "VILLA DE LEYVA"
     },
     "15464000": {
-        "Id_mercado": "1825",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "MONGUA"
     },
     "15466000": {
-        "Id_mercado": "1825",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "MONGU\u00cd"
     },
     "15476000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "MOTAVITA"
     },
     "15491000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "NOBSA"
     },
     "15491007": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "NAZARETH"
     },
     "15500000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "OICATA"
     },
     "15516000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "PAIPA"
     },
     "15600000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "RAQUIRA"
     },
     "15638000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "SACHICA"
     },
     "15646000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "SAMACA"
     },
     "15693000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "SANTA ROSA DE VITERBO"
     },
     "15696000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "SANTA SOFIA"
     },
     "15759000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "SOGAMOSO"
     },
     "15762000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "SORA"
     },
     "15776000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "SUTAMARCHAN"
     },
     "15806000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "TIBASOSA"
     },
     "15808000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "TINJACA"
     },
     "15820000": {
-        "Id_mercado": "1825",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "T\u00d3PAGA"
     },
     "15832000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "TUNUNGUA"
     },
     "15837000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "TUTA"
     },
     "20011000": {
-        "Id_mercado": "21",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "AGUACHICA"
     },
     "20013000": {
-        "Id_mercado": "21",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "AGUSTIN CODAZZI"
     },
     "20013002": {
-        "Id_mercado": "21",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "CASACAZA"
     },
     "20045000": {
-        "Id_mercado": "21",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "BECERRIL"
     },
     "20178000": {
-        "Id_mercado": "21",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "CHIRIGUANA"
     },
     "20178008": {
-        "Id_mercado": "21",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "RINCON HONDO"
     },
     "20228000": {
-        "Id_mercado": "21",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "CURUMANI"
     },
     "20228001": {
-        "Id_mercado": "21",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "SABANAGRANDE"
     },
     "20228002": {
-        "Id_mercado": "21",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "SAN ROQUE"
     },
     "20295000": {
-        "Id_mercado": "21",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "GAMARRA"
     },
     "20383000": {
-        "Id_mercado": "21",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "LA GLORIA"
     },
     "20383001": {
-        "Id_mercado": "21",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "AYACUCHO"
     },
     "20383005": {
-        "Id_mercado": "21",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "SIMANA"
     },
     "20383010": {
-        "Id_mercado": "21",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "LA MATA"
     },
     "20400000": {
-        "Id_mercado": "21",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "LA JAGUA DE IBIRICO"
     },
     "20400001": {
-        "Id_mercado": "21",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "LAS PALMITAS"
     },
     "20517000": {
-        "Id_mercado": "21",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "PAILITAS"
     },
     "20517006": {
-        "Id_mercado": "21",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "EL BURRO"
     },
     "20550000": {
-        "Id_mercado": "21",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "PELAYA"
     },
     "20710000": {
-        "Id_mercado": "21",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "SAN ALBERTO"
     },
     "20750000": {
-        "Id_mercado": "21",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "SAN DIEGO"
     },
     "20750002": {
-        "Id_mercado": "21",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "MEDIA LUNA"
     },
     "20770000": {
-        "Id_mercado": "80",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "SAN MARTIN"
     },
     "20787000": {
-        "Id_mercado": "21",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "TAMALAMEQUE"
     },
     "25035000": {
-        "Id_mercado": "149",
+        "Id_mercado": "488",
         "Id_empresa": "488",
         "Nombre_municipio": "ANAPOIMA"
     },
     "25099000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "BOJACA"
     },
     "25126000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "CAJICA"
     },
     "25175000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "CHIA"
     },
     "25178000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "CHIPAQUE"
     },
     "25200000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "COGUA"
     },
     "25214000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "COTA"
     },
     "25224000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "CUCUNUBA"
     },
     "25245000": {
-        "Id_mercado": "149",
+        "Id_mercado": "488",
         "Id_empresa": "488",
         "Nombre_municipio": "EL COLEGIO"
     },
     "25260000": {
-        "Id_mercado": "139",
+        "Id_mercado": "488",
         "Id_empresa": "488",
         "Nombre_municipio": "EL ROSAL"
     },
     "25269000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "FACATATIVA"
     },
     "25286000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "FUNZA"
     },
     "25288000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "FUQUENE"
     },
     "25288001": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "CAPELLANIA"
     },
     "25295000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "GACHANCIPA"
     },
     "25377000": {
-        "Id_mercado": "113",
+        "Id_mercado": "488",
         "Id_empresa": "488",
         "Nombre_municipio": "LA CALERA"
     },
     "25386000": {
-        "Id_mercado": "149",
+        "Id_mercado": "488",
         "Id_empresa": "488",
         "Nombre_municipio": "LA MESA"
     },
     "25430000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "MADRID"
     },
     "25473000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "MOSQUERA"
     },
     "25486000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "NEMOCON"
     },
     "25740000": {
-        "Id_mercado": "23",
+        "Id_mercado": "488",
         "Id_empresa": "488",
         "Nombre_municipio": "SIBATE"
     },
     "25745000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "SIMIJACA"
     },
     "25754000": {
-        "Id_mercado": "23",
+        "Id_mercado": "488",
         "Id_empresa": "488",
         "Nombre_municipio": "SOACHA"
     },
     "25758000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "SOPO"
     },
     "25769000": {
-        "Id_mercado": "106",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "SUBACHOQUE"
     },
     "25779000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "SUSA"
     },
     "25781000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "SUTATAUSA"
     },
     "25785000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "TABIO"
     },
     "25793000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "TAUSA"
     },
     "25799000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "TENJO"
     },
     "25817000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "TOCANCIPA"
     },
     "25843000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "VILLA DE SAN DIEGO DE UBATE"
     },
     "25843001": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "GUATANCUY"
     },
     "25878000": {
-        "Id_mercado": "149",
+        "Id_mercado": "488",
         "Id_empresa": "488",
         "Nombre_municipio": "VIOTA"
     },
     "25898000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "ZIPACON"
     },
     "25899000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "ZIPAQUIRA"
     },
     "47245000": {
-        "Id_mercado": "21",
+        "Id_mercado": "525",
         "Id_empresa": "525",
         "Nombre_municipio": "EL BANCO"
     },
     "68001000": {
-        "Id_mercado": "11",
+        "Id_mercado": "526",
         "Id_empresa": "526",
         "Nombre_municipio": "BUCARAMANGA"
     },
     "68010000": {
-        "Id_mercado": "11",
+        "Id_mercado": "526",
         "Id_empresa": "526",
         "Nombre_municipio": "VEREDAS"
     },
     "68020000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "ALBANIA"
     },
     "68081000": {
-        "Id_mercado": "16",
+        "Id_mercado": "526",
         "Id_empresa": "526",
         "Nombre_municipio": "BARRANCABERMEJA"
     },
     "68081002": {
-        "Id_mercado": "16",
+        "Id_mercado": "526",
         "Id_empresa": "526",
         "Nombre_municipio": "EL LLANITO"
     },
     "68271000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "FLORIAN"
     },
     "68276000": {
-        "Id_mercado": "9",
+        "Id_mercado": "526",
         "Id_empresa": "526",
         "Nombre_municipio": "FLORIDABLANCA"
     },
     "68307000": {
-        "Id_mercado": "11",
+        "Id_mercado": "526",
         "Id_empresa": "526",
         "Nombre_municipio": "GIRON"
     },
     "68377000": {
-        "Id_mercado": "169",
+        "Id_mercado": "2225",
         "Id_empresa": "2225",
         "Nombre_municipio": "LA BELLEZA"
     },
     "68406000": {
-        "Id_mercado": "11",
+        "Id_mercado": "526",
         "Id_empresa": "526",
         "Nombre_municipio": "LEBRIJA"
     },
     "68547000": {
-        "Id_mercado": "11",
+        "Id_mercado": "526",
         "Id_empresa": "526",
         "Nombre_municipio": "PIEDECUESTA"
     },
     "68575000": {
-        "Id_mercado": "11",
+        "Id_mercado": "526",
         "Id_empresa": "526",
         "Nombre_municipio": "PUERTO WILCHES"
     },
     "68575007": {
-        "Id_mercado": "16",
+        "Id_mercado": "526",
         "Id_empresa": "526",
         "Nombre_municipio": "EL PEDRAL"
     },
     "68575015": {
-        "Id_mercado": "16",
+        "Id_mercado": "526",
         "Id_empresa": "526",
         "Nombre_municipio": "PUENTE SOGAMOSO"
     },
     "68655000": {
-        "Id_mercado": "11",
+        "Id_mercado": "526",
         "Id_empresa": "526",
         "Nombre_municipio": "SABANA DE TORRES"
     }

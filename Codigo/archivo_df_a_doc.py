@@ -1,12 +1,8 @@
-import pandas as pd
 from docx import Document
 from docx.shared import Inches, Pt
 from docx2pdf import convert
 import os
 from contextlib import redirect_stdout, redirect_stderr
-from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
-from docx.oxml import OxmlElement
-import win32com.client as win32
 
 def add_horizontal_line(doc):
     paragraph = doc.add_paragraph()
@@ -19,20 +15,18 @@ def add_horizontal_line(doc):
     run.text = "-"*2850
     run.font.size = Pt(1)
 
-def almacenar_errores(dic_errores, filial, c_filial, mes, anio, nombre, largo, num):
+def almacenar_errores(dic_errores, filial, c_filial, mes, anio, nombre, largo, num, clasi):
     doc = Document()
     section = doc.sections[0]
     section.orientation = 1
-    section.page_height = Inches(largo*4)
+    section.page_height = Inches(largo*4.5)
     section.page_width = Inches(16)
-    #20
-    #14
     section.top_margin = Inches(0.5)
     section.bottom_margin = Inches(0.5)
     section.left_margin = Inches(0.5)
     section.right_margin = Inches(0.5)
     parrafo = doc.add_paragraph()
-    parrafo.add_run(f"Errores encontrados para el reporte {num} de Desviaciones Significativas").bold = True
+    parrafo.add_run(f"Errores encontrados para el reporte {num} de Desviaciones Significativas {clasi}").bold = True
     parrafo = doc.add_paragraph()
     parrafo.add_run(f"{filial} ({c_filial}) para {mes}-{anio}").bold = True
     add_horizontal_line(doc)
@@ -50,6 +44,8 @@ def almacenar_errores(dic_errores, filial, c_filial, mes, anio, nombre, largo, n
             for paragraph in hdr_cells[i].paragraphs: # Espaciado después
                 for run in paragraph.runs:
                     run.font.size = Pt(11)
+                    if i == columna-1:
+                        run.bold = True
         for row in df.itertuples(index=False):
             row_cells = table.add_row().cells
             for i, value in enumerate(row):
@@ -57,7 +53,7 @@ def almacenar_errores(dic_errores, filial, c_filial, mes, anio, nombre, largo, n
                 paragraph.paragraph_format.space_before = Pt(0)  # Espaciado antes
                 paragraph.paragraph_format.space_after = Pt(0)   # Espaciado después
                 paragraph.paragraph_format.line_spacing = Pt(1)
-                if i == columna:
+                if i == columna-1:
                     run = row_cells[i].add_paragraph().add_run(str(value))
                     run.bold = True
                 else:
