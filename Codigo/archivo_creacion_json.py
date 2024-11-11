@@ -1021,6 +1021,19 @@ def variables_reportes(reporte):
                 datos = {"descripcion":desc,
                         "datos":data}
                 guardar_diccionario_ruta(datos, n_archivo)
+                desc = "Servicio_categorias",
+                data = {"1":"Consumos reales",
+                        "2":"Error en la lectura",
+                        "3":"Error en la lectura",
+                        "4":"Error en la lectura",
+                        "5":"No se logró visita por impedimento",
+                        "6":"No se logró visita por impedimento",
+                        "7":"No se logró visita por impedimento",
+                        "8":"No se logró visita por impedimento",
+                        "9":"No realizó visita"}
+                datos = {"descripcion":desc,
+                        "datos":data}
+                guardar_diccionario_ruta(datos, "tabla_8_DS_categoria")
 
 def crear_archivos_json_principales():
         variables_reportes("GRT1")

@@ -43,7 +43,7 @@ def leer_archivos_json(archivo):
 # *                                             Constantes globales
 # * -------------------------------------------------------------------------------------------------------
 
-global lista_meses, lista_empresas, lista_anios, dic_reportes, lista_reportes_generales, reportes_generados, lista_reportes_totales,chunksize,llaves_dic_reporte, dic_carpetas, dic_filiales,antidad_datos_excel, dic_nit, cantidad_datos_estilo_excel,grupo_vanti,mercado_relevante,mercado_relevante_resumen,mercado_relevante_id,tabla_3,tabla_11,fecha_actual,lista_trimestres, dic_meses_abre,lista_clasi_reportes,categoria_matriz_requerimientos,lista_archivo_desviaciones,tabla_2_DS,tabla_3_DS,tabla_4_DS,tabla_5_DS,tabla_6_DS,tabla_8_DS,indicador_SUI,tabla_30
+global lista_meses, lista_empresas, lista_anios, dic_reportes, lista_reportes_generales, reportes_generados, lista_reportes_totales,chunksize,llaves_dic_reporte, dic_carpetas, dic_filiales,antidad_datos_excel, dic_nit, cantidad_datos_estilo_excel,grupo_vanti,mercado_relevante,mercado_relevante_resumen,mercado_relevante_id,tabla_3,tabla_11,fecha_actual,lista_trimestres, dic_meses_abre,lista_clasi_reportes,categoria_matriz_requerimientos,lista_archivo_desviaciones,tabla_2_DS,tabla_3_DS,tabla_4_DS,tabla_5_DS,tabla_6_DS,tabla_8_DS,indicador_SUI,tabla_30,tabla_8_DS_categoria
 grupo_vanti = "Grupo Vanti"
 dic_carpetas = leer_archivos_json(ruta_constantes+"carpetas.json")
 lista_anios = list(leer_archivos_json(ruta_constantes+"anios.json")["datos"].values())
@@ -74,6 +74,7 @@ tabla_4_DS = leer_archivos_json(ruta_constantes+"/tabla_4_DS.json")["datos"]
 tabla_5_DS = leer_archivos_json(ruta_constantes+"/tabla_5_DS.json")["datos"]
 tabla_6_DS = leer_archivos_json(ruta_constantes+"/tabla_6_DS.json")["datos"]
 tabla_8_DS = leer_archivos_json(ruta_constantes+"/tabla_8_DS.json")["datos"]
+tabla_8_DS_categoria = leer_archivos_json(ruta_constantes+"/tabla_8_DS_categoria.json")["datos"]
 tabla_30 = leer_archivos_json(ruta_constantes+"/tabla_30.json")["datos"]
 indicador_SUI = leer_archivos_json(ruta_constantes+"/indicador_SUI.json")["datos"]
 empresa_indicador_SUI = leer_archivos_json(ruta_constantes+"/empresa_indicador_SUI.json")["datos"]
@@ -1460,7 +1461,7 @@ def apoyo_reporte_comercial_sector_consumo(df1, n1, df2, n2, informar=True,repor
         return df3, n2
     return None, None
 
-def reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=None, valor_facturado=True, subsidio=False, almacenar_excel=True, total=False, facturas=False, reporte_DANE=True):
+def reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=None, valor_facturado=True, subsidio=False, almacenar_excel=True, total=False, facturas=False, reporte_DANE=False):
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for fecha, lista_archivos in dic_archivos.items():
         lista_df_filiales = []
@@ -3049,19 +3050,32 @@ def generar_reporte_desviaciones_mensual(dic_archivos, seleccionar_reporte, info
                         "Visitas_realizadas":[],
                         "No_realizo_viista":[],
                         "Porcentaje_atendidos":[]}
+                dic_df_1 = {"Filial":[],
+                        "Indicador_SUI":[],
+                        "Mercado_relevante":[],
+                        "Desviaciones_totales":[],
+                        "Categoria":[],
+                        "Total_categoria":[]}
+                dic_reporte_categoria = {}
                 for id_empresa in lista_id_empresa:
                     if str(id_empresa) not in dic_reporte_atendidos:
                         dic_reporte_atendidos[str(id_empresa)] = {}
+                    if str(id_empresa) not in dic_reporte_categoria:
+                        dic_reporte_categoria[str(id_empresa)] = {}
                     df_empresa = df_total_compilado[df_total_compilado["ID_EMPRESA"]==id_empresa].reset_index(drop=True)
                     id_mercado = list(df_empresa["ID_MERCADO"].unique())
                     for id_mercado in id_mercado:
                         if str(id_mercado) not in dic_reporte_atendidos[str(id_empresa)]:
                             dic_reporte_atendidos[str(id_empresa)][str(id_mercado)] = None
+                        if str(id_mercado) not in dic_reporte_categoria[str(id_empresa)]:
+                            dic_reporte_categoria[str(id_empresa)][str(id_mercado)] = {}
                         df_mercado = df_empresa[df_empresa["ID_MERCADO"]==id_mercado].reset_index(drop=True)
+                        df_mercado_1 = df_mercado.copy()
                         c_nan = df_mercado['FECHA_VISITA'].isna().sum()
                         df_mercado = df_mercado.dropna(subset=['FECHA_VISITA'])
                         largo = len(df_mercado)
                         valor = dic_reporte_empresa[str(id_empresa)][str(id_mercado)]
+                        dic_reporte_categoria[str(id_empresa)][str(id_mercado)]["Total"] = valor
                         porcentaje = f"{round((largo/valor)*100,2)} %"
                         dic_reporte_atendidos[str(id_empresa)][str(id_mercado)] = porcentaje
                         dic_df["Filial"].append(dic_filiales[empresa_indicador_SUI[str(id_empresa)]])
@@ -3071,12 +3085,45 @@ def generar_reporte_desviaciones_mensual(dic_archivos, seleccionar_reporte, info
                         dic_df["Visitas_realizadas"].append(largo)
                         dic_df["No_realizo_viista"].append(c_nan)
                         dic_df["Porcentaje_atendidos"].append(porcentaje)
+                        lista_resultados = list(df_mercado_1["RESULTADO_FINAL_VISITA"].unique())
+                        for resultado in lista_resultados:
+                            llave = tabla_8_DS_categoria[str(resultado)]
+                            cantidad = len(df_mercado_1[df_mercado_1["RESULTADO_FINAL_VISITA"]==resultado])
+                            if llave not in dic_reporte_categoria[str(id_empresa)][str(id_mercado)]:
+                                dic_reporte_categoria[str(id_empresa)][str(id_mercado)][llave] = 0
+                            dic_reporte_categoria[str(id_empresa)][str(id_mercado)][llave] += cantidad
+                for id_empresa, dic_empresa in dic_reporte_categoria.items():
+                    for id_mercado, dic_mercado in dic_empresa.items():
+                        for categoria, valor in dic_mercado.items():
+                            if categoria != "Total":
+                                dic_df_1["Filial"].append(dic_filiales[empresa_indicador_SUI[str(id_empresa)]])
+                                dic_df_1["Indicador_SUI"].append(id_empresa)
+                                dic_df_1["Mercado_relevante"].append(id_mercado)
+                                dic_df_1["Desviaciones_totales"].append(dic_mercado["Total"])
+                                dic_df_1["Categoria"].append(categoria)
+                                dic_df_1["Total_categoria"].append(valor)
                 df_metricas = pd.DataFrame(dic_df)
                 lista_fecha = fecha.split(" - ")
+                lista_fecha = fecha_anterior(lista_fecha[0], lista_fecha[1])
                 df_metricas["Anio_reportado"] = lista_fecha[0]
                 df_metricas["Mes_reportado"] = lista_fecha[1]
-                nuevo_nombre = nuevo_nombre.replace(".csv", "_metricas.csv")
-                almacenar_df_csv_y_excel(df_metricas, nuevo_nombre)
+                df_metricas_categoria = pd.DataFrame(dic_df_1)
+                ultima_fila = [grupo_vanti, grupo_vanti, grupo_vanti, df_metricas_categoria["Total_categoria"].sum(), "Total", df_metricas_categoria["Total_categoria"].sum()]
+                lista_categoria = list(df_metricas_categoria["Categoria"].unique())
+                matriz_fila = []
+                for categoria in lista_categoria:
+                    df_categoria = df_metricas_categoria[df_metricas_categoria["Categoria"]==categoria].reset_index(drop=True)
+                    nueva_fila = [grupo_vanti, grupo_vanti, grupo_vanti, df_metricas_categoria["Total_categoria"].sum(), categoria, df_categoria["Total_categoria"].sum()]
+                    matriz_fila.append(nueva_fila)
+                for fila in matriz_fila:
+                    df_metricas_categoria.loc[len(df_metricas_categoria)] = fila
+                df_metricas_categoria.loc[len(df_metricas_categoria)] = ultima_fila
+                df_metricas_categoria["Anio_reportado"] = lista_fecha[0]
+                df_metricas_categoria["Mes_reportado"] = lista_fecha[1]
+                nombre = nuevo_nombre.replace(".csv", "_metricas.csv")
+                almacenar_df_csv_y_excel(df_metricas, nombre)
+                nombre = nuevo_nombre.replace(".csv", "_metricas_categorias.csv")
+                almacenar_df_csv_y_excel(df_metricas_categoria, nombre)
 
 def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, almacenar_excel=True):
     proceso_GRC1 = False
@@ -3670,6 +3717,7 @@ def contribuciones_MME(dashboard=False, texto_fecha=None):
                                     "Causado":[],
                                     "Pagado":[],
                                     "Promedio":[],
+                                    "Deuda":[],
                                     "KPI":[]}
                 for elemento in v_ultimos_12_meses:
                     df_periodo = df_filtro[(df_filtro["Anio"]==elemento[0]) & (df_filtro["Mes"]==elemento[1])]
@@ -3680,6 +3728,7 @@ def contribuciones_MME(dashboard=False, texto_fecha=None):
                         dic_df_12_meses["Causado"].append(df_periodo["Causado"].iloc[0])
                         dic_df_12_meses["Pagado"].append(df_periodo["Pagado"].iloc[0])
                         dic_df_12_meses["Promedio"].append(df_periodo["Promedio"].iloc[0])
+                        dic_df_12_meses["Deuda"].append(df_periodo["Deuda"].iloc[0])
                         dic_df_12_meses["KPI"].append(df_periodo["KPI"].iloc[0])
                 df_12_meses = pd.DataFrame(dic_df_12_meses)
                 dic_df_meses_anio = {"Filial":[],
@@ -3688,6 +3737,7 @@ def contribuciones_MME(dashboard=False, texto_fecha=None):
                                     "Causado":[],
                                     "Pagado":[],
                                     "Promedio":[],
+                                    "Deuda":[],
                                     "KPI":[]}
                 for elemento in v_meses_anio_actual:
                     df_periodo_1 = df_12_meses[(df_12_meses["Anio"]==elemento[0]) & (df_12_meses["Mes"]==lista_meses[int(elemento[1])-1])]
@@ -3698,6 +3748,7 @@ def contribuciones_MME(dashboard=False, texto_fecha=None):
                         dic_df_meses_anio["Causado"].append(df_periodo_1["Causado"].iloc[0])
                         dic_df_meses_anio["Pagado"].append(df_periodo_1["Pagado"].iloc[0])
                         dic_df_meses_anio["Promedio"].append(df_periodo_1["Promedio"].iloc[0])
+                        dic_df_meses_anio["Deuda"].append(df_periodo_1["Deuda"].iloc[0])
                         dic_df_meses_anio["KPI"].append(df_periodo_1["KPI"].iloc[0])
                 df_meses_anio = pd.DataFrame(dic_df_meses_anio)
                 if len(df_12_meses) and len(df_meses_anio):

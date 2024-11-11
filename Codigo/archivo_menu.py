@@ -35,8 +35,8 @@ lista_reportes_generales = mod_2.leer_archivos_json(ruta_constantes+"carpetas_1.
 reportes_generados = mod_2.leer_archivos_json(ruta_constantes+"carpetas_1.json")["carpeta_4"]
 trimestre_mes = mod_2.leer_archivos_json(ruta_constantes+"trimestre_mes.json")["datos"]
 lista_reportes_generados = ["_resumen","_form_estandar", #formatos generales
-                            "_reporte_consumo","_CLD","_PRD","_porcentaje_comparacion_SAP","_total_comparacion_SAP","SH","DANE","_reporte_DANE",
-                            "_comparacion_iguales","_comparacion_diferentes","_subsidio","_info_comercial","_reporte_compensacion","_compilado_compensacion","_compilado_DS", #formatos comerciales
+                            "_reporte_consumo","_CLD","_PRD","_porcentaje_comparacion_SAP","_total_comparacion_SAP","SH","DANE","_reporte_DANE","_compilado_desviaciones","_compilado_DS_metricas",
+                            "_comparacion_iguales","_comparacion_diferentes","_subsidio","_info_comercial","_reporte_compensacion","_compilado_compensacion", #formatos comerciales
                             "_reporte_tarifario", #formatos tarifarios
                             "_indicador_tecnico","_reporte_suspension","_indicador_tecnico_IRST","_indicador_tecnico_IRST_minutos","_indicador_tecnico_IRST_horas", #formatos tecnicos
                             "_inventario_suscriptores","_usuarios_unicos","_reporte_facturacion",#calidad de la información
@@ -526,7 +526,7 @@ def generar_archivos_extra(seleccionar_reporte, regenerar=False, evitar_extra=[]
     else:
         return None, None
 
-def generar_archivos_extra_dashboard(seleccionar_reporte, regenerar=False, evitar_extra=[], continuar=False, informar=True, ext="_resumen.csv", solo_crear_arc=False, mostrar_dic=False):
+def generar_archivos_extra_dashboard(seleccionar_reporte, evitar_extra=[], ext="_resumen.csv"):
     tipo = ext
     lista_agrupar_archivos = []
     lista_agrupar_archivos_mostrar = []
@@ -557,6 +557,16 @@ def generar_archivos_extra_dashboard(seleccionar_reporte, regenerar=False, evita
         if proceso_agrupar:
             lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte,"Compensaciones"])
             lista_agrupar_archivos_mostrar.append({"Compensaciones":dic_archivos_mostrar})
+        else:
+            lista_agrupar_archivos.append([{},None])
+    seleccionar_reporte["tipo"] = ["Comercial"]
+    seleccionar_reporte["clasificacion"] = ["DS"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte, evitar_extra, informar=False)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte,"Desviaciones Significativas"])
+            lista_agrupar_archivos_mostrar.append({"Desviaciones Significativas":dic_archivos_mostrar})
         else:
             lista_agrupar_archivos.append([{},None])
     seleccionar_reporte["tipo"] = ["Tarifario"]
@@ -616,29 +626,27 @@ def generar_archivos_extra_dashboard(seleccionar_reporte, regenerar=False, evita
                 seleccionar_reporte = lista_agrupar_archivos[i][1]
                 nombre = lista_agrupar_archivos[i][2]
                 if len(elemento):
+                    print(f"\nInicio de procesamiento para: {nombre}\n\n")
                     if i == 0:
-                        print(f"\nInicio de procesamiento para: {nombre}\n\n")
                         mod_1.reporte_comercial_sector_consumo(cambio_diccionario_reportes(elemento), seleccionar_reporte, total=True, valor_facturado=True)
                     elif i == 1:
-                        print(f"\nInicio de procesamiento para: {nombre}\n\n")
                         mod_1.reporte_comercial_sector_consumo(cambio_diccionario_reportes(elemento), seleccionar_reporte, total=True, valor_facturado=True, subsidio=True)
                     elif i == 2:
-                        print(f"\nInicio de procesamiento para: {nombre}\n\n")
                         mod_1.generar_reporte_compensacion_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte)
                     elif i == 3:
-                        print(f"\nInicio de procesamiento para: {nombre}\n\n")
-                        mod_1.reporte_tarifas_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte)
+                        mod_1.generar_reporte_desviaciones_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte)
                     elif i == 4:
-                        print(f"\nInicio de procesamiento para: {nombre}\n\n")
-                        mod_1.generar_reporte_suspension_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte)
+                        mod_1.reporte_tarifas_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte)
                     elif i == 5:
-                        print(f"\nInicio de procesamiento para: {nombre}\n\n")
-                        mod_1.generar_reporte_indicadores_tecnicos_IRST_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte)
+                        mod_1.generar_reporte_suspension_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte)
                     elif i == 6:
-                        print(f"\nInicio de procesamiento para: {nombre}\n\n")
+                        mod_1.generar_reporte_indicadores_tecnicos_IRST_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte)
+                    elif i == 7:
                         mod_1.generar_reporte_indicadores_tecnicos_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte)
+            return True
+        return False
 
-def generar_archivos_mensuales_dashboard(seleccionar_reporte, regenerar=False, evitar_extra=[], continuar=False, informar=True, ext="_resumen.csv", solo_crear_arc=False, mostrar_dic=False):
+def generar_archivos_mensuales_dashboard(seleccionar_reporte, evitar_extra=[], ext="_resumen.csv"):
     tipo = ext
     lista_agrupar_archivos = []
     lista_agrupar_archivos_mostrar = []
@@ -669,6 +677,16 @@ def generar_archivos_mensuales_dashboard(seleccionar_reporte, regenerar=False, e
         if proceso_agrupar:
             lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte,"Compensaciones"])
             lista_agrupar_archivos_mostrar.append({"Compensaciones":dic_archivos_mostrar})
+        else:
+            lista_agrupar_archivos.append([{},None])
+    seleccionar_reporte["tipo"] = ["Comercial"]
+    seleccionar_reporte["clasificacion"] = ["DS"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo(tipo, seleccionar_reporte, evitar_extra, informar=False)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte,"Desviaciones Significativas"])
+            lista_agrupar_archivos_mostrar.append({"Desviaciones Significativas":dic_archivos_mostrar})
         else:
             lista_agrupar_archivos.append([{},None])
     seleccionar_reporte["tipo"] = ["Tarifario"]
@@ -728,27 +746,25 @@ def generar_archivos_mensuales_dashboard(seleccionar_reporte, regenerar=False, e
                 seleccionar_reporte = lista_agrupar_archivos[i][1]
                 nombre = lista_agrupar_archivos[i][2]
                 if len(elemento):
+                    print(f"\nInicio de procesamiento para: {nombre}\n\n")
                     if i == 0:
-                        print(f"\nInicio de procesamiento para: {nombre}\n\n")
                         mod_1.reporte_comercial_sector_consumo(cambio_diccionario_reportes(elemento), seleccionar_reporte, total=True, valor_facturado=True)
                     elif i == 1:
-                        print(f"\nInicio de procesamiento para: {nombre}\n\n")
                         mod_1.reporte_comercial_sector_consumo(cambio_diccionario_reportes(elemento), seleccionar_reporte, total=True, valor_facturado=True, subsidio=True)
                     elif i == 2:
-                        print(f"\nInicio de procesamiento para: {nombre}\n\n")
                         mod_1.generar_reporte_compensacion_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte)
                     elif i == 3:
-                        print(f"\nInicio de procesamiento para: {nombre}\n\n")
-                        mod_1.reporte_tarifas_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte)
+                        mod_1.generar_reporte_desviaciones_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte)
                     elif i == 4:
-                        print(f"\nInicio de procesamiento para: {nombre}\n\n")
-                        mod_1.generar_reporte_suspension_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte)
+                        mod_1.reporte_tarifas_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte)
                     elif i == 5:
-                        print(f"\nInicio de procesamiento para: {nombre}\n\n")
-                        mod_1.generar_reporte_indicadores_tecnicos_IRST_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte)
+                        mod_1.generar_reporte_suspension_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte)
                     elif i == 6:
-                        print(f"\nInicio de procesamiento para: {nombre}\n\n")
+                        mod_1.generar_reporte_indicadores_tecnicos_IRST_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte)
+                    elif i == 7:
                         mod_1.generar_reporte_indicadores_tecnicos_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte)
+            return True
+        return False
 
 def generar_archivos_anuales_dashboard(seleccionar_reporte_dashboard):
     lista_anual = []
@@ -791,6 +807,17 @@ def generar_archivos_anuales_dashboard(seleccionar_reporte_dashboard):
     seleccionar_reporte["clasificacion"] = ["GRC3"]
     reporte = "_compilado_compensacion.csv"
     categoria = "Reporte de compensaciones"
+    proceso,dic_archivos_anual = generar_archivos_extra_anual(seleccionar_reporte, reporte, continuar=True, mostrar_dic=False)
+    if proceso:
+        lista_dic.append((dic_archivos_anual,categoria))
+        if len(categoria) > v_max:
+            v_max = len(categoria)
+    else:
+        lista_dic.append(({},None))
+    seleccionar_reporte["tipo"] = ["Comercial"]
+    seleccionar_reporte["clasificacion"] = ["DS57"]
+    reporte = "_compilado_DS_metricas.csv"
+    categoria = "Reporte de desviaciones significativas"
     proceso,dic_archivos_anual = generar_archivos_extra_anual(seleccionar_reporte, reporte, continuar=True, mostrar_dic=False)
     if proceso:
         lista_dic.append((dic_archivos_anual,categoria))
@@ -865,13 +892,15 @@ def generar_archivos_anuales_dashboard(seleccionar_reporte_dashboard):
     if len(lista_dic):
         for elemento in lista_dic:
             dic = elemento[0]
-            categoria = elemento[1]
-            for fecha, lista_fecha in dic.items():
-                if fecha not in nuevo_dic_mostrar:
-                    nuevo_dic_mostrar[fecha] = {}
-                if categoria not in nuevo_dic_mostrar[fecha]:
-                    nuevo_dic_mostrar[fecha][categoria] = None
-                nuevo_dic_mostrar[fecha][categoria] = lista_fecha[0].split("\\")[-1]
+            if len(dic):
+                categoria = elemento[1]
+                for fecha, lista_fecha in dic.items():
+                    if len(lista_fecha):
+                        if fecha not in nuevo_dic_mostrar:
+                            nuevo_dic_mostrar[fecha] = {}
+                        if categoria not in nuevo_dic_mostrar[fecha]:
+                            nuevo_dic_mostrar[fecha][categoria] = None
+                        nuevo_dic_mostrar[fecha][categoria] = lista_fecha[0].split("\\")[-1]
         mostrar_dic_archivos_agrupados_dashboard_anual(nuevo_dic_mostrar, v_max)
         lista_menu = ["Sí","No"]
         option,valor = opcion_menu_valida(lista_menu, "¿Desea generar el reporte con los archivos disponibles?")
@@ -1160,7 +1189,6 @@ def menu_comercial_compensaciones(option,valor):
     #? Generación de reportes de compensaciones anual
     elif option == "2":
         seleccionar_reporte = funcion_seleccionar_reportes("reportes_compensacion_anual")
-        print(seleccionar_reporte)
         reporte = "_compilado_compensacion.csv"
         op_add = anadir_opciones(True, reportes_mensuales=True,texto_regenerar_mensuales=reporte, inventario=True)
         t_i = time.time()
@@ -1196,7 +1224,25 @@ def menu_comercial_desviaciones_significativas(option,valor):
             t_f = time.time()
             mod_1.mostrar_tiempo(t_f, t_i)
     #? Generación de reportes de desviaciones significativas anual
-
+    elif option == "2":
+        seleccionar_reporte = funcion_seleccionar_reportes("reportes_DS_anual")
+        reporte = "_compilado_DS_metricas.csv"
+        op_add = anadir_opciones(regenerar=True,reportes_mensuales=True,texto_regenerar_mensuales=reporte)
+        t_i = time.time()
+        regenerar = op_add[1]
+        regenerar_reportes_mensuales = op_add[6]
+        print(f"\nInicio de procesamiento para: {valor}\n\n")
+        if regenerar:
+            proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False)
+        if regenerar_reportes_mensuales:
+            proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, False, continuar=True, mostrar_dic=True)
+            if proceso:
+                mod_1.generar_reporte_desviaciones_mensual(dic_archivos, seleccionar_reporte)
+        proceso,dic_archivos_anual = generar_archivos_extra_anual(seleccionar_reporte, reporte)
+        if proceso:
+            mod_1.union_archivos_mensuales_anual(dic_archivos_anual, seleccionar_reporte, True)
+        t_f = time.time()
+        mod_1.mostrar_tiempo(t_f, t_i)
 
 def menu_reportes_DANE(valor):
     #? Generación de reportes DANE mensual
@@ -1641,6 +1687,7 @@ def menu_creacion_dashboard():
     seleccionar_reporte_dashboard = funcion_seleccionar_reportes("dashboard")
     option,valor = opcion_menu_valida(["Generar información para los 12 meses seleccionados","Generar información para el último mes seleccionado", "Continuar"], "Información anual Dashboard")
     t_i = time.time()
+    generar_DB = True
     if option == "1":
         seleccionar_reporte = seleccionar_reporte_dashboard.copy()
         seleccionar_reporte["tipo"] = list(dic_reportes.keys()).copy()
@@ -1649,7 +1696,7 @@ def menu_creacion_dashboard():
         regenerar = op_add[1]
         if regenerar:
             proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False)
-        generar_archivos_mensuales_dashboard(seleccionar_reporte, False, continuar=True, mostrar_dic=True)
+        generar_DB = generar_archivos_mensuales_dashboard(seleccionar_reporte)
     elif option == "2":
         seleccionar_reporte = seleccionar_reporte_dashboard.copy()
         seleccionar_reporte["anios"] = [seleccionar_reporte_dashboard["fecha_personalizada"][1][0]]
@@ -1661,73 +1708,80 @@ def menu_creacion_dashboard():
         regenerar = op_add[1]
         if regenerar:
             proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False)
-        generar_archivos_extra_dashboard(seleccionar_reporte, False, continuar=True, mostrar_dic=True)
+        generar_DB = generar_archivos_extra_dashboard(seleccionar_reporte)
+    if generar_DB:
+        fi_1 = seleccionar_reporte_dashboard["fecha_personalizada"][0][0]
+        fi_2 = seleccionar_reporte_dashboard["fecha_personalizada"][0][1]
+        ff_1 = seleccionar_reporte_dashboard["fecha_personalizada"][1][0]
+        ff_2 = seleccionar_reporte_dashboard["fecha_personalizada"][1][1]
+        texto_fecha = f"{fi_1}_{fi_2.upper()}_{ff_1}_{ff_2.upper()}"
+        fecha = ((fi_1, fi_2),(ff_1, ff_2))
+        texto_fecha_completo = f"{fi_2}/{fi_1} - {ff_2}/{ff_1}"
+        v_fecha_anterior = mod_1.fecha_anterior(ff_1, ff_2)
+        v_fecha_inicial = mod_1.fecha_anterior(fi_1, fi_2)
+        print(f"\nInicio de creación del Dashboard para el periodo: ({fi_1}/{fi_2} - {ff_1}/{ff_2})\n\n")
+        lista_archivos_anuales = generar_archivos_anuales_dashboard(seleccionar_reporte_dashboard)
+        if len(lista_archivos_anuales):
+            dic_metricas = {}
+            for i in range(len(lista_archivos_anuales)):
+                archivo = lista_archivos_anuales[i]
+                if archivo:
+                    if i == 0:
+                        #mod_6.grafica_pie_tipo_usuario(archivo, v_fecha_anterior)
+                        #mod_6.grafico_barras_consumo(archivo)
+                        #mod_6.grafico_usuarios(archivo)
+                        #dic_metricas = mod_6.grafica_pie_usuarios(archivo, v_fecha_anterior, dic_metricas)
+                        #mod_6.grafica_tabla_sector_consumo(archivo, v_fecha_anterior)
+                        #dic_metricas = mod_6.metricas_sector_consumo(archivo, v_fecha_inicial, v_fecha_anterior, dic_metricas)
+                        pass
+                    elif i == 1:
+                        #mod_6.grafica_pie_subsidios(archivo, v_fecha_anterior)
+                        #dic_metricas = mod_6.grafica_barras_subsidios(archivo, dic_metricas)
+                        pass
+                    elif i == 2:
+                        #mod_6.grafica_barras_compensacion(archivo)
+                        #dic_metricas = mod_6.metricas_compensacines(archivo, v_fecha_anterior, dic_metricas)
+                        pass
+                    elif i == 3:
+                        #mod_6.grafica_DS(archivo)
+                        pass
+                    elif i == 4:
+                        dic_metricas = mod_6.fun_tarifas(archivo, v_fecha_anterior, dic_metricas)
+                    elif i == 5:
+                        dic_metricas = mod_6.metricas_suspensiones(archivo, v_fecha_anterior, dic_metricas)
+                    elif i == 6:
+                        dic_metricas = mod_6.metricas_indicadores(archivo, v_fecha_anterior, dic_metricas)
+                    elif i == 7:
+                        mod_6.grafica_barras_indicador_tecnico_minutos(archivo)
+                        pass
+                    elif i == 8:
+                        mod_6.grafica_barras_indicador_tecnico_horas(archivo, fecha)
+                        pass
+                    elif i == 9:
+                        mod_6.grafica_barras_indicador_tecnico(archivo)
+            fi,ff,listas_unidas = eleccion_rango_trimestral([(fi_1, fi_2),(ff_1, ff_2)])
+            archivo = mod_1.reporte_info_reclamos(fi,ff,listas_unidas, dashboard=True, texto_fecha=texto_fecha)
+            if archivo:
+                mod_6.grafica_barras_trimestre_reclamos(archivo)
+            archivo = mod_1.gastos_AOM(dashboard=True, texto_fecha=texto_fecha)
+            if archivo:
+                mod_6.grafica_gastos_AOM(archivo, anio_actual-1)
+            archivo = mod_1.generar_porcentaje_matriz_requerimientos(dashboard=True, texto_fecha=texto_fecha)
+            if archivo:
+                mod_6.grafica_matriz_requerimientos(archivo)
+            archivo = mod_1.generar_porcentaje_cumplimientos_regulatorios(dashboard=True, texto_fecha=texto_fecha)
+            if archivo:
+                mod_6.velocimetro_cumplimientos_regulatorios(archivo, v_fecha_anterior)
+            archivo, archivo_1 = mod_1.contribuciones_MME(dashboard=True, texto_fecha=texto_fecha)
+            if archivo and archivo_1:
+                dic_metricas = mod_6.grafica_deuda_subsidios(archivo, archivo_1, dic_metricas)
+            lista_archivo = archivo.split("\\")[:-2]
 
-    fi_1 = seleccionar_reporte_dashboard["fecha_personalizada"][0][0]
-    fi_2 = seleccionar_reporte_dashboard["fecha_personalizada"][0][1]
-    ff_1 = seleccionar_reporte_dashboard["fecha_personalizada"][1][0]
-    ff_2 = seleccionar_reporte_dashboard["fecha_personalizada"][1][1]
-    texto_fecha = f"{fi_1}_{fi_2.upper()}_{ff_1}_{ff_2.upper()}"
-    fecha = ((fi_1, fi_2),(ff_1, ff_2))
-    texto_fecha_completo = f"{fi_2}/{fi_1} - {ff_2}/{ff_1}"
-    v_fecha_anterior = mod_1.fecha_anterior(ff_1, ff_2)
-    v_fecha_inicial = mod_1.fecha_anterior(fi_1, fi_2)
-    print(f"\nInicio de creación del Dashboard para el periodo: ({fi_1}/{fi_2} - {ff_1}/{ff_2})\n\n")
-    lista_archivos_anuales = generar_archivos_anuales_dashboard(seleccionar_reporte_dashboard)
-    dic_metricas = {}
-    for i in range(len(lista_archivos_anuales)):
-        archivo = lista_archivos_anuales[i]
-        if archivo:
-            if i == 0:
-                mod_6.grafica_pie_tipo_usuario(archivo, v_fecha_anterior)
-                mod_6.grafico_barras_consumo(archivo)
-                mod_6.grafico_usuarios(archivo)
-                dic_metricas = mod_6.grafica_pie_usuarios(archivo, v_fecha_anterior, dic_metricas)
-                mod_6.grafica_tabla_sector_consumo(archivo, v_fecha_anterior)
-                dic_metricas = mod_6.metricas_sector_consumo(archivo, v_fecha_inicial, v_fecha_anterior, dic_metricas)
-            elif i == 1:
-                mod_6.grafica_pie_subsidios(archivo, v_fecha_anterior)
-                dic_metricas = mod_6.grafica_barras_subsidios(archivo, dic_metricas)
-            elif i == 2:
-                mod_6.grafica_barras_compensacion(archivo)
-                dic_metricas = mod_6.metricas_compensacines(archivo, v_fecha_anterior, dic_metricas)
-            elif i == 3:
-                mod_6.mapa_tarifas(archivo, v_fecha_anterior)
-            elif i == 4:
-                dic_metricas = mod_6.metricas_suspensiones(archivo, v_fecha_anterior, dic_metricas)
-            elif i == 5:
-                dic_metricas = mod_6.metricas_indicadores(archivo, v_fecha_anterior, dic_metricas)
-            elif i == 6:
-                mod_6.grafica_barras_indicador_tecnico_minutos(archivo)
-            elif i == 7:
-                mod_6.grafica_barras_indicador_tecnico_horas(archivo, fecha)
-            elif i == 8:
-                mod_6.grafica_barras_indicador_tecnico(archivo)
-    fi,ff,listas_unidas = eleccion_rango_trimestral([(fi_1, fi_2),(ff_1, ff_2)])
-    archivo = mod_1.reporte_info_reclamos(fi,ff,listas_unidas, dashboard=True, texto_fecha=texto_fecha)
-    if archivo:
-        mod_6.grafica_barras_trimestre_reclamos(archivo)
-    archivo = mod_1.gastos_AOM(dashboard=True, texto_fecha=texto_fecha)
-    if archivo:
-        mod_6.grafica_gastos_AOM(archivo, anio_actual-1)
-    archivo = mod_1.generar_porcentaje_matriz_requerimientos(dashboard=True, texto_fecha=texto_fecha)
-    if archivo:
-        mod_6.grafica_matriz_requerimientos(archivo)
-    archivo = mod_1.generar_porcentaje_cumplimientos_regulatorios(dashboard=True, texto_fecha=texto_fecha)
-    if archivo:
-        mod_6.velocimetro_cumplimientos_regulatorios(archivo, v_fecha_anterior)
-    archivo, archivo_1 = mod_1.contribuciones_MME(dashboard=True, texto_fecha=texto_fecha)
-    if archivo and archivo_1:
-        pass
-        # Gráfico subsidios
-        #mod_6.velocimetro_cumplimientos_regulatorios(archivo, v_fecha_anterior)
-    lista_archivo = archivo.split("\\")[:-2]
+            #mod_7.crear_slides(mod_1.lista_a_texto(lista_archivo,"\\"),v_fecha_anterior,texto_fecha_completo, fecha_actual_texto, texto_fecha, lista_metricas_portada)
+            print(dic_metricas)
 
-    #mod_7.crear_slides(mod_1.lista_a_texto(lista_archivo,"\\"),v_fecha_anterior,texto_fecha_completo, fecha_actual_texto, texto_fecha, lista_metricas_portada)
-    #print(dic_metricas)
-
-    t_f = time.time()
-    mod_1.mostrar_tiempo(t_f, t_i)
+            t_f = time.time()
+            mod_1.mostrar_tiempo(t_f, t_i)
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Menú general
