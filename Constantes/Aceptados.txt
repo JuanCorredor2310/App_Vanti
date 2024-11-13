@@ -5,6 +5,8 @@ info_trimestral.xlsx
 ruta.txt
 reportes_disponibles.txt
 reportes_disponibles_carpeta.txt
+Matriz requerimientos.xlsm
+BD.xlsx
 residencial.png
 comercial.png
 industrial.png

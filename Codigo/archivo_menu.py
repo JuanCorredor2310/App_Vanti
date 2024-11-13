@@ -1727,24 +1727,20 @@ def menu_creacion_dashboard():
                 archivo = lista_archivos_anuales[i]
                 if archivo:
                     if i == 0:
-                        #mod_6.grafica_pie_tipo_usuario(archivo, v_fecha_anterior)
-                        #mod_6.grafico_barras_consumo(archivo)
-                        #mod_6.grafico_usuarios(archivo)
-                        #dic_metricas = mod_6.grafica_pie_usuarios(archivo, v_fecha_anterior, dic_metricas)
-                        #mod_6.grafica_tabla_sector_consumo(archivo, v_fecha_anterior)
-                        #dic_metricas = mod_6.metricas_sector_consumo(archivo, v_fecha_inicial, v_fecha_anterior, dic_metricas)
-                        pass
+                        mod_6.grafica_pie_tipo_usuario(archivo, v_fecha_anterior)
+                        mod_6.grafico_barras_consumo(archivo)
+                        mod_6.grafico_usuarios(archivo)
+                        dic_metricas = mod_6.grafica_pie_usuarios(archivo, v_fecha_anterior, dic_metricas)
+                        mod_6.grafica_tabla_sector_consumo(archivo, v_fecha_anterior)
+                        dic_metricas = mod_6.metricas_sector_consumo(archivo, v_fecha_inicial, v_fecha_anterior, dic_metricas)
                     elif i == 1:
-                        #mod_6.grafica_pie_subsidios(archivo, v_fecha_anterior)
-                        #dic_metricas = mod_6.grafica_barras_subsidios(archivo, dic_metricas)
-                        pass
+                        mod_6.grafica_pie_subsidios(archivo, v_fecha_anterior)
+                        dic_metricas = mod_6.grafica_barras_subsidios(archivo, dic_metricas)
                     elif i == 2:
-                        #mod_6.grafica_barras_compensacion(archivo)
-                        #dic_metricas = mod_6.metricas_compensacines(archivo, v_fecha_anterior, dic_metricas)
-                        pass
+                        mod_6.grafica_barras_compensacion(archivo)
+                        dic_metricas = mod_6.metricas_compensacines(archivo, v_fecha_anterior, dic_metricas)
                     elif i == 3:
-                        #mod_6.grafica_DS(archivo)
-                        pass
+                        mod_6.grafica_DS(archivo)
                     elif i == 4:
                         dic_metricas = mod_6.fun_tarifas(archivo, v_fecha_anterior, dic_metricas)
                     elif i == 5:
@@ -1753,10 +1749,8 @@ def menu_creacion_dashboard():
                         dic_metricas = mod_6.metricas_indicadores(archivo, v_fecha_anterior, dic_metricas)
                     elif i == 7:
                         mod_6.grafica_barras_indicador_tecnico_minutos(archivo)
-                        pass
                     elif i == 8:
                         mod_6.grafica_barras_indicador_tecnico_horas(archivo, fecha)
-                        pass
                     elif i == 9:
                         mod_6.grafica_barras_indicador_tecnico(archivo)
             fi,ff,listas_unidas = eleccion_rango_trimestral([(fi_1, fi_2),(ff_1, ff_2)])

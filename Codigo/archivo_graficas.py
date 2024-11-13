@@ -961,18 +961,16 @@ def grafica_DS(archivo):
                     lista_mercado_nombre.append(nombre_mercado)
                     df_mercado = df_filial[df_filial["Mercado_relevante"] == id_mercado].reset_index(drop=True)
                     for fecha in lista_periodos:
-                        df_fecha = df_mercado[df_mercado["Fecha"] == id_mercado].reset_index(drop=True)
+                        df_fecha = df_mercado[df_mercado["Fecha"] == fecha].reset_index(drop=True)
                         if len(df_fecha):
                             lista_porcentaje.append(df_fecha["Porcentaje_atendidos"][0])
                         else:
                             lista_porcentaje.append(0)
-                    lista_porcentaje = list(df_mercado["Porcentaje_atendidos"])
+                    print(len(lista_periodos), lista_periodos)
+                    print(len(lista_porcentaje), lista_porcentaje)
                     if max(lista_porcentaje) > vmax:
                         vmax = max(lista_porcentaje)
                     line, = ax.plot(lista_periodos, lista_porcentaje, marker='o', label=nombre_mercado, color=lista_colores[j], markersize=60, alpha=0.6, linewidth=5)
-                    #for i in range(len(lista_periodos)):
-                        #ax.annotate(f'{lista_porcentaje[i]} %', xy=(i, lista_porcentaje[i]),
-                        #            textcoords='offset points', ha='center', va='bottom', color=lista_colores[j], fontsize=32)
             for spine in ax.spines.values():
                 spine.set_visible(False)
             ax.set_xticks(x)
@@ -1705,7 +1703,7 @@ def grafica_deuda_subsidios(archivo, archivo_1, dic_metricas):
         lista_colores = [dic_colores["azul_v"], dic_colores["rojo_c"]]
         fig, ax = plt.subplots(figsize=(30,15))
         ax.fill_between(x, df["Deuda"], color=lista_colores[0], label='Causado')
-        ax.fill_between(x, df["Pagado"], color=lista_colores[1], alpha=0.7, label='Pagado MME')
+        ax.fill_between(x, df["Pagado"], color=lista_colores[1], alpha=0.7, label='Girado MME')
         ax.yaxis.set_major_locator(ticker.AutoLocator())
         ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: f'{x/1e9:.1f} m M'))
         for tick in ax.yaxis.get_major_ticks():
