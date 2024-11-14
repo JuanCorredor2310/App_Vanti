@@ -1,6 +1,3 @@
-# ---------------------------------------------------------------------------------------------------------
-# Python: 3.10.11 64-bit
-# & Código Versión 1 - VANTI
 import os
 import sys
 import time
@@ -3090,6 +3087,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                     elif col == "OBSERVACION":
                         df.loc[df[col] == "", 'OBSERVACION'] = "NA"
                         df.loc[df[col] == " ", 'OBSERVACION'] = "NA"
+                        df[col] = df[col].fillna('NA')
                         mask &= (df[col].astype(str).str.len() > 0)
                 nombre = archivo.replace("_HC","").replace("_GC","")
                 df_filtrado = df[mask].copy()
@@ -3149,7 +3147,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos,filial,fecha,
         pos_mes_1 = str(pos_mes_1)
     inicio_mes = f"01-{pos_mes}-{anio}"
     fin_mes = f"{ultimo_dia}-{pos_mes_1}-{anio_siguiente}"
-    print(inicio_mes, fin_mes)
+    #print(inicio_mes, fin_mes)
     inicio_mes_dt = pd.to_datetime(inicio_mes, dayfirst=True)
     inicio_mes_str = inicio_mes_dt.strftime('%d-%m-%Y')
     fin_mes_dt = pd.to_datetime(fin_mes, dayfirst=True)
@@ -4231,6 +4229,70 @@ def contribuciones_MME(dashboard=False, texto_fecha=None):
     else:
         print(f"No existe el archivo {archivo_csv}. No es posible generar el reporte.")
         return None, None
+
+def tarifas_distribuidoras_GN():
+    max_bola = 65
+
+    nombre = "tarifas_nacionales"
+    hoja = nombre
+    archivo = ruta_constantes+"\\"+f"{nombre}.xlsx"
+    if os.path.exists(archivo):
+        lista_hojas = mod_5.hojas_disponibles(archivo)
+        proceso = False
+        for i in lista_hojas:
+            if hoja in i:
+                hoja = i
+                proceso = True
+        if proceso:
+            df, proceso = mod_5.lectura_hoja_xlsx(archivo, hoja)
+            if proceso:
+                dic_tarifas = {}
+                df['Fecha'] = pd.to_datetime(df[['Anio', 'Mes']].rename(columns={'Anio': 'year', 'Mes': 'month'}).assign(day=1))
+                fecha_max = df['Fecha'].max().strftime('%m-%Y')
+                lista_fecha_max = fecha_max.split("-")
+                mes_final = int(lista_fecha_max[0])
+                anio_final = int(lista_fecha_max[1])
+                mes = lista_meses[int(lista_fecha_max[0])-1]
+                anio = lista_fecha_max[1]
+                fecha_min = fecha_anterior(anio, mes)
+                mes_inicial = lista_meses.index(fecha_min[1])+1
+                anio_inicial = int(fecha_min[0])
+                df_fecha_max = df[((df['Fecha'].dt.month == mes_final) & (df['Fecha'].dt.year == anio_inicial))]
+                df_fecha_min = df[((df['Fecha'].dt.month == mes_inicial) & (df['Fecha'].dt.year == anio_final))]
+                if len(df_fecha_max) and len(df_fecha_min):
+                    lista_empresas = list(df_fecha_max['Empresa'].unique())
+                    for empresa in lista_empresas:
+                        df_empresa_max = df_fecha_max[df_fecha_max['Empresa'] == empresa].reset_index(drop=True)
+                        df_empresa_min = df_fecha_min[df_fecha_min['Empresa'] == empresa].reset_index(drop=True)
+                        if len(df_empresa_max) and len(df_empresa_min):
+                            if empresa not in dic_tarifas:
+                                dic_tarifas[empresa] = {}
+                                dic_tarifas[empresa]["Tarifa"] = round(df_empresa_max["Cuv"][0])
+                                if df_empresa_min["Cuv"][0] < df_empresa_max["Cuv"][0]:
+                                    cambio = "red"
+                                elif df_empresa_min["Cuv"][0] > df_empresa_max["Cuv"][0]:
+                                    cambio = "verde"
+                                else:
+                                    cambio = "orange"
+                                dic_tarifas[empresa]["Cambio"] = cambio
+                    df_empresa_max = df_fecha_max.sort_values(by=['Cuv'], ascending=False).reset_index(drop=True)
+                    v_max = df_empresa_max["Cuv"].max()
+                    for i in range(len(df_empresa_max)):
+                        bola = int((df_empresa_max["Cuv"][i]/v_max)*max_bola)
+                        dic_tarifas[df_empresa_max["Empresa"][i]]["Bola"] = bola
+                    return dic_tarifas
+                else:
+                    return None
+            else:
+                print(f"No es posible a acceder al archivo {archivo}.")
+                return None
+        else:
+            print(f"No existe un hoja {hoja} en el archivo {nombre}.xlsx")
+            return None
+    else:
+        print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
+        return None
+
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Reportes Tarifarios

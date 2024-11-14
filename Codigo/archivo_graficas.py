@@ -966,8 +966,6 @@ def grafica_DS(archivo):
                             lista_porcentaje.append(df_fecha["Porcentaje_atendidos"][0])
                         else:
                             lista_porcentaje.append(0)
-                    print(len(lista_periodos), lista_periodos)
-                    print(len(lista_porcentaje), lista_porcentaje)
                     if max(lista_porcentaje) > vmax:
                         vmax = max(lista_porcentaje)
                     line, = ax.plot(lista_periodos, lista_porcentaje, marker='o', label=nombre_mercado, color=lista_colores[j], markersize=60, alpha=0.6, linewidth=5)

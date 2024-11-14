@@ -18,6 +18,7 @@ import archivo_crear_carpetas as mod_3
 import archivo_busqueda_reportes as mod_4
 import archivo_graficas as mod_6
 import archivo_slides_dashboard as mod_7
+#import archivo_interfaz as mod_9
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Constantes globales
@@ -1679,6 +1680,13 @@ def menu_cumplimientos_reportes(option, valor):
         mod_1.contribuciones_MME()
         t_f = time.time()
         mod_1.mostrar_tiempo(t_f, t_i)
+    #? Tarifas distribuidoras de GN en Colombia
+    elif option == "6":
+        t_i = time.time()
+        print(f"\nInicio de procesamiento para: {valor}\n\n")
+        mod_1.tarifas_distribuidoras_GN()
+        t_f = time.time()
+        mod_1.mostrar_tiempo(t_f, t_i)
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Creación DASHBOARD
@@ -1769,9 +1777,10 @@ def menu_creacion_dashboard():
             archivo, archivo_1 = mod_1.contribuciones_MME(dashboard=True, texto_fecha=texto_fecha)
             if archivo and archivo_1:
                 dic_metricas = mod_6.grafica_deuda_subsidios(archivo, archivo_1, dic_metricas)
-            lista_archivo = archivo.split("\\")[:-2]
-
-            #mod_7.crear_slides(mod_1.lista_a_texto(lista_archivo,"\\"),v_fecha_anterior,texto_fecha_completo, fecha_actual_texto, texto_fecha, lista_metricas_portada)
+            dic_tarifas = mod_1.tarifas_distribuidoras_GN()
+            if dic_tarifas:
+                dic_metricas["Tarifas_nacionales"] = dic_tarifas
+            #mod_7.crear_slides(mod_1.lista_a_texto(archivo.split("\\")[:-2],"\\"),v_fecha_anterior,texto_fecha_completo, fecha_actual_texto, texto_fecha, lista_metricas_portada)
             print(dic_metricas)
 
             t_f = time.time()
@@ -1837,6 +1846,7 @@ def menu_inicial(lista, nombre):
                     "Información para matriz de requerimientos",
                     "Gastos AOM (Administrativos, Operativos y Mantenimiento)",
                     "Pagos contribuciones MME",
+                    "Tarifas distribuidoras de GN en Colombia",
                     "Regresar al menú inicial"]
         option,valor = opcion_menu_valida(lista_menu, "Cumplimientos Regulatorios", False)
         menu_cumplimientos_reportes(option,valor)
@@ -2302,6 +2312,8 @@ def mostrar_inicio_app():
     iniciar_menu()
 
 mostrar_inicio_app()
+
+
 
 # TODO: Pendientes Urgentes
     #Terminar slides Canva
