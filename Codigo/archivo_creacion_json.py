@@ -456,9 +456,30 @@ def variables_reportes(reporte):
                 generales_float = ["Longitud","Latitud"]
                 generales_hora = []
                 generales_fecha = ["Fecha ajuste"]
-                seleccionados = ["Longitud","Latitud","NIU","Tipo_usuario","ID_Comercializador","ID_Mercado","Codigo_DANE",
-                                "Estrato","Altitud","Estado","Direccion","Cedula_Catastral"]
+                seleccionados = generales_carga.copy()
                 total = len(generales_float)+len(generales_no_float)+len(generales_hora)+len(generales_fecha)
+                datos = {"generales":dict(zip(generales_carga, generales_presentacion)),
+                        "generales_no_float":generales_no_float,
+                        "generales_float":generales_float,
+                        "generales_hora":generales_hora,
+                        "generales_fecha":generales_fecha,
+                        "seleccionados": seleccionados,
+                        "cantidad_columnas":total}
+                guardar_diccionario_ruta(datos, n_archivo)
+        elif reporte == "GRTT2SAP":
+                generales_carga = ["NIU","Tipo_usuario","ID_Comercializador","ID_Mercado","Codigo_DANE","Ubicacion","Direccion","Informacion_predial_actualizada",
+                                "Cedula_Catastral","Estrato","Altitud","Longitud","Latitud","Estado","Fecha_ajuste",
+                                "Desc_tipo_usuario","ID_Sociedad_SAP","Municipio","Llave_Signature","Tipo_tarifa", "STS_Regularizacion","Codigo_SAP"]
+                generales_presentacion = ["NIU","Tipo_usuario","ID_Comercializador","ID_Mercado","Codigo_DANE","Ubicacion","Direccion","Informacion_predial_actualizada",
+                                "Cedula_Catastral","Estrato","Altitud","Longitud","Latitud","Estado","Fecha_ajuste",
+                                "Desc_tipo_usuario","ID_Sociedad_SAP","Municipio","Llave_Signature","Tipo_tarifa", "STS_Regularizacion","Codigo_SAP"]
+                generales_no_float = ["NIU","Tipo_usuario","ID_Comercializador","ID_Mercado","Codigo_DANE","Ubicacion","Direccion","Informacion_predial_actualizada",
+                                        "Cedula_Catastral","Estrato","Altitud","Estado"]
+                generales_float = ["Longitud","Latitud"]
+                generales_hora = []
+                generales_fecha = ["Fecha ajuste"]
+                seleccionados = generales_carga.copy()
+                total = len(generales_carga)
                 datos = {"generales":dict(zip(generales_carga, generales_presentacion)),
                         "generales_no_float":generales_no_float,
                         "generales_float":generales_float,
@@ -534,6 +555,7 @@ def variables_reportes(reporte):
                                 "GRC1",
                                 "GRC2",
                                 "GRC3",
+                                "GRTT2SAP",
                                 "GRTT2",
                                 "DS56",
                                 "DS57",
@@ -732,6 +754,15 @@ def variables_reportes(reporte):
                 data = {"1":"Primario",
                         "2":"Secundario",
                         "3":"Comercialización minorista"}
+                datos = {"descripcion":desc,
+                        "datos":data}
+                guardar_diccionario_ruta(datos, n_archivo)
+        elif reporte == "tabla_16":
+                desc = "Mercado"
+                data = {"1":"Información Predial de cada catastro",
+                        "2":"Número predial nacional",
+                        "3":"Número Único Predial - NUPRE",
+                        "4":"Predio Nuevo sin homologar o Suscriptor sin cédula catastral asociada por el prestador"}
                 datos = {"descripcion":desc,
                         "datos":data}
                 guardar_diccionario_ruta(datos, n_archivo)
@@ -1048,6 +1079,7 @@ def crear_archivos_json_principales():
         variables_reportes("GRCS9")
         variables_reportes("GRS1")
         variables_reportes("GRTT2")
+        variables_reportes("GRTT2SAP")
         variables_reportes("tabla_nit")
         variables_reportes("tabla_empresa")
         variables_reportes("reportes_disponibles")
@@ -1067,6 +1099,7 @@ def crear_archivos_json_principales():
         variables_reportes("tabla_8")
         variables_reportes("tabla_11")
         variables_reportes("tabla_13")
+        variables_reportes("tabla_16")
         variables_reportes("tabla_17")
         variables_reportes("tabla_18")
         variables_reportes("anios")

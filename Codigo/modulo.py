@@ -14,6 +14,9 @@ import googlemaps
 import shutil
 import calendar
 import warnings
+import unicodedata
+import re
+from decimal import Decimal
 import ruta_principal as mod_rp
 global ruta_principal, ruta_codigo, ruta_constantes, ruta_nuevo_sui, ruta_archivos
 ruta_principal = mod_rp.v_ruta_principal()
@@ -41,7 +44,7 @@ def leer_archivos_json(archivo):
 # *                                             Constantes globales
 # * -------------------------------------------------------------------------------------------------------
 
-global lista_meses, lista_empresas, lista_anios, dic_reportes, lista_reportes_generales, reportes_generados, lista_reportes_totales,chunksize,llaves_dic_reporte, dic_carpetas, dic_filiales,antidad_datos_excel, dic_nit, cantidad_datos_estilo_excel,grupo_vanti,mercado_relevante,mercado_relevante_resumen,mercado_relevante_id,tabla_3,tabla_11,fecha_actual,lista_trimestres, dic_meses_abre,lista_clasi_reportes,categoria_matriz_requerimientos,lista_archivo_desviaciones,tabla_2_DS,tabla_3_DS,tabla_4_DS,tabla_5_DS,tabla_6_DS,tabla_8_DS,indicador_SUI,tabla_30,tabla_8_DS_categoria
+global lista_meses, lista_empresas, lista_anios, dic_reportes, lista_reportes_generales, reportes_generados, lista_reportes_totales,chunksize,llaves_dic_reporte, dic_carpetas, dic_filiales,antidad_datos_excel, dic_nit, cantidad_datos_estilo_excel,grupo_vanti,mercado_relevante,mercado_relevante_resumen,mercado_relevante_id,tabla_3,tabla_11,fecha_actual,lista_trimestres, dic_meses_abre,lista_clasi_reportes,categoria_matriz_requerimientos,lista_archivo_desviaciones,tabla_2_DS,tabla_3_DS,tabla_4_DS,tabla_5_DS,tabla_6_DS,tabla_8_DS,indicador_SUI,tabla_30,tabla_8_DS_categoria,tabla_71,tabla_16, tabla_3_data
 grupo_vanti = "Grupo Vanti"
 dic_carpetas = leer_archivos_json(ruta_constantes+"carpetas.json")
 lista_anios = list(leer_archivos_json(ruta_constantes+"anios.json")["datos"].values())
@@ -63,7 +66,10 @@ cantidad_datos_excel = chunksize
 cantidad_datos_estilo_excel = 120000
 llaves_dic_reporte = ["generales_no_float","generales_float","generales_fecha","generales_hora"]
 tabla_3 = leer_archivos_json(ruta_constantes+"tabla_3.json")
+tabla_3_data = tabla_3["datos"]
 tabla_11 = leer_archivos_json(ruta_constantes+"/tabla_11.json")
+tabla_16 = leer_archivos_json(ruta_constantes+"/tabla_16.json")["datos"]
+tabla_71 = leer_archivos_json(ruta_constantes+"/tabla_71.json")["datos"]
 categoria_matriz_requerimientos = leer_archivos_json(ruta_constantes+"categoria_matriz_requerimientos.json")["datos"]
 lista_archivo_desviaciones = ["DS56","DS57","DS58"]
 tabla_2_DS = leer_archivos_json(ruta_constantes+"/tabla_2_DS.json")["datos"]
@@ -174,6 +180,20 @@ def elegir_codificacion(archivo):
         encoding_1 = result['encoding']
     return encoding_1
 
+def normalizar_texto(texto):
+    if isinstance(texto, str):
+        texto = unicodedata.normalize('NFKD', texto).encode('ascii', 'ignore').decode('utf-8')
+        texto = texto.replace('ñ', 'n').replace('Ñ', 'N')
+    return texto
+
+def eliminar_caracteres_especiales(df):
+    regex = r"[^\w\s]"
+    for col in df.columns:
+        if df[col].dtype == 'object' or df[col].dtype.name == 'string':
+            df[col] = df[col].str.replace(regex, "", regex=True)
+            df[col] = df[col].apply(normalizar_texto)
+    return df
+
 def lectura_dataframe_chunk(archivo, valor_chunksize=chunksize,separador=","):
     lista_codificaciones = []
     lista_codificaciones.append(elegir_codificacion(archivo))
@@ -191,9 +211,12 @@ def lectura_dataframe_chunk(archivo, valor_chunksize=chunksize,separador=","):
             try:
                 lista_df = []
                 for i, chunk in enumerate(pd.read_csv(archivo, chunksize=valor_chunksize, encoding=elemento, sep=separador,low_memory=False)):
+                    chunk = eliminar_caracteres_especiales(chunk)
                     lista_df.append(chunk.reset_index(drop=True).copy())
                 return lista_df
             except Exception:
+                pass
+            except BaseException:
                 pass
     return None
 
@@ -215,6 +238,8 @@ def lectura_dataframe_chunk_prueba(archivo, valor_chunksize=8000,separador=","):
                     df_prueba = chunk.reset_index(drop=True).copy()
                     return True
             except Exception:
+                pass
+            except BaseException:
                 pass
     return False
 
@@ -253,14 +278,6 @@ def generar_suma_df_filiales(df, lista_total, lista_suma):
     return df_final
 
 # * -------------------------------------------------------------------------------------------------------
-# *                                             Información horaria
-# * -------------------------------------------------------------------------------------------------------
-
-def determinar_mes_actual(fecha_actual):
-    mes = fecha_actual.month
-    return lista_meses[:mes]
-
-# * -------------------------------------------------------------------------------------------------------
 # *                                             Tiempo de procesamiento
 # * -------------------------------------------------------------------------------------------------------
 def mostrar_tiempo(t_f, t_i):
@@ -286,26 +303,6 @@ def lista_a_texto(lista, separador, salto=False):
         texto += "\n"
     return texto
 
-def cambio_separador_texto(texto):
-    if texto.count(';') > 3:
-        lista_texto = texto.split(";")
-        largo = len(lista_texto)
-        for i in range(largo):
-            lista_texto[i] = lista_texto[i].replace(",",".")
-        texto = lista_a_texto(lista_texto, ",", False)
-    return texto
-
-def cambio_caracteres_texto(texto):
-    dic = {"Á":"A","É":"E","Í":"I","Ó":"O","Ú":"U",
-            "á":"a","é":"e","í":"i","ó":"o","ú":"u",
-            "Ñ":"N","ñ":"n","<":" ",">":" "}
-    ele = '[¿?!¡]()"\"#\\$%&\'´+*\{}…=€£¥÷×@^|~§©®™°•¶'
-    for i in ele:
-        texto = texto.replace(i,"")
-    for i, j in dic.items():
-        texto = texto.replace(i,j)
-    return texto
-
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Creación de carpetas
 # * -------------------------------------------------------------------------------------------------------
@@ -323,12 +320,6 @@ def buscar_carpetas_lista_carpetas(lista_carpetas):
     for elemento in lista_carpetas:
         lista_final.extend(list(buscar_carpetas(elemento)))
     return lista_final
-
-def ciclo_creacion_carpetas(ubicacion, carpeta):
-    for i in range(len(carpeta)):
-        numeros_c = listado_numeros_lista(carpeta)
-        ubi = ubicacion+"/"+numeros_c[i]+carpeta[i]
-        os.makedirs(ubi, exist_ok=True)
 
 def crear_carpeta(elemento):
     os.makedirs(elemento, exist_ok=True)
@@ -376,45 +367,6 @@ def crear_carpeta_anual(fecha, lista_archivo):
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Edición de archivos
 # * -------------------------------------------------------------------------------------------------------
-def lectura_archivo_readline(ruta):
-    try:
-        with open(ruta, 'r', encoding='utf-8') as archivo_txt:
-            lineas = archivo_txt.readlines()
-            archivo_txt.close()
-    except UnicodeDecodeError:
-        try:
-            archivo_txt.close()
-            with open(ruta, 'r', encoding='utf-8-sig') as archivo_txt:
-                lineas = archivo_txt.readlines()
-                archivo_txt.close()
-        except UnicodeDecodeError:
-            try:
-                archivo_txt.close()
-                with open(ruta, 'r', encoding='iso-8859-1') as archivo_txt:
-                    lineas = archivo_txt.readlines()
-                    archivo_txt.close()
-            except UnicodeDecodeError:
-                try:
-                    archivo_txt.close()
-                    with open(ruta, 'r', encoding='utf-16') as archivo_txt:
-                        lineas = archivo_txt.readlines()
-                        archivo_txt.close()
-                except UnicodeDecodeError:
-                    try:
-                        archivo_txt.close()
-                        with open(ruta, 'r', encoding='utf-32') as archivo_txt:
-                            lineas = archivo_txt.readlines()
-                            archivo_txt.close()
-                    except UnicodeDecodeError:
-                        try:
-                            archivo_txt.close()
-                            encoding_1 = elegir_codificacion(ruta)
-                            with open(ruta, 'r', encoding=encoding_1) as archivo_txt:
-                                lineas = archivo_txt.readlines()
-                                archivo_txt.close()
-                        except UnicodeDecodeError:
-                            lineas = []
-    return lineas
 
 def encontrar_codificacion(archivo):
     lista_codificaciones = []
@@ -458,13 +410,6 @@ def eliminar_archivos(lista):
     for elemento in lista:
         if os.path.exists(elemento):
             os.remove(elemento)
-
-def buscar_archivos_no_repetidos(archivo):
-    lista_archivo = archivo.split("\\")
-    if "_form_estandar" not in lista_archivo[-1] and "_resumen" not in lista_archivo[-1]:
-        return True
-    else:
-        return False
 
 def buscar_formato(archivo):
     lista_archivo = archivo.split("\\")
@@ -698,6 +643,7 @@ def almacenar_archivos(ruta_guardar_archivos,informar):
     lista_archivos = cantidad_minima_info_archivo(lista_archivos)
     for archivo in lista_archivos:
         bool_DS = False
+        bool_GRTT2SAP = False
         try:
             nombre_archivo = archivo.split("\\")[-1].replace(" ","_")
             for i in range(9):
@@ -712,7 +658,10 @@ def almacenar_archivos(ruta_guardar_archivos,informar):
             ext_archivo[-1] = ext_archivo[-1].split(".")[0]
             ext_archivo = formato_ext_archivo(ext_archivo)
             tipo = ext_archivo[0]
-            if tipo in lista_archivo_desviaciones:
+            if tipo == "GRTT2SAP":
+                tipo = "GRTT2"
+                bool_GRTT2SAP = True
+            elif tipo in lista_archivo_desviaciones:
                 tipo = "DS"
                 ext_archivo[4] = ext_archivo[4].upper()
                 bool_DS = True
@@ -723,6 +672,12 @@ def almacenar_archivos(ruta_guardar_archivos,informar):
                 if comprobar_info_nombre_archivo(ext_archivo):
                     ubi_1 = encontrar_nueva_ubi_archivo(ubi, ext_archivo)
                     nueva_ubi = ubi_1+"\\"+nombre_archivo
+                    if bool_GRTT2SAP:
+                        lista_nueva_ubi = nueva_ubi.split("\\")
+                        valor = lista_nueva_ubi[-1]
+                        lista_nueva_ubi[-1] = "00. GRTT2"
+                        lista_nueva_ubi.append(valor)
+                        nueva_ubi = lista_a_texto(lista_nueva_ubi, "\\")
                     if bool_DS:
                         lista_nueva_ubi = nueva_ubi.split("\\")
                         valor = lista_nueva_ubi[-1]
@@ -2307,6 +2262,346 @@ def apoyo_reporte_usuarios_filial(lista_archivos,informar,filial,almacenar_excel
     else:
         return None,None
 
+def generar_listas_fechas(lista_fechas):
+    lista_final = []
+    for i in range(1,len(lista_fechas)):
+        lista_final.append((lista_fechas[i-1],lista_fechas[i]))
+    return lista_final
+
+def encontrar_errores_inventario_suscriptores(dic_archivos, seleccionar_reporte):
+    lista_fechas = generar_listas_fechas(list(dic_archivos.keys()))
+    lista_filiales_archivo = seleccionar_reporte["filial"]
+    for union in lista_fechas:
+        lista_archivos_filial = []
+        for filial in lista_filiales_archivo:
+            proceso_GRTT2 = False
+            proceso_GRTT2SAP = False
+            for archivo in dic_archivos[union[0]]:
+                if "GRTT2" in archivo and "SAP" not in archivo and filial in archivo:
+                    lista_archivos_filial.append(archivo)
+            if len(lista_archivos_filial):
+                proceso_GRTT2 = True
+            for archivo in dic_archivos[union[1]]:
+                if "GRTT2SAP" in archivo and filial in archivo:
+                    lista_archivos_filial.append(archivo)
+            if len(lista_archivos_filial) == 2:
+                proceso_GRTT2SAP = True
+            if proceso_GRTT2SAP and proceso_GRTT2:
+                df1,nombre = apoyo_encontrar_errores_inventario_suscriptores(lista_archivos_filial,filial, union[0])
+            else:
+                print(f"No es posible generar el reporte. Deben existir los archivos de los periodos {union[0]} y {union[1]}")
+
+def unir_archivos_csv(arc_1, arc_2, nombre):
+    lista_arc_1 = lectura_dataframe_chunk(arc_1)
+    lista_arc_2 = lectura_dataframe_chunk(arc_2)
+    columnas = list(lista_arc_1[0].columns)
+    lista_total = []
+    try:
+        for i in lista_arc_1:
+            lista_total.append(i.copy())
+        for i in lista_arc_2:
+            i = i[columnas]
+            lista_total.append(i.copy())
+        df_total = pd.concat(lista_total, ignore_index=True)
+        almacenar_df_csv_y_excel(df_total, nombre, almacenar_excel=False, informar=False)
+        return True
+    except BaseException:
+        return False
+
+def corregir_errores_inventario_suscriptores(dic_archivos, seleccionar_reporte):
+    lista_fechas = generar_listas_fechas(list(dic_archivos.keys()))
+    lista_filiales_archivo = seleccionar_reporte["filial"]
+    for union in lista_fechas:
+        lista_archivos_filial = []
+        for filial in lista_filiales_archivo:
+            proceso_GRTT2 = False
+            proceso_GRTT2SAP = False
+            for archivo in dic_archivos[union[0]]:
+                if "GRTT2" in archivo and "SAP" not in archivo and filial in archivo:
+                    lista_archivos_filial.append(archivo)
+            if len(lista_archivos_filial):
+                proceso_GRTT2 = True
+            for archivo in dic_archivos[union[1]]:
+                if "GRTT2SAP" in archivo and filial in archivo:
+                    n1 = archivo.replace("_resumen","_completo")
+                    n2 = archivo.replace("_resumen","_error")
+                    n3 = archivo.replace("_resumen","_apoyo_error")
+                    if os.path.exists(n1) and os.path.exists(n2):
+                        proceso = unir_archivos_csv(n1, n2, n3)
+                        if proceso:
+                            lista_archivos_filial.append(n3)
+            if len(lista_archivos_filial) == 2:
+                proceso_GRTT2SAP = True
+            if proceso_GRTT2SAP and proceso_GRTT2:
+                df1,nombre = apoyo_encontrar_errores_inventario_suscriptores(lista_archivos_filial,filial, union[0])
+                eliminar_archivos([n3])
+            else:
+                print(f"No es posible corregir los errores. Deben existir los archivos (_resumen.csv, _completo.csv, _error.csv) de los periodos {union[0]} y {union[1]}\nLos archivos deben cumplir con la estructura de certificación del GRTT2")
+
+def listas_iguales(lista_1, lista_2):
+    if len(lista_1) == len(lista_2):
+        for i in range(1, len(lista_1)-1):
+            if lista_1[i] != lista_2[i]:
+                return True,lista_2
+        return False,lista_1
+
+    else:
+        return False,lista_1
+
+def convertir_fecha(fecha):
+    fecha_str = str(fecha).zfill(8)
+    dia = fecha_str[0:2]
+    mes = fecha_str[2:4]
+    anio = fecha_str[4:]
+    return f"{dia}-{mes}-{anio}"
+
+def errores_lista(lista):
+    columnas_error = []
+    """for i in range(1, len(lista)-1):
+        if i == 1:
+            if lista[i] != 1:
+                columnas_error.append(i)
+    lista.append(lista_a_texto(columnas_error, ", "))"""
+    lista.append("Error")
+    return lista
+
+def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fecha):
+    if len(lista_archivos) == 2:
+        filas_minimas = ["NIU","ID_Comercializador","ID_Mercado"]
+        columnas_GRTT2 = leer_archivos_json(ruta_constantes+"/GRTT2.json")["seleccionados"]
+        archivo_previo = lista_archivos[0]
+        archivo_SAP = lista_archivos[1]
+        dic_error = {}
+        lista_df_SAP = lectura_dataframe_chunk(archivo_SAP)
+        columnas_SAP = list(lista_df_SAP[0].columns)[:-2]
+        indicador_SUI_filial = indicador_SUI[filial]
+        dic_filial_mercado = mercado_relevante_id[str(indicador_SUI_filial)]
+        dic_filial_DANE = mercado_relevante_DANE[str(indicador_SUI_filial)]
+        lista_ubi = ["C","U","R"]
+        fecha = fecha.split(" - ")
+        mes = fecha[1]
+        anio = fecha[0]
+        pos_mes = lista_meses.index(mes)+1
+        if pos_mes < 10:
+            pos_mes = "0" + str(pos_mes)
+        else:
+            pos_mes = str(pos_mes)
+        inicio_mes = f"01-{pos_mes}-{anio}"
+        inicio_mes_dt = pd.to_datetime(inicio_mes, dayfirst=True)
+        inicio_mes_str = inicio_mes_dt.strftime('%d-%m-%Y')
+        lista_df_previo = lectura_dataframe_chunk(archivo_previo)
+        dic_NIU_SAP = {}
+        dic_NIU_previo = {}
+        lista_aceptado = []
+        if lista_df_SAP and lista_df_previo:
+            for df in lista_df_SAP:
+                df = df.reset_index(drop=True)
+                for col in columnas_SAP:
+                    if col == "NIU":
+                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
+                        df_filter = df[df[col] > 0].reset_index(drop=True)
+                        df_error = df[df[col] == 0].reset_index(drop=True)
+                        if len(df_error):
+                            if col not in dic_error:
+                                dic_error[col] = []
+                            dic_error[col].append(df_error)
+                    elif col == "Tipo_usuario":
+                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
+                        df_filter = df[df[col] == 1].reset_index(drop=True)
+                        df_error = df[df[col] != 1].reset_index(drop=True)
+                        if len(df_error):
+                            if col not in dic_error:
+                                dic_error[col] = []
+                            dic_error[col].append(df_error)
+                    elif col == "ID_Comercializador":
+                        df[col] = df[col].astype(str)
+                        df_filter = df[df[col] == indicador_SUI_filial].reset_index(drop=True)
+                        df_error = df[df[col] != indicador_SUI_filial].reset_index(drop=True)
+                        if len(df_error):
+                            if col not in dic_error:
+                                dic_error[col] = []
+                            dic_error[col].append(df_error)
+                    elif col == "ID_Mercado":
+                        df[col] = df[col].astype(str)
+                        df_filter = df[df[col].isin(dic_filial_mercado)].reset_index(drop=True)
+                        df_error = df[~df[col].isin(dic_filial_mercado)].reset_index(drop=True)
+                        if len(df_error):
+                            if col not in dic_error:
+                                dic_error[col] = []
+                            dic_error[col].append(df_error)
+                    elif col == "Codigo_DANE":
+                        df[col] = df[col].astype(str)
+                        df[col] = df[col].apply(lambda x: '0' + x if len(x) == 7 else x)
+                        df[col] = df[col].apply(lambda x: x[:-3] + '000' if len(x) >= 3 else x)
+                        df_filter = df[df[col].isin(dic_filial_DANE)].reset_index(drop=True)
+                        df_error = df[~df[col].isin(dic_filial_DANE)].reset_index(drop=True)
+                        if len(df_error):
+                            if col not in dic_error:
+                                dic_error[col] = []
+                            dic_error[col].append(df_error)
+                    elif col == "Ubicacion":
+                        df[col] = df[col].astype(str)
+                        df[col] = df[col].str.upper()
+                        df_filter = df.copy()
+                        df_filter[col] = df_filter[col].apply(
+                            lambda x: 1 if x=="R" else
+                                    3 if x=="C" else 2)
+                    elif col == "Direccion":
+                        df[col] = df[col].astype(str)
+                        df[col] = df[col].str.replace(r"\s{2,}", "", regex=True)
+                        df_filter = df[~(df[col].isna()) & ~(df[col] == '') & ~(df[col]==' ')].reset_index(drop=True)
+                        df_error = df[df[col].isna() | (df[col] == ' ') | (df[col]=='')].reset_index(drop=True)
+                        if len(df_error):
+                            if col not in dic_error:
+                                dic_error[col] = []
+                            dic_error[col].append(df_error)
+                    elif col == "Cedula_Catastral":
+                        df[col] = df[col].apply(lambda x: int(Decimal(x)) if pd.notna(x) and str(x).replace('.', '', 1).isdigit() else Decimal(0))
+                        df[col] = df[col].astype(str).replace("0", "")
+                    elif col == "Estrato":
+                        df[col] = df[col].astype(str)
+                        df_filter = df[df[col].isin(tabla_3_data)].reset_index(drop=True)
+                        df_error = df[~df[col].isin(tabla_3_data)].reset_index(drop=True)
+                        if len(df_error):
+                            if col not in dic_error:
+                                dic_error[col] = []
+                            dic_error[col].append(df_error)
+                    elif col == "Altitud":
+                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
+                        df_filter = df[(df[col] > 0) & (df[col] < 6000)].reset_index(drop=True)
+                        df_error = df[(df[col] < 0) | (df[col] >= 6000)].reset_index(drop=True)
+                        if len(df_error):
+                            if col not in dic_error:
+                                dic_error[col] = []
+                            dic_error[col].append(df_error)
+                    elif col == "Longitud":
+                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(-100).astype(float)
+                        df_filter = df[(df[col] <= -66.848333) & (df[col] >= -79.006389)].reset_index(drop=True)
+                    elif col == "Latitud":
+                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(-100).astype(float)
+                        df_filter = df[(df[col] <= 12.4627780) & (df[col] >= -4.225)].reset_index(drop=True)
+                    elif col == "Estado":
+                        df[col] = df[col].astype(str)
+                        df_filter = df[df[col].isin(tabla_30)].reset_index(drop=True)
+                        df_error = df[~df[col].isin(tabla_30)].reset_index(drop=True)
+                        if len(df_error):
+                            if col not in dic_error:
+                                dic_error[col] = []
+                            dic_error[col].append(df_error)
+                    elif col == "STS_Regularizacion":
+                        df[col] = df[col].str.capitalize()
+                        df_filter = df[(df[col]!="Potencial") & (df[col]!="Gasificado")].reset_index(drop=True)
+                        df_error = df[(df[col]=="Gasificado") | (df[col]=="Potencial")].reset_index(drop=True)
+                        if len(df_error):
+                            if col not in dic_error:
+                                dic_error[col] = []
+                            dic_error[col].append(df_error)
+                    df = df_filter.copy()
+                df["Fecha_ajuste"] = inicio_mes_str
+                df["Cedula_Catastral"] = df["Cedula_Catastral"].astype(str)
+                df['Informacion_predial_actualizada'] = df['Cedula_Catastral'].apply(
+                    lambda x: 2 if len(x) == 30 else
+                            3 if len(x) == 11 else
+                            1 if 21 <= len(x) <= 56 else 4)
+                df["Longitud"] = df["Latitud"].apply(lambda x: -100 if x == -100 else x)
+                df["Latitud"] = df["Longitud"].apply(lambda x: -100 if x == -100 else x)
+                df_filter["Longitud"] = df_filter["Longitud"].apply(lambda x: "" if x==-100 else x)
+                df_filter["Latitud"] = df_filter["Latitud"].apply(lambda x: "" if x==-100 else x)
+                lista_aceptado.append(df)
+            df_SAP_preliminar = pd.concat(lista_aceptado, ignore_index=True)
+            df_SAP_preliminar = df_SAP_preliminar[columnas_GRTT2]
+            df_SAP_preliminar["Tipo_usuario"] = pd.to_numeric(df_SAP_preliminar["Tipo_usuario"], errors='coerce').fillna(0).astype(int)
+            df_SAP_preliminar["ID_Comercializador"] = pd.to_numeric(df_SAP_preliminar["ID_Comercializador"], errors='coerce').fillna(0).astype(int)
+            df_SAP_preliminar["ID_Mercado"] = pd.to_numeric(df_SAP_preliminar["ID_Mercado"], errors='coerce').fillna(0).astype(int)
+            df_SAP_preliminar["Estrato"] = pd.to_numeric(df_SAP_preliminar["Estrato"], errors='coerce').fillna(0).astype(int)
+            df_SAP_preliminar["Estado"] = pd.to_numeric(df_SAP_preliminar["Estado"], errors='coerce').fillna(0).astype(int)
+            for i in range(len(df_SAP_preliminar)):
+                niu = df_SAP_preliminar["NIU"][i]
+                if niu > 0:
+                    if str(niu) not in dic_NIU_SAP:
+                        dic_NIU_SAP[str(niu)] = df_SAP_preliminar.iloc[i].tolist()
+            for df in lista_df_previo:
+                df = df.reset_index(drop=True)
+                df = df[columnas_GRTT2]
+                df["Codigo_DANE"] = df["Codigo_DANE"].astype(str)
+                df["Codigo_DANE"] = df["Codigo_DANE"].apply(lambda x: '0' + x if len(x) == 7 else x)
+                df["Codigo_DANE"] = df["Codigo_DANE"].apply(lambda x: x[:-3] + '000' if len(x) >= 3 else x)
+                df["Cedula_Catastral"] = df["Cedula_Catastral"].apply(lambda x: int(Decimal(x)) if pd.notna(x) and str(x).replace('.', '', 1).isdigit() else Decimal(0))
+                df["Cedula_Catastral"] = df["Cedula_Catastral"].astype(str)
+                df['Fecha_ajuste'] = df['Fecha_ajuste'].astype(str).replace('-', "").replace('/', '').replace('_', '')
+                df["Fecha_ajuste"] = df["Fecha_ajuste"].apply(lambda x: '0' + x if len(x) == 7 else x)
+                df['Fecha_ajuste'] = df['Fecha_ajuste'].apply(convertir_fecha)
+                for i in range(len(df)):
+                    niu = df["NIU"][i]
+                    if niu > 0:
+                        if str(niu) not in dic_NIU_previo:
+                            dic_NIU_previo[str(niu)] = df.iloc[i].tolist()
+            if len(dic_error):
+                lista_df_error = []
+                dic_error_2 = {}
+                total = 0
+                for col, lista_df in dic_error.items():
+                    columnas_minimas = filas_minimas.copy()
+                    if col not in columnas_minimas:
+                        columnas_minimas.append(col)
+                    df_unido = pd.concat(lista_df, ignore_index=True)
+                    lista_df_error.append(df_unido)
+                    df_unido["Columna_error"] = col
+                    largo = len(df_unido)
+                    total += largo
+                    if largo > 300:
+                        df_unido = df_unido.head(300)
+                    columnas_minimas.append("Columna_error")
+                    if largo == 1:
+                        texto = f"1 error en la columna {col}."
+                    else:
+                        texto = f"{largo} errores en la columna {col}."
+                    dic_error_2[col] = [texto, df_unido[columnas_minimas]]
+                lista_archivo = archivo_SAP.split("\\")
+                lista_archivo[-1] = "log_errores_"+lista_archivo[-1]
+                nombre_error = lista_a_texto(lista_archivo, "\\").replace("_resumen","").replace("_apoyo_error","")
+                nombre_error_doc = nombre_error.replace(".csv",".docx")
+                nombre_error_pdf = nombre_error.replace(".csv",".pdf")
+                op = mod_8.almacenar_errores(dic_error_2, filial, indicador_SUI[filial], mes, anio, nombre_error_doc, total, "GRTT2", "")
+                if op:
+                    informar_archivo_creado(nombre_error_pdf, True)
+                else:
+                    print(f"No es posible acceder al archivo {acortar_nombre(nombre_error_pdf)}")
+                df_error = pd.concat(lista_df_error, ignore_index=True)
+                columnas = list(df_error.columns)
+                columnas.append("Columna_error")
+                lista_errores = []
+                for i in range(len(df_error)):
+                    lista_errores.append(errores_lista(df_error.iloc[i].tolist()))
+                df_error_col = pd.DataFrame(lista_errores, columns=columnas)
+                nombre = archivo_SAP.replace("_resumen","_error").replace("_apoyo_error","_error")
+                almacenar_df_csv_y_excel(df_error_col, nombre, almacenar_excel=False)
+            lista_cambios = []
+            lista_nuevos = []
+            lista_completo = []
+            for niu in dic_NIU_SAP:
+                lista_sap = dic_NIU_SAP[niu]
+                if niu in dic_NIU_previo:
+                    op, lista = listas_iguales(dic_NIU_previo[niu], lista_sap)
+                    if op:
+                        lista_cambios.append(lista)
+                    lista_completo.append(lista)
+                else:
+                    lista_cambios.append(lista_sap)
+                    lista_completo.append(lista_sap)
+                    lista_nuevos.append(lista_sap)
+            df_completo = pd.DataFrame(lista_completo, columns=columnas_GRTT2)
+            nombre = archivo_SAP.replace("_resumen","_completo").replace("_apoyo_error","_completo")
+            almacenar_df_csv_y_excel(df_completo, nombre, almacenar_excel=False)
+            df_procesado = pd.DataFrame(lista_cambios, columns=columnas_GRTT2)
+            nombre = archivo_SAP.replace("_resumen","_procesado").replace("_apoyo_error","_procesado")
+            almacenar_df_csv_y_excel(df_procesado, nombre, almacenar_excel=False)
+            df_nuevo = pd.DataFrame(lista_nuevos, columns=columnas_GRTT2)
+            nombre = archivo_SAP.replace("_resumen","_nuevo").replace("_apoyo_error","_nuevo")
+            almacenar_df_csv_y_excel(df_nuevo, nombre, almacenar_excel=False)
+    return None, None
+
+
 def reporte_usuarios_filial(dic_archivos, seleccionar_reporte, informar, almacenar_excel=True, usuarios_unicos=True):
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for fecha, lista_archivos in dic_archivos.items():
@@ -3140,14 +3435,13 @@ def apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos,filial,fecha,
         pos_mes = "0" + str(pos_mes)
     else:
         pos_mes = str(pos_mes)
-    pos_mes_1 = lista_meses.index(mes)+1
+    pos_mes_1 = lista_meses.index(mes_siguiente)+1
     if pos_mes_1 < 10:
         pos_mes_1 = "0" + str(pos_mes_1)
     else:
         pos_mes_1 = str(pos_mes_1)
     inicio_mes = f"01-{pos_mes}-{anio}"
     fin_mes = f"{ultimo_dia}-{pos_mes_1}-{anio_siguiente}"
-    #print(inicio_mes, fin_mes)
     inicio_mes_dt = pd.to_datetime(inicio_mes, dayfirst=True)
     inicio_mes_str = inicio_mes_dt.strftime('%d-%m-%Y')
     fin_mes_dt = pd.to_datetime(fin_mes, dayfirst=True)
@@ -3712,8 +4006,7 @@ def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, alma
                         try:
                             valor = int(df["NIU"][i])
                             if valor not in dic_GRTT2:
-                                dic_GRTT2[valor] = [df["Codigo_DANE"][i],
-                                                df["Estrato"][i]]
+                                dic_GRTT2[valor] = [df["Codigo_DANE"][i], df["Estrato"][i]]
                         except ValueError:
                             pass
                         except TypeError:

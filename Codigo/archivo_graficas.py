@@ -236,14 +236,14 @@ def velocimetro_cumplimientos_regulatorios(archivo, fecha):
                                                 markerfacecolor=colors[i], markersize=10)
                                         for i in range(len(colors))]
             ax.legend(reversed(legend_handles), reversed(labels), loc='lower center', bbox_to_anchor=(0.5, 0.31), fontsize=14, ncol=1)
-            plt.title(f'Oportunidad en la certifiación de\n reportes regulatorios para\n{dic_cumplimientos_reporte[filial]} (Acumulado año)', y=0.8, color=colors[-1], fontsize=18)
+            #plt.title(f'Oportunidad en la certifiación de\n reportes regulatorios para\n{dic_cumplimientos_reporte[filial]} (Acumulado año)', y=0.8, color=colors[-1], fontsize=18)
             ax.set_ylim(-0.01, 3.2)
             ax.grid(False)
             lista_archivo = archivo.split("\\")
             lista_archivo.insert(-1, "Imagenes")
             archivo_copia = mod_1.lista_a_texto(lista_archivo,"\\")
             n_imagen = archivo_copia.replace(".csv", f"_{dic_filiales_largo[dic_cumplimientos_reporte[filial]]}.png")
-            plt.savefig(n_imagen)
+            plt.savefig(n_imagen, transparent=True)
             plt.close()
             imagen = Image.open(n_imagen)
             if filial == grupo_vanti:
@@ -264,21 +264,23 @@ def grafica_matriz_requerimientos(archivo):
         labels = list(df["Categoria_entidad"])
         sizes = list(df["Cantidad"])
         colors = ["#ea7916","#2db6cf","#4eb6a8","#815081"]
-        plt.figure(figsize=(8.3,8))
-        plt.pie(sizes, labels=labels, colors=colors, autopct=lambda p : '{:.0f}'.format(p * sum(df['Cantidad']) / 100), textprops={'fontsize': 29,'color':'white'}, wedgeprops={'linewidth': 10, 'edgecolor': 'none'},startangle=90, explode=[0.05, 0.05, 0.05, 0.05])
-        plt.legend(bbox_to_anchor=(0.5, 0.01), loc='upper center',
-                                ncol=2, borderaxespad=0.0, fontsize=26)
-        plt.title("Cantidad de requerimientos solicitados \n(Acumulado año)", fontsize=30, color=colors[-1], y=0.97)
+        plt.figure(figsize=(10,10))
+        plt.pie(sizes, labels=[""]*len(labels), colors=colors, autopct=lambda p : '{:.0f}'.format(p * sum(df['Cantidad']) / 100), textprops={'fontsize': 29,'color':'white'}, wedgeprops={'linewidth': 10, 'edgecolor': 'none'},startangle=90, explode=[0.05, 0.05, 0.05, 0.05])
+        legend_handles = [plt.Line2D([0], [0], marker='o', color='w', label=labels[i],
+                                            markerfacecolor=colors[i], markersize=18)
+                                    for i in range(len(labels))]
+        plt.legend(handles=legend_handles, bbox_to_anchor=(0.5, 0.01), loc='upper center',
+                            ncol=2, borderaxespad=0.0, fontsize=22)
         plt.gca().spines['top'].set_visible(False)
         plt.gca().spines['right'].set_visible(False)
         plt.gca().spines['bottom'].set_visible(False)
         plt.gca().spines['left'].set_visible(False)
         archivo_copia = mod_1.lista_a_texto(lista_archivo,"\\")
         n_imagen = archivo_copia.replace(".csv", ".png")
-        plt.savefig(n_imagen)
+        plt.savefig(n_imagen, transparent=True)
         plt.close()
         imagen = Image.open(n_imagen)
-        recorte = (35, 30, imagen.width-20, imagen.height)
+        recorte = (0, 30, imagen.width, imagen.height)
         imagen_recortada = imagen.crop(recorte)
         imagen_recortada.save(n_imagen)
         informar_imagen(n_imagen)

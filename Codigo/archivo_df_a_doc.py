@@ -3,6 +3,7 @@ from docx.shared import Inches, Pt
 from docx2pdf import convert
 import os
 from contextlib import redirect_stdout, redirect_stderr
+import win32com.client
 
 def add_horizontal_line(doc):
     paragraph = doc.add_paragraph()
@@ -15,7 +16,19 @@ def add_horizontal_line(doc):
     run.text = "-"*2850
     run.font.size = Pt(1)
 
+def cerrar_documentos_word():
+    try:
+        word = win32com.client.Dispatch("Word.Application")
+        if word.Documents.Count > 0:
+            for i in range(word.Documents.Count, 0, -1):
+                doc = word.Documents(i)
+                doc.Close(SaveChanges=False)
+        word.Quit()
+    except BaseException:
+        print(f"Error al cerrar documentos de Word")
+
 def almacenar_errores(dic_errores, filial, c_filial, mes, anio, nombre, largo, num, clasi):
+    cerrar_documentos_word()
     doc = Document()
     section = doc.sections[0]
     section.orientation = 1

@@ -1,20 +1,27 @@
 {
     "generales": {
         "NIU": "NIU",
-        "Tipo_usuario": "Tipo usuario",
-        "ID_Comercializador": "ID Comercializador",
-        "ID_Mercado": "ID Mercado",
-        "Codigo_DANE": "C\u00f3digo DANE",
-        "Ubicacion": "Ubicaci\u00f3n",
-        "Direccion": "Direcci\u00f3n",
-        "Informacion_predial_actualizada": "Informaci\u00f3n Predial Actualizada",
-        "Cedula_Catastral": "C\u00e9dula Catastral",
+        "Tipo_usuario": "Tipo_usuario",
+        "ID_Comercializador": "ID_Comercializador",
+        "ID_Mercado": "ID_Mercado",
+        "Codigo_DANE": "Codigo_DANE",
+        "Ubicacion": "Ubicacion",
+        "Direccion": "Direccion",
+        "Informacion_predial_actualizada": "Informacion_predial_actualizada",
+        "Cedula_Catastral": "Cedula_Catastral",
         "Estrato": "Estrato",
         "Altitud": "Altitud",
         "Longitud": "Longitud",
         "Latitud": "Latitud",
         "Estado": "Estado",
-        "Fecha_ajuste": "Fecha ajuste"
+        "Fecha_ajuste": "Fecha_ajuste",
+        "Desc_tipo_usuario": "Desc_tipo_usuario",
+        "ID_Sociedad_SAP": "ID_Sociedad_SAP",
+        "Municipio": "Municipio",
+        "Llave_Signature": "Llave_Signature",
+        "Tipo_tarifa": "Tipo_tarifa",
+        "STS_Regularizacion": "STS_Regularizacion",
+        "Codigo_SAP": "Codigo_SAP"
     },
     "generales_no_float": [
         "NIU",
@@ -53,7 +60,14 @@
         "Longitud",
         "Latitud",
         "Estado",
-        "Fecha_ajuste"
+        "Fecha_ajuste",
+        "Desc_tipo_usuario",
+        "ID_Sociedad_SAP",
+        "Municipio",
+        "Llave_Signature",
+        "Tipo_tarifa",
+        "STS_Regularizacion",
+        "Codigo_SAP"
     ],
-    "cantidad_columnas": 15
+    "cantidad_columnas": 22
 }

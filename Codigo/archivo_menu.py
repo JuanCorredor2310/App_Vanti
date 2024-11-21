@@ -18,7 +18,7 @@ import archivo_crear_carpetas as mod_3
 import archivo_busqueda_reportes as mod_4
 import archivo_graficas as mod_6
 import archivo_slides_dashboard as mod_7
-#import archivo_interfaz as mod_9
+import archivo_interfaz as mod_9
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Constantes globales
@@ -41,7 +41,8 @@ lista_reportes_generados = ["_resumen","_form_estandar", #formatos generales
                             "_reporte_tarifario", #formatos tarifarios
                             "_indicador_tecnico","_reporte_suspension","_indicador_tecnico_IRST","_indicador_tecnico_IRST_minutos","_indicador_tecnico_IRST_horas", #formatos tecnicos
                             "_inventario_suscriptores","_usuarios_unicos","_reporte_facturacion",#calidad de la información
-                            "porcentaje_cumplimientos_regulatorios"] #formatos regulatorios
+                            "porcentaje_cumplimientos_regulatorios",
+                            "_error","_nuevos","_completo","_procesado"] #formatos regulatorios
 cantidad_datos_estilo_excel = 80000
 fecha_actual = datetime.now()
 anio_actual = fecha_actual.year
@@ -1299,8 +1300,38 @@ def menu_comercial_trimestral(option,valor):
         mod_1.mostrar_tiempo(t_f, t_i)
 
 def menu_comercial_analisis_previo(option,valor):
-    #? Generación de información para el inventrario de suscriptores mensual
+    #? Comprobación de calidad de información para inventario de suscriptores
     if option == "1":
+        seleccionar_reporte = funcion_seleccionar_reportes("inventario_suscriptores_mensual_cert")
+        seleccionar_reporte = agregar_meses_anteriores(seleccionar_reporte)
+        op_add = anadir_opciones(regenerar=True, reportes_mensuales=None)
+        regenerar = op_add[1]
+        t_i = time.time()
+        print(f"\nInicio de procesamiento para: {valor}\n\n")
+        if regenerar:
+            proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False)
+        proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, False, continuar=False, mostrar_dic=True)
+        if proceso:
+            mod_1.encontrar_errores_inventario_suscriptores(dic_archivos, seleccionar_reporte)
+        t_f = time.time()
+        mod_1.mostrar_tiempo(t_f, t_i)
+    #? Corrección de errores del inventario de suscriptores
+    elif option == "2":
+        seleccionar_reporte = funcion_seleccionar_reportes("inventario_suscriptores_mensual_cert")
+        seleccionar_reporte = agregar_meses_anteriores(seleccionar_reporte)
+        op_add = anadir_opciones(regenerar=True, reportes_mensuales=None)
+        regenerar = op_add[1]
+        t_i = time.time()
+        print(f"\nInicio de procesamiento para: {valor}\n\n")
+        if regenerar:
+            proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False)
+        proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, False, continuar=False, mostrar_dic=True)
+        if proceso:
+            mod_1.corregir_errores_inventario_suscriptores(dic_archivos, seleccionar_reporte)
+        t_f = time.time()
+        mod_1.mostrar_tiempo(t_f, t_i)
+    #? Generación de información para el inventrario de suscriptores mensual
+    elif option == "3":
         seleccionar_reporte = funcion_seleccionar_reportes("inventario_suscriptores_mensual")
         op_add = anadir_opciones(regenerar=True, usuarios_activos=True, reportes_mensuales=None)
         regenerar = op_add[1]
@@ -1315,7 +1346,7 @@ def menu_comercial_analisis_previo(option,valor):
         t_f = time.time()
         mod_1.mostrar_tiempo(t_f, t_i)
     #? Generación de información para el inventrario de suscriptores anual
-    elif option == "2":
+    elif option == "4":
         seleccionar_reporte = funcion_seleccionar_reportes("inventario_suscriptores_anual")
         reporte = "_inventario_suscriptores_sector_consumo.csv"
         op_add = anadir_opciones(True, reportes_mensuales=True,texto_regenerar_mensuales=f"{reporte}", usuarios_activos=True)
@@ -1336,7 +1367,7 @@ def menu_comercial_analisis_previo(option,valor):
         t_f = time.time()
         mod_1.mostrar_tiempo(t_f, t_i)
     #? Generación de información para usuarios regulados / no regulados mensual
-    elif option == "3":
+    elif option == "5":
         seleccionar_reporte = funcion_seleccionar_reportes("usuarios_unicos_mensual")
         op_add = anadir_opciones(regenerar=True)
         regenerar = op_add[1]
@@ -1350,7 +1381,7 @@ def menu_comercial_analisis_previo(option,valor):
         t_f = time.time()
         mod_1.mostrar_tiempo(t_f, t_i)
     #? Generación de información para usuarios regulados / no regulados anual
-    elif option == "4":
+    elif option == "6":
         seleccionar_reporte = funcion_seleccionar_reportes("usuarios_unicos_anual")
         reporte_1 = "_usuarios_unicos.csv"
         reporte_2 = "_reporte_facturacion.csv"
@@ -1462,7 +1493,9 @@ def menu_comercial(option,valor):
         menu_comercial_desviaciones_significativas(option,valor)
     #? Análisis previo para comprobar la calidad de la información
     elif option == "4":
-        lista_menu = ["Generación de información para el inventrario de suscriptores mensual",
+        lista_menu = ["Comprobación de calidad de información para inventario de suscriptores",
+                    "Corrección de errores del inventario de suscriptores",
+                    "Generación de información para el inventrario de suscriptores mensual",
                     "Generación de información para el inventrario de suscriptores anual",
                     "Generación de información de facturación para usuarios regulados / no regulados mensual",
                     "Generación de información de facturación para usuarios regulados / no regulados anual",
@@ -1954,6 +1987,13 @@ def funcion_seleccionar_reportes(tipo):
         seleccionar_reportes = eleccion_fecha_personalizada(seleccionar_reportes, True)
         seleccionar_reportes = eleccion_elemento(seleccionar_reportes, lista_filiales.copy(), "Seleccionar todas las filiales", "Elección filial", "filial", False)
         return seleccionar_reportes
+    elif tipo == "inventario_suscriptores_mensual_cert":
+        seleccionar_reportes["ubicacion"] = ["Reportes Nuevo SUI"]
+        seleccionar_reportes["tipo"] = ["Comercial"]
+        seleccionar_reportes["clasificacion"] = ["GRTT2"]
+        seleccionar_reportes = eleccion_fecha_personalizada(seleccionar_reportes, True)
+        seleccionar_reportes = eleccion_elemento(seleccionar_reportes, lista_filiales.copy(), "Seleccionar todas las filiales", "Elección filial", "filial", False)
+        return seleccionar_reportes
     elif tipo == "inventario_suscriptores_anual":
         seleccionar_reportes["ubicacion"] = ["Reportes Nuevo SUI"]
         seleccionar_reportes["tipo"] = ["Comercial"]
@@ -2113,6 +2153,19 @@ def funcion_seleccionar_reportes(tipo):
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Procesamiento de fechas
 # * -------------------------------------------------------------------------------------------------------
+
+def agregar_meses_anteriores(seleccionar_reporte):
+    if seleccionar_reporte["meses"]:
+        mes = seleccionar_reporte["meses"][0]
+        seleccionar_reporte["meses"] = None
+        anio = seleccionar_reporte["anios"][0]
+        seleccionar_reporte["anios"] = None
+        seleccionar_reporte["fecha_personalizada"] = [fecha_anterior_rango(anio, mes),(anio,mes)]
+    elif seleccionar_reporte["fecha_personalizada"]:
+        anio = seleccionar_reporte["fecha_personalizada"][0][0]
+        mes = seleccionar_reporte["fecha_personalizada"][0][1]
+        seleccionar_reporte["fecha_personalizada"][0] = fecha_anterior_rango(anio, mes)
+    return seleccionar_reporte
 
 def eleccion_fecha_personalizada(seleccionar_reportes, personalizado):
     if personalizado:
@@ -2311,17 +2364,12 @@ def mostrar_inicio_app():
     mod_1.mostrar_titulo("Regulación, Márgenes y Tarifas", None, "down")
     iniciar_menu()
 
-mostrar_inicio_app()
-
-
 
 # TODO: Pendientes Urgentes
     #Terminar slides Canva
     #Automatizar almacenamiento de sides
-    #Crear variables globales con funciones
     #Creación de mapa de suspensiones
     #Almacenamiento de archivos json como Excel
-    #Crear figma aplicativo
     #Generar aplicativo
 
 # TODO Documento:
@@ -2332,5 +2380,13 @@ mostrar_inicio_app()
     # Revisión reportes anuales de calidad de la info
     # Generar un archivo CSV en la comparación del GRC1/CLD/PRD si la cantidad de NIU no encontrados es mayor al 1% de la muestra total
 
-# TODO Pendientes NO Urgentes:
-    #Revisar llamado de todas las funciones
+
+def iniciar_app():
+    centinela = True
+    app, window, central_widget, dimensiones = mod_9.crear_pantalla_incial()
+    estado = mod_9.pantalla_inicio(app, window, central_widget, dimensiones)
+    print(f"Último estado: {estado}")
+    sys.exit(app.exec_())
+
+mostrar_inicio_app()
+#iniciar_app()
