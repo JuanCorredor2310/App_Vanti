@@ -24,9 +24,9 @@ def leer_archivos_json(archivo):
     return data
 dic_colores = leer_archivos_json(ruta_constantes+"colores.json")["datos"]
 
-def crear_label(texto, central_widget, font="normal", color="white", font_size=30):
+def crear_label(texto, central_widget, font="normal", color="white", font_size=30, background_color="#030918"):
     label = QLabel(texto, central_widget)
-    label.setStyleSheet(f"color: {color};")
+    label.setStyleSheet(f"color: {color}; background-color: {background_color};")
     if font == "normal":
         font_id = QFontDatabase().addApplicationFont(ruta_fuente)
     elif font == "bold":
@@ -34,6 +34,17 @@ def crear_label(texto, central_widget, font="normal", color="white", font_size=3
     font_family = QFontDatabase().applicationFontFamilies(font_id)[0]
     label.setFont(QFont(font_family, font_size))
     return label
+
+def crear_cuadro(central_widget, dimensiones, color="white", size=0.7):
+    screen_width, screen_height = dimensiones
+    largo_x = int(screen_width * size)
+    largo_y = int(screen_height * size)
+    ubi_x = int((screen_width-largo_x)/2)
+    ubi_y = int((screen_height-largo_y)/2)
+    cuadro = QLabel("", central_widget)
+    cuadro.setStyleSheet(f"background-color: {color};")
+    cuadro.setGeometry(ubi_x, ubi_y, largo_x, largo_y)
+    return cuadro
 
 def crear_boton(texto, central_widget, font="normal", color=dic_colores["azul_v"], font_size=32):
     boton = QPushButton(texto, central_widget)
@@ -157,7 +168,7 @@ def pantalla_inicio(app, window, central_widget, dimensiones):
     button.clicked.connect(on_button_clicked)
     event_loop.exec_()
     # Esperar hasta que el botón sea oprimido
-    return True
+    return estado
 
 def menu_inicial(app, window, central_widget, dimensiones):
     screen_width = dimensiones[0]
@@ -329,10 +340,14 @@ def menu_config_inicial(app, window, central_widget, dimensiones):
         esconder_label(boton_4)
         esconder_label(image_button_1)
         if texto == "volver":
-            menu_inicial(app, window, central_widget, dimensiones)
+            estado = menu_inicial(app, window, central_widget, dimensiones)
+        elif texto == "crear_carpetas":
+            op = texto
+            texto = "Creación de carpetas y constantes"
+            estado = confirmacion_seleccion(app, window, central_widget, dimensiones, texto, op)
         else:
             print(texto)
-            menu_inicial(app, window, central_widget, dimensiones)
+            estado = menu_inicial(app, window, central_widget, dimensiones)
     image_button.clicked.connect(lambda:on_button_clicked("volver"))
     boton_1.clicked.connect(lambda:on_button_clicked("crear_carpetas"))
     boton_2.clicked.connect(lambda:on_button_clicked("agregar_anio"))
@@ -340,7 +355,55 @@ def menu_config_inicial(app, window, central_widget, dimensiones):
     boton_4.clicked.connect(lambda:on_button_clicked("agregar_reporte"))
     image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto))
     event_loop.exec_()
-    print(f"Resultado: {estado}")
+    return estado
+
+def confirmacion_seleccion(app, window, central_widget, dimensiones, texto, op):
+    estado = op
+    screen_width, screen_height = dimensiones
+
+    image_button = QPushButton("", central_widget)
+    pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    icon = QIcon(pixmap)
+    image_button.setIcon(icon)
+    image_button.setIconSize(pixmap.size())
+    image_button.move(20,20)
+    mostrar_label(image_button)
+
+    cuadro = crear_cuadro(central_widget, dimensiones)
+    mostrar_label(cuadro)
+
+    titulo_espacios = crear_label(texto, central_widget, font="bold", font_size=40, color="#030918", background_color="white")
+    x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
+    titulo_espacios.move(x, 400)
+    mostrar_label(titulo_espacios)
+
+    texto_1 = crear_label("¿Desea continar con la seleción?", central_widget, font_size=30, color="#030918", background_color="white")
+    x = round((screen_width-texto_1.sizeHint().width())*0.5)
+    texto_1.move(x, 600)
+    mostrar_label(texto_1)
+
+    boton_1 = crear_boton("Aceptar", central_widget)
+    x = round((((screen_width*0.5)-boton_1.sizeHint().width())*0.5)+(screen_width*0.53))
+    boton_1.move(x,1040)
+    boton_1.setParent(central_widget)
+    mostrar_label(boton_1)
+
+    event_loop = QEventLoop()
+    def on_button_clicked(texto):
+        nonlocal estado
+        event_loop.quit()
+        esconder_label(titulo_espacios)
+        esconder_label(texto_1)
+        esconder_label(image_button)
+        esconder_label(cuadro)
+        esconder_label(boton_1)
+        if texto == "volver":
+            estado = menu_config_inicial(app, window, central_widget, dimensiones)
+        else:
+            estado = texto
+    image_button.clicked.connect(lambda:on_button_clicked("volver"))
+    boton_1.clicked.connect(lambda:on_button_clicked(op))
+    event_loop.exec_()
     return estado
 
 def ventana_secundaria(central_widget, titulo, dic_texto):

@@ -818,9 +818,9 @@ def generar_archivos_anuales_dashboard(seleccionar_reporte_dashboard):
         lista_dic.append(({},None))
     seleccionar_reporte["tipo"] = ["Comercial"]
     seleccionar_reporte["clasificacion"] = ["DS57"]
-    reporte = "_compilado_DS_metricas.csv"
+    reporte = "_compilado_DS_metricas_categorias.csv"
     categoria = "Reporte de desviaciones significativas"
-    proceso,dic_archivos_anual = generar_archivos_extra_anual(seleccionar_reporte, reporte, continuar=True, mostrar_dic=False)
+    proceso,dic_archivos_anual = generar_archivos_extra_anual(seleccionar_reporte, reporte, evitar_extra=["_compilado_desviaciones","_compilado_DS_metricas"], continuar=True, mostrar_dic=False)
     if proceso:
         lista_dic.append((dic_archivos_anual,categoria))
         if len(categoria) > v_max:
@@ -1781,7 +1781,7 @@ def menu_creacion_dashboard():
                         mod_6.grafica_barras_compensacion(archivo)
                         dic_metricas = mod_6.metricas_compensacines(archivo, v_fecha_anterior, dic_metricas)
                     elif i == 3:
-                        mod_6.grafica_DS(archivo)
+                        mod_6.grafica_DS(archivo, dic_metricas)
                     elif i == 4:
                         dic_metricas = mod_6.fun_tarifas(archivo, v_fecha_anterior, dic_metricas)
                     elif i == 5:
@@ -2380,13 +2380,25 @@ def mostrar_inicio_app():
     # Revisión reportes anuales de calidad de la info
     # Generar un archivo CSV en la comparación del GRC1/CLD/PRD si la cantidad de NIU no encontrados es mayor al 1% de la muestra total
 
-
-def iniciar_app():
-    centinela = True
+def crear_app():
     app, window, central_widget, dimensiones = mod_9.crear_pantalla_incial()
+    info_app = app, window, central_widget, dimensiones
+    window.closeEvent = lambda event: on_close(event, app)
+    return info_app
+
+def iniciar_app(info_app):
+    app, window, central_widget, dimensiones = info_app
     estado = mod_9.pantalla_inicio(app, window, central_widget, dimensiones)
-    print(f"Último estado: {estado}")
+    if estado:
+        print(f"Función: {estado}")
+        iniciar_app(info_app)
     sys.exit(app.exec_())
 
-mostrar_inicio_app()
-#iniciar_app()
+def on_close(event, app):
+    app.closeAllWindows()
+    event.accept()
+    subprocess.run(['taskkill', '/F', '/IM', 'pwsh.exe', '/T'], check=True)
+    os.system("exit")
+
+#iniciar_app(crear_app())
+iniciar_menu()

@@ -551,14 +551,14 @@ def grafico_usuarios(archivo):
         x = range(len(lista_periodos))
         bar_width = 0.75
         lista_colores = [dic_colores["azul_v"], "white"]
-        line3, = ax.plot(lista_periodos, lista_usuarios, marker='o', label='Cantidad de usuarios (millones)', color=dic_colores["amarillo_v"], alpha=0.6)
+        line3, = ax.plot(lista_periodos, lista_usuarios, marker='o', label='Cantidad de usuarios (millones)', color=dic_colores["amarillo_v"], alpha=0.6, linewidth=8)
         ax1 = ax.twinx()
-        line2, = ax1.plot(lista_periodos, lista_usuarios_nuevos, marker='o', label='Nuevos usuarios', color=dic_colores["azul_v"], alpha=0.3)
+        line2, = ax1.plot(lista_periodos, lista_usuarios_nuevos, marker='o', label='Nuevos usuarios', color="white", alpha=0.3, linewidth=8)
         for i in range(len(lista_periodos)):
             ax.annotate(f'{lista_usuarios_millones[i]}', xy=(i, v_min1), xytext=(0, 10),
-                        textcoords='offset points', ha='center', va='bottom', color=dic_colores["amarillo_v"], fontsize=24)
+                        textcoords='offset points', ha='center', va='bottom', color=dic_colores["amarillo_v"], fontsize=30)
             ax1.annotate(f'{lista_usuarios_nuevos[i]}', xy=(i, lista_usuarios_nuevos[i]), xytext=(0, 10),
-                        textcoords='offset points', ha='center', va='bottom', color=dic_colores["azul_v"], fontsize=24)
+                        textcoords='offset points', ha='center', va='bottom', color="white", fontsize=30)
         ax.tick_params(axis='x', colors="white",labelsize=15)
         ax.tick_params(axis='y', colors="white",size=0)
         for spine in ax.spines.values():
@@ -572,9 +572,9 @@ def grafico_usuarios(archivo):
         ax.set_xticks(x)
         ax.tick_params(axis='x')
         ax.set_xticklabels(lista_periodos, fontsize=24)
-        ax.set_ylabel('Cantidad de usuarios (millones)', color=dic_colores["amarillo_v"], fontsize=25)
+        ax.set_ylabel('Cantidad de usuarios (millones)', color=dic_colores["amarillo_v"], fontsize=38)
         ax.tick_params(axis='y', labelcolor=dic_colores["amarillo_v"])
-        ax1.set_ylabel('Nuevos usuarios', color=dic_colores["azul_v"],fontsize=25)
+        ax1.set_ylabel('Nuevos usuarios', color="white",fontsize=38)
         ax1.tick_params(axis='y', labelcolor=dic_colores["azul_v"])
         ax.set_ylim(v_min1, v_max)
         ax1.set_ylim(v_min_ax1, v_max_ax1)
@@ -731,10 +731,14 @@ def grafica_pie_usuarios(archivo, fecha, dic_metricas):
                         imagen_recortada = ubicar_texto(imagen_recortada, esp, texto, color="white")
             imagen_recortada.save(n_imagen)
             informar_imagen(n_imagen)
+        usuarios_totales = 0
         valor = dic_metricas["usarios_residenciales"]
+        usuarios_totales += valor
         dic_metricas["usarios_residenciales"] = f"{round(valor/1e6,1)} M"
         valor = dic_metricas["usarios_no_residenciales"]
+        usuarios_totales += valor
         dic_metricas["usarios_no_residenciales"] = f"{round(valor/1e3,3)}"
+        dic_metricas["usuarios"] = round(usuarios_totales)
         return dic_metricas
     else:
         dic_metricas["usarios_residenciales"] = None
@@ -935,7 +939,7 @@ def grafica_barras_compensacion(archivo):
         plt.close()
         informar_imagen(n_imagen)
 
-def grafica_DS(archivo):
+def grafica_DS(archivo, dic_metricas):
     n_archivo = archivo
     if os.path.exists(n_archivo):
         lista_archivo = n_archivo.split("\\")
@@ -943,9 +947,54 @@ def grafica_DS(archivo):
         archivo_copia = mod_1.lista_a_texto(lista_archivo,"\\")
         df = pd.read_csv(n_archivo, sep=",", encoding="utf-8-sig")
         df['Mes_reportado'] = df['Mes_reportado'].str[:3]
-        df['Porcentaje_atendidos'] = df['Porcentaje_atendidos'].str.replace(" %", "").astype(float)
+        lista_categorias = ["Consumos reales","Error en la lectura","No se logró visita por impedimento","No realizó visita"]
         df = union_listas_df_fecha(df)
-        lista_filiales = list(df["Filial"].unique())
+        df_metricas = df[(df["Indicador_SUI"]==grupo_vanti)].reset_index(drop=True)
+        df = df[(df["Indicador_SUI"]==grupo_vanti) & (df["Categoria"]=="Total")].reset_index(drop=True)
+        lista_valores = list(df["Desviaciones_totales"])
+        dic_metricas["DS"] = {}
+        if "usuarios" in dic_metricas:
+            valor = lista_valores[-1]
+            porcentaje = str(round((valor/dic_metricas["usuarios"])*100,1))+" %"
+            dic_metricas["DS"]["Porcentaje"] = porcentaje
+            dic_metricas["DS"]["Total"] = valor
+        lista_periodos = list(df["Fecha"].unique())
+        fecha = lista_periodos[-1]
+        df_metricas = df_metricas[(df_metricas["Fecha"]==fecha) & (df_metricas["Categoria"]!="Total")].reset_index(drop=True)
+        for categoria in lista_categorias:
+            df_metricas_categoria = df_metricas[df_metricas["Categoria"]==categoria].reset_index(drop=True)
+            if len(df_metricas_categoria):
+                dic_metricas["DS"][categoria] = str(round(df_metricas_categoria["Total_categoria"][0]))
+            else:
+                dic_metricas["DS"][categoria] = 0
+        lista_colores = [dic_colores["azul_agua_v"], dic_colores["naranja_v"], dic_colores["morado_v"], dic_colores["verde_v"], dic_colores["azul_agua_c_v"], dic_colores["naranja_c_v"], dic_colores["morado_c_v"], dic_colores["verde_c_v"]]
+        fig, ax = plt.subplots(figsize=(40,26))
+        x = range(len(lista_periodos))
+        line, = ax.plot(lista_periodos, lista_valores, marker='o', color=lista_colores[0], markersize=70, alpha=0.6, linewidth=10)
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+        ax.set_xticks(x)
+        ax.tick_params(axis='x')
+        ax.set_xticklabels(lista_periodos, fontsize=44, color=dic_colores["azul_v"])
+        ax.yaxis.set_major_locator(ticker.AutoLocator())
+        ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: f'{x/1e3:.1f} m'))
+        for tick in ax.yaxis.get_major_ticks():
+            tick.label1.set_color(dic_colores["azul_v"])
+            tick.label1.set_fontsize(60)
+            tick.set_pad(8)
+        ax.set_ylabel('Desviaciones totales', color=dic_colores["azul_v"], fontsize=90)
+        ax.grid(axis='y', color='gray', linestyle='--', linewidth=3)
+        #dic_filiales_cambio = {valor: clave for clave, valor in dic_filiales.items()}
+        nombre = archivo_copia.replace('.csv',f'.png')
+        plt.savefig(nombre, transparent=True)
+        plt.close()
+        imagen = Image.open(nombre)
+        recorte = (0, 140, imagen.width, imagen.height)
+        imagen_recortada = imagen.crop(recorte)
+        imagen_recortada.save(nombre)
+        informar_imagen(nombre)
+
+        """lista_filiales = list(df["Filial"].unique())
         lista_periodos = list(df["Fecha"].unique())
         lista_colores = [dic_colores["azul_agua_v"], dic_colores["naranja_v"], dic_colores["morado_v"], dic_colores["verde_v"], dic_colores["azul_agua_c_v"], dic_colores["naranja_c_v"], dic_colores["morado_c_v"], dic_colores["verde_c_v"]]
         for filial in lista_filiales:
@@ -997,7 +1046,7 @@ def grafica_DS(archivo):
             recorte = (0, 140, imagen.width, imagen.height)
             imagen_recortada = imagen.crop(recorte)
             imagen_recortada.save(nombre)
-            informar_imagen(nombre)
+            informar_imagen(nombre)"""
 
 def cambio_lista_IRST(lista, v_min):
     lista_1 = []
@@ -1445,14 +1494,24 @@ def grafica_barras_indicador_tecnico_horas(archivo, fecha):
                 for i,(llave, valor) in enumerate(dic.items()):
                     lista_llaves = list(dic.keys())
                     lista_valores = list(dic.values())
+                    x = np.arange(len(lista_valores))
+                    x = list(range(24))
                     if i == 0:
-                        ax.bar(range(24), lista_valores[0], bar_width, label=f'{evento} ({llave})', color=lista_colores[i])
+                        ax.bar(x, lista_valores[0], bar_width, label=f'{evento} ({llave})', color=lista_colores[i])
                     else:
-                        ax.bar(range(24), lista_valores[i], bar_width, label=f'{evento} ({llave})', color=lista_colores[i], bottom=suma_listas_pos(i, lista_valores))
+                        ax.bar(x, lista_valores[i], bar_width, label=f'{evento} ({llave})', color=lista_colores[i], bottom=suma_listas_pos(i, lista_valores))
                     if i == len(dic)-1:
-                        for j in range(24):
-                            ax.text(j, base[j]+v_max*0.03, f"{lista_valores[i][j]}", ha='center', fontsize=26, color=lista_colores[-1])
-                ax.set_xticks(np.arange(24))
+                        v_x = []
+                        v_y = []
+                        for j in x:
+                            valor = lista_valores[i][j]
+                            if valor > 0:
+                                y = base[j]+v_max*0.09
+                                ax.text(j, y, f"{lista_valores[i][j]}", ha='center', fontsize=23, color="white",fontweight='bold')
+                                v_x.append(j)
+                                v_y.append(y)
+                        ax.scatter(v_x, v_y, color='red', s=2000)
+                ax.set_xticks(x)
                 ax.set_xlabel("Franja horaria", color=dic_colores["azul_v"],fontsize=27)
                 ax.set_ylabel("Cantidad de eventos", color=dic_colores["azul_v"],fontsize=27)
                 ax.set_xticklabels(range(24), color=dic_colores["azul_v"], fontsize=23)
@@ -1699,10 +1758,12 @@ def grafica_deuda_subsidios(archivo, archivo_1, dic_metricas):
         df = union_listas_df_fecha(df, anio="Anio", mes="Mes")
         anios = list(df["Fecha"])
         x = range(1, len(df)+1)
-        data = [list(df["Deuda"]), list(df["Pagado"])]
+        valor = round(list(df["Deuda"])[-1])
+        texto = f"{valor/1e9:.1f} m M"
+        dic_metricas["deuda_subsidios"] = texto
         lista_colores = [dic_colores["azul_v"], dic_colores["rojo_c"]]
         fig, ax = plt.subplots(figsize=(30,15))
-        ax.fill_between(x, df["Deuda"], color=lista_colores[0], label='Causado')
+        ax.fill_between(x, df["Deuda"], color=lista_colores[0], label='Deuda MME')
         ax.fill_between(x, df["Pagado"], color=lista_colores[1], alpha=0.7, label='Girado MME')
         ax.yaxis.set_major_locator(ticker.AutoLocator())
         ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: f'{x/1e9:.1f} m M'))
