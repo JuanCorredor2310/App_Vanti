@@ -2302,7 +2302,9 @@ def unir_archivos_csv(arc_1, arc_2, nombre):
         for i in lista_arc_2:
             i = i[columnas]
             lista_total.append(i.copy())
-        df_total = pd.concat(lista_total, ignore_index=True)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=FutureWarning)
+            df_total = pd.concat(lista_total, ignore_index=True)
         almacenar_df_csv_y_excel(df_total, nombre, almacenar_excel=False, informar=False)
         return True
     except BaseException:
@@ -2388,7 +2390,10 @@ def errores_lista(lista, indicador_SUI_filial, dic_filial_mercado, dic_filial_DA
                 if i == 20:
                     if lista[i] == "Gasificado" or lista[i] == "Potencial":
                         columnas_error.append(i+1)
-    lista.append(lista_a_texto(columnas_error, "-"))
+    if len(columnas_error):
+        lista.append(lista_a_texto(columnas_error, "-"))
+    else:
+        lista.append("")
     return lista
 
 def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fecha):
@@ -2571,19 +2576,24 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                     columnas_minimas = filas_minimas.copy()
                     if col not in columnas_minimas:
                         columnas_minimas.append(col)
+                    columnas_minimas.append("Columna_error")
                     df_unido = pd.concat(lista_df, ignore_index=True)
+                    df_unido['Fecha_ajuste'] = df_unido['Fecha_ajuste'].astype(str).replace('-', "").replace('/', '').replace('_', '')
+                    df_unido["Fecha_ajuste"] = df_unido["Fecha_ajuste"].apply(lambda x: '0' + x if len(x) == 7 else x)
+                    df_unido['Fecha_ajuste'] = df_unido['Fecha_ajuste'].apply(convertir_fecha)
                     lista_df_error.append(df_unido)
-                    df_unido["Columna_error"] = col
-                    largo = len(df_unido)
+                    df_unido_2 = df_unido.copy()
+                    df_unido_2["Columna_error"] = col
+                    df_unido_2 = df_unido_2[columnas_minimas]
+                    largo = len(df_unido_2)
                     total += largo
                     if largo > 300:
-                        df_unido = df_unido.head(300)
-                    columnas_minimas.append("Columna_error")
+                        df_unido_2 = df_unido_2.head(300)
                     if largo == 1:
                         texto = f"1 error en la columna {col}."
                     else:
                         texto = f"{largo} errores en la columna {col}."
-                    dic_error_2[col] = [texto, df_unido[columnas_minimas]]
+                    dic_error_2[col] = [texto, df_unido_2.copy()]
                 lista_archivo = archivo_SAP.split("\\")
                 lista_archivo[-1] = "log_errores_"+lista_archivo[-1]
                 nombre_error = lista_a_texto(lista_archivo, "\\").replace("_resumen","").replace("_apoyo_error","")

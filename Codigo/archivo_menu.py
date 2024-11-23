@@ -42,7 +42,7 @@ lista_reportes_generados = ["_resumen","_form_estandar", #formatos generales
                             "_indicador_tecnico","_reporte_suspension","_indicador_tecnico_IRST","_indicador_tecnico_IRST_minutos","_indicador_tecnico_IRST_horas", #formatos tecnicos
                             "_inventario_suscriptores","_usuarios_unicos","_reporte_facturacion",#calidad de la información
                             "porcentaje_cumplimientos_regulatorios",
-                            "_error","_nuevos","_completo","_procesado"] #formatos regulatorios
+                            "_error","_nuevo","_completo","_procesado"] #formatos regulatorios
 cantidad_datos_estilo_excel = 80000
 fecha_actual = datetime.now()
 anio_actual = fecha_actual.year
