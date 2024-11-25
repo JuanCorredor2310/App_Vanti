@@ -2400,5 +2400,7 @@ def on_close(event, app):
     subprocess.run(['taskkill', '/F', '/IM', 'pwsh.exe', '/T'], check=True)
     os.system("exit")
 
-#iniciar_app(crear_app())
-iniciar_menu()
+
+print(lista_anios, dic_meses, lista_meses, lista_trimestres)
+iniciar_app(crear_app())
+#iniciar_menu()

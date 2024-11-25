@@ -6,7 +6,7 @@ import ruta_principal as mod_rp
 import json
 import time
 
-global ruta_principal, ruta_codigo, ruta_constantes, ruta_nuevo_sui, ruta_archivos, ruta_fuentes, ruta_imagenes, fuente_texto, azul_vanti, dic_colores, nombre_aplicativo
+global ruta_principal, ruta_codigo, ruta_constantes, ruta_nuevo_sui, ruta_archivos, ruta_fuentes, ruta_imagenes, fuente_texto, azul_vanti, dic_colores, nombre_aplicativo, lista_anios, dic_meses, lista_meses, lista_trimestres,reportes_disponibles
 global ruta_fuente, grupo_vanti,ruta_fuente_negrilla
 ruta_principal = mod_rp.v_ruta_principal()
 ruta_constantes = mod_rp.v_constantes()
@@ -24,6 +24,11 @@ def leer_archivos_json(archivo):
             data = json.load(file)
     return data
 dic_colores = leer_archivos_json(ruta_constantes+"colores.json")["datos"]
+lista_anios = list(leer_archivos_json(ruta_constantes+"anios.json")["datos"].values())
+dic_meses = leer_archivos_json(ruta_constantes+"tabla_18.json")["datos"]
+lista_meses = list(dic_meses.values())
+lista_trimestres = list(leer_archivos_json(ruta_constantes+"trimestres.json")["datos"].values())
+reportes_disponibles = leer_archivos_json(ruta_constantes+"reportes_disponibles.json")["datos"]
 
 def crear_label(texto, central_widget, font="normal", color="white", font_size=30, background_color="#030918"):
     label = QLabel(texto, central_widget)
@@ -47,7 +52,7 @@ def crear_cuadro(central_widget, dimensiones, color="white", size=0.7):
     cuadro.setGeometry(ubi_x, ubi_y, largo_x, largo_y)
     return cuadro
 
-def crear_boton(texto, central_widget, font="normal", color=dic_colores["azul_v"], font_size=32, padding=20):
+def crear_boton(texto, central_widget, font="normal", color=dic_colores["azul_v"], font_size=32, padding=20, radius = 15):
     boton = QPushButton(texto, central_widget)
     if font == "normal":
         font_id = QFontDatabase().addApplicationFont(ruta_fuente)
@@ -55,7 +60,7 @@ def crear_boton(texto, central_widget, font="normal", color=dic_colores["azul_v"
         font_id = QFontDatabase().addApplicationFont(ruta_fuente_negrilla)
     font_family = QFontDatabase().applicationFontFamilies(font_id)[0]
     boton.setStyleSheet(f"""QPushButton {{color: {color};padding: {padding}px;font-size: {font_size}px;
-                            border: 0.5px solid white;border-radius: 15px;font-family: '{font_family}';background-color: #ffffff;}}""")
+                            border: 0.5px solid white;border-radius: {radius}px;font-family: '{font_family}';background-color: #ffffff;}}""")
     return boton
 
 def crear_label_imagen(ruta, central_widget):
@@ -623,7 +628,7 @@ def menu_reporte_comercial(app, window, central_widget, dimensiones):
         if texto == "volver":
             estado = menu_reportes_comerciales(app, window, central_widget, dimensiones)
         else:
-            botones = menu_seleccion(app, window, central_widget, dimensiones)
+            botones = menu_seleccion(app, window, central_widget, dimensiones, "menu_reporte_comercial")
             print(botones)
     image_button.clicked.connect(lambda:on_button_clicked("volver"))
     boton_1.clicked.connect(lambda:on_button_clicked("reporte_comercial_sector_consumo"))
@@ -632,143 +637,331 @@ def menu_reporte_comercial(app, window, central_widget, dimensiones):
     event_loop.exec_()
     return estado
 
-def menu_seleccion(app, window, central_widget, dimensiones):
+def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=None):
     screen_width = dimensiones[0]
 
     titulo = "Selección información"
-    titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=65)
+    titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=60)
     x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
-    titulo_espacios.move(x, 30)
+    titulo_espacios.move(x, 10)
     titulo_espacios.setParent(central_widget)
     mostrar_label(titulo_espacios)
 
-    t_filial = crear_label("Filiales", central_widget, font="bold", font_size=65)
+    t_filial = crear_label("Filiales", central_widget, font="bold", font_size=50)
     t_filial.move(50, 150)
     t_filial.setParent(central_widget)
     mostrar_label(t_filial)
 
+    t_periodo = crear_label("Periodos", central_widget, font="bold", font_size=50)
+    t_periodo.move(700, 150)
+    t_periodo.setParent(central_widget)
+    mostrar_label(t_periodo)
+
+    boton_2 = crear_boton("", central_widget, font_size=60, padding=5)
+    boton_2.setFixedSize(60,60)
+    boton_2.move(1200,210)
+    boton_2.setParent(central_widget)
+    mostrar_label(boton_2)
+
+    t_anual = crear_label("Anual", central_widget, font="bold", font_size=40)
+    t_anual.move(1300, 170)
+    t_anual.setParent(central_widget)
+    mostrar_label(t_anual)
+    anual = False
+
     f1 = crear_boton("", central_widget, font_size=60, padding=5)
-    f1.setFixedSize(80,300)
-    f1.move(50,200)
+    f1.setFixedSize(80,80)
+    f1.move(50,350)
     f1.setParent(central_widget)
     mostrar_label(f1)
 
     t_f1 = crear_label("VANTI", central_widget, font="bold", font_size=40)
-    t_f1.move(150, 200)
+    t_f1.move(150, 310)
     t_f1.setParent(central_widget)
     mostrar_label(t_f1)
 
     f2 = crear_boton("", central_widget, font_size=60, padding=5)
     f2.setFixedSize(80,80)
-    f2.move(50,300)
+    f2.move(50,500)
     f2.setParent(central_widget)
     mostrar_label(f2)
 
     t_f2 = crear_label("GNCB", central_widget, font="bold", font_size=40)
-    t_f2.move(150, 300)
+    t_f2.move(150, 460)
     t_f2.setParent(central_widget)
     mostrar_label(t_f2)
 
     f3 = crear_boton("", central_widget, font_size=60, padding=5)
     f3.setFixedSize(80,80)
-    f3.move(50,400)
+    f3.move(50,650)
     f3.setParent(central_widget)
     mostrar_label(f3)
 
     t_f3 = crear_label("GNCR", central_widget, font="bold", font_size=40)
-    t_f3.move(150, 400)
+    t_f3.move(150, 610)
     t_f3.setParent(central_widget)
     mostrar_label(t_f3)
 
     f4 = crear_boton("", central_widget, font_size=60, padding=5)
     f4.setFixedSize(80,80)
-    f4.move(50,500)
+    f4.move(50,800)
     f4.setParent(central_widget)
     mostrar_label(f4)
 
     t_f4 = crear_label("GOR", central_widget, font="bold", font_size=40)
-    t_f4.move(150, 500)
+    t_f4.move(150, 760)
     t_f4.setParent(central_widget)
     mostrar_label(t_f4)
 
     f5 = crear_boton("", central_widget, font_size=60, padding=5)
     f5.setFixedSize(80,80)
-    f5.move(50,600)
+    f5.move(50,950)
     f5.setParent(central_widget)
     mostrar_label(f5)
 
     t_f5 = crear_label("Todas", central_widget, font="bold", font_size=40)
-    t_f5.move(150, 600)
+    t_f5.move(150, 910)
     t_f5.setParent(central_widget)
     mostrar_label(t_f5)
 
-    boton_1 = crear_boton("Aceptar", central_widget)
+    dic_botones_filiales = {"VANTI":[f1,t_f1,False], "GNCB":[f2,t_f2,False], "GNCR":[f3,t_f3,False], "GOR":[f4,t_f4,False], "Todas":[f5,t_f5,False]}
+
+    boton_1 = crear_boton("Aceptar", central_widget, font_size=25)
     x = round((((screen_width*0.5)-boton_1.sizeHint().width())*0.5)+(screen_width*0.53))
-    boton_1.move(x,1040)
+    boton_1.move(x,1100)
     boton_1.setParent(central_widget)
     mostrar_label(boton_1)
-    dic_botones_filiales = {"VANTI":[f1,False], "GNCB":[f2,False], "GNCR":[f3,False], "GOR":[f4,False], "Todas":[f5,False]}
+
+    boton_3 = crear_boton("Limpiar", central_widget, font_size=25)
+    x = round((((screen_width*0.5)-boton_3.sizeHint().width())*0.5)+(screen_width*0.53))
+    boton_3.move(1700,150)
+    boton_3.setParent(central_widget)
+    mostrar_label(boton_3)
+
+    if len(lista_anios) >=3 :
+        lista_anios_sel = lista_anios[-3:]
+    else:
+        lista_anios_sel = lista_anios.copy()
+    lista_fechas_sel = []
+    dic_fechas = {}
+    x_fecha = 620
+    for anio in lista_anios_sel:
+        y_fecha = 300
+        for mes in lista_meses:
+            llave = anio+" / "+mes[:3]
+            lista_fechas_sel.append(llave)
+            dic_fechas[llave] = [(anio, mes), False, crear_boton("", central_widget, font_size=42, padding=1, radius=5), crear_label(llave, central_widget, font_size=15)]
+            dic_fechas[llave][2].setFixedSize(48,48)
+            dic_fechas[llave][2].setParent(central_widget)
+            dic_fechas[llave][3].setParent(central_widget)
+            dic_fechas[llave][2].move(x_fecha,y_fecha)
+            dic_fechas[llave][3].move(x_fecha + 100, y_fecha-10)
+            y_fecha += 65
+            mostrar_label(dic_fechas[llave][2])
+            mostrar_label(dic_fechas[llave][3])
+        x_fecha += 450
+
+    image_button = QPushButton("", central_widget)
+    pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    icon = QIcon(pixmap)
+    image_button.setIcon(icon)
+    image_button.setIconSize(pixmap.size())
+    image_button.move(20,20)
+    mostrar_label(image_button)
+
     event_loop = QEventLoop()
 
-    def cambiar_botones(boton):
+    def cambiar_botones(llave):
+        nonlocal dic_botones_filiales
+        boton = dic_botones_filiales[llave][0]
+        if llave != "Todas":
+            if boton.text() == "X":
+                boton.setText("")
+                dic_botones_filiales[llave][2] = False
+            elif boton.text() == "":
+                boton.setText("X")
+                dic_botones_filiales[llave][2] = True
+            boton.setParent(central_widget)
+            mostrar_label(boton)
+        else:
+            if boton.text() == "X":
+                texto = ""
+                valor = False
+            elif boton.text() == "":
+                texto = "X"
+                valor = True
+            for key, value in dic_botones_filiales.items():
+                boton_for = dic_botones_filiales[key][0]
+                boton_for.setText(texto)
+                dic_botones_filiales[key][2] = valor
+                boton_for.setParent(central_widget)
+                mostrar_label(boton_for)
+
+    def cambiar_botones_x(boton):
+        nonlocal anual
         if boton.text() == "X":
             boton.setText("")
+            anual = False
         elif boton.text() == "":
             boton.setText("X")
-        boton.setParent(central_widget)
+            anual = True
+
+    def cambiar_botones_fecha(llave):
+        nonlocal dic_fechas
+        boton = dic_fechas[llave][2]
+        if boton.text() == "X":
+            boton.setText("")
+            dic_fechas[llave][1] = False
+        elif boton.text() == "":
+            boton.setText("X")
+            dic_fechas[llave][1] = True
         mostrar_label(boton)
+        comprobar_anual(llave)
+
+    def comprobar_anual(llave_sel):
+        nonlocal anual
+        nonlocal dic_fechas
+        if anual:
+            cambio = False
+            contador = 0
+            largo = len(dic_fechas)
+            for llave, valor in dic_fechas.items():
+                valor[2].setText("")
+                valor[1] = False
+            for i, (llave, valor) in enumerate(reversed(dic_fechas.items())):
+                if llave == llave_sel:
+                    cambio = True
+                if cambio:
+                    valor[2].setText("X")
+                    valor[1] = True
+                    contador += 1
+                if contador > 12:
+                    cambio = False
+    def limpiar_botones(boton):
+        nonlocal dic_fechas, dic_botones_filiales, anual, boton_2
+        boton_2.setText("")
+        anual = False
+        for llave, value in dic_fechas.items():
+            value[2].setText("")
+            value[1] = False
+        for llave, value in dic_botones_filiales.items():
+            value[0].setText("")
+            value[2] = False
 
     def on_button_clicked(texto):
+        event_loop.quit()
+        esconder_label(titulo_espacios)
+        esconder_label(t_filial)
+        esconder_label(f1)
+        esconder_label(f2)
+        esconder_label(f3)
+        esconder_label(f4)
+        esconder_label(f5)
+        esconder_label(t_f1)
+        esconder_label(t_f2)
+        esconder_label(t_f3)
+        esconder_label(t_f4)
+        esconder_label(t_f5)
+        esconder_label(boton_1)
+        esconder_label(t_periodo)
+        esconder_label(t_anual)
+        esconder_label(boton_2)
+        esconder_label(boton_3)
+        for llave, value in dic_fechas.items():
+            esconder_label(value[3])
+            esconder_label(value[2])
         if texto == "volver":
-            event_loop.quit()
-            esconder_label(titulo_espacios)
-            esconder_label(t_filial)
-            esconder_label(f1)
-            esconder_label(f2)
-            esconder_label(f3)
-            esconder_label(f4)
-            esconder_label(f5)
-            esconder_label(t_f1)
-            esconder_label(t_f2)
-            esconder_label(t_f3)
-            esconder_label(t_f4)
-            esconder_label(t_f5)
-            esconder_label(boton_1)
-            estado = menu_reporte_comercial(app, window, central_widget, dimensiones)
-    f1.clicked.connect(lambda: cambiar_botones(f1))
-    f2.clicked.connect(lambda: cambiar_botones(f2))
-    f3.clicked.connect(lambda: cambiar_botones(f3))
-    f4.clicked.connect(lambda: cambiar_botones(f4))
+            if estado_anterior == "menu_reporte_comercial":
+                estado = menu_reporte_comercial(app, window, central_widget, dimensiones)
+        elif texto == "aceptar":
+            estado = seleccionar_reporte(app, window, central_widget, dimensiones)
 
-    boton_1.clicked.connect(lambda:on_button_clicked("volver"))
+    f1.clicked.connect(lambda: cambiar_botones("VANTI"))
+    f2.clicked.connect(lambda: cambiar_botones("GNCB"))
+    f3.clicked.connect(lambda: cambiar_botones("GNCR"))
+    f4.clicked.connect(lambda: cambiar_botones("GOR"))
+    f5.clicked.connect(lambda: cambiar_botones("Todas"))
+    boton_1.clicked.connect(lambda:on_button_clicked("aceptar"))
+    boton_2.clicked.connect(lambda:cambiar_botones_x(boton_2))
+    boton_3.clicked.connect(lambda:limpiar_botones(boton_3))
+    image_button.clicked.connect(lambda:on_button_clicked("volver"))
+    for llave, value in dic_fechas.items():
+        value[2].clicked.connect(lambda _, l=llave: cambiar_botones_fecha(l))
     event_loop.exec_()
-    #esconder_label(box)
+    print(f"Retorno: {dic_botones_filiales}")
+    print(f"Retorno: {dic_fechas}")
     return True
 
+def seleccionar_reporte(app, window, central_widget, dimensiones):
+    screen_width = dimensiones[0]
 
-def manejar_clic_boton(boton_actual, lista_botones):
-    """
-    Maneja el clic en los botones
-    - Si se selecciona el último botón, selecciona todos
-    - Actualiza el diccionario de botones seleccionados
-    """
-    global selected_buttons
+    titulo = "Selección de reportes"
+    titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=60)
+    x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
+    titulo_espacios.move(x, 10)
+    titulo_espacios.setParent(central_widget)
+    mostrar_label(titulo_espacios)
 
-    # Limpiar el diccionario de selección
-    selected_buttons.clear()
+    t_comercial = crear_label("Reportes comerciales", central_widget, font="bold", font_size=32)
+    t_comercial.move(50, 150)
+    t_comercial.setParent(central_widget)
+    mostrar_label(t_comercial)
 
-    # Si el último botón (índice 4) está seleccionado, seleccionar todos
-    if lista_botones[4].isChecked():
-        for btn in lista_botones:
-            btn.setChecked(True)
+    t_tarifario = crear_label("Reportes tarifarios", central_widget, font="bold", font_size=32)
+    t_tarifario.move(780, 150)
+    t_tarifario.setParent(central_widget)
+    mostrar_label(t_tarifario)
 
-    # Actualizar el diccionario de botones seleccionados
-    for btn in lista_botones:
-        selected_buttons[btn.text()] = btn.isChecked()
+    t_tecnico = crear_label("Reportes técnicos", central_widget, font="bold", font_size=32)
+    t_tecnico.move(1400, 150)
+    t_tecnico.setParent(central_widget)
+    mostrar_label(t_tecnico)
 
-    # Imprimir los botones seleccionados
-    print("Botones seleccionados:", selected_buttons)
+    #reportes_disponibles
+    boton_1 = crear_boton("Aceptar", central_widget, font_size=25)
+    x = round((((screen_width*0.5)-boton_1.sizeHint().width())*0.5)+(screen_width*0.53))
+    boton_1.move(x,1100)
+    boton_1.setParent(central_widget)
+    mostrar_label(boton_1)
 
+    image_button = QPushButton("", central_widget)
+    pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    icon = QIcon(pixmap)
+    image_button.setIcon(icon)
+    image_button.setIconSize(pixmap.size())
+    image_button.move(20,20)
+    mostrar_label(image_button)
+
+    image_button_1 = QPushButton("", central_widget)
+    pixmap_1 = QPixmap(ruta_imagenes+"lupa.png")
+    icon_1 = QIcon(pixmap_1)
+    image_button_1.setIcon(icon_1)
+    image_button_1.setIconSize(QSize(80, 80))  # Ajusta el tamaño del ícono
+    image_button_1.setFixedSize(150, 150)
+    x = round((screen_width-(image_button_1.sizeHint().width()))*0.95)
+    image_button_1.move(x,5)
+    mostrar_label(image_button_1)
+    dic_texto = {"Reportes comerciales":[("GRC1","Información comercial de usuarios regulados"),("GRC2","Información comercial de suministro, transporte, distribución y comercialización"),("GRC3","Información de compensación sector residencial y\nno residencial usuarios regulados"),("GRTT2","Inventario de suscriptores"),("DS56","Usuarios con consumos estacionales"),("DS57","Investigaciones por Desviaciones Significativas"),("DS58"," Resultados Investigaciones por Desviaciones Significativas")],
+                "Reportes tarifarios":[("GRT1","Estructura tarifaria de gas combustible por redes"),("GRT3","Opción tarifaria")],
+                "Reportes técnicos":[("GRS1","Información de suspensiones"),("GRCS1","Información de Respuesta a Servicio Técnico"),("GRCS2","Consolidación de indicadores"),("GRCS3","Información de Presión en Líneas Individuales y Nivel de Odorización"),("GRCS7","Revisiones previas y Revisiones Periódicas Obligatorias - RPO"),("GRCS9","Revisiones Periódicas Obligatorias y revisiones previas\n - cuentas no normalizadas")]}
+
+    event_loop = QEventLoop()
+    def on_button_clicked(texto):
+        event_loop.quit()
+        esconder_label(titulo_espacios)
+        esconder_label(t_comercial)
+        esconder_label(t_tarifario)
+        esconder_label(t_tecnico)
+        esconder_label(image_button)
+        esconder_label(boton_1)
+        esconder_label(image_button_1)
+        if texto == "volver":
+            estado = menu_seleccion(app, window, central_widget, dimensiones)
+    image_button.clicked.connect(lambda:on_button_clicked("volver"))
+    boton_1.clicked.connect(lambda:on_button_clicked(""))
+    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto))
+    event_loop.exec_()
+    return True
 
 def confirmacion_seleccion(app, window, central_widget, dimensiones, texto, op, estado_anterior):
     estado = op
@@ -837,9 +1030,19 @@ def ventana_secundaria(central_widget, titulo, dic_texto):
         label = QLabel(llave, ventana)
         label.setStyleSheet(f"color: white;font-size: {int(font_size*1.8)}px;font-family: '{font_family_1}'")
         layout.addWidget(label)
-        label_1 = QLabel(valor, ventana)
-        label_1.setStyleSheet(f"color: white;font-size: {font_size}px;font-family: '{font_family}'")
-        layout.addWidget(label_1)
+        if isinstance(valor, str):
+            label_1 = QLabel(valor, ventana)
+            label_1.setStyleSheet(f"color: white;font-size: {font_size}px;font-family: '{font_family}'")
+            layout.addWidget(label_1)
+        elif isinstance(valor, list):
+            for elemento in valor:
+                label_2 = QLabel(elemento[0], ventana)
+                label_2.setStyleSheet(f"color: white;font-size: {int(font_size*1.4)}px;font-family: '{font_family_1}'")
+                layout.addWidget(label_2)
+                label_3 = QLabel(elemento[1], ventana)
+                label_3.setStyleSheet(f"color: white;font-size: {font_size}px;font-family: '{font_family}'")
+                layout.addWidget(label_3)
+
     content_widget = QWidget()
     content_widget.setLayout(layout)
     scroll_area = QScrollArea()
@@ -868,4 +1071,11 @@ def reset_reporte():
                         "clasificacion":None,
                         "fecha_personalizada":None}
     return seleccionar_reportes
+"""
+
+
+"""
+regenerar=False, codigo_DANE=False, valor_facturado=False, cantidad_filas=False, mostrar_archivos=False, inventario=False,
+                    calcular_tiempo=True, reportes_mensuales=False, texto_regenerar = "_form_estandar, _resumen", texto_regenerar_mensuales="",
+                    usuarios_activos=False, sumatoria=False, reporte_consumo_anual=False, facturas=False
 """
