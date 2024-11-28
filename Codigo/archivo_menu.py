@@ -3,12 +3,16 @@ import sys
 import time
 import subprocess
 from datetime import datetime
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QHBoxLayout, QSpacerItem, QSizePolicy, QDialog, QPushButton, QScrollArea, QLineEdit
+from PyQt5.QtGui import QPalette, QColor, QFont, QFontDatabase, QPixmap, QIcon
+from PyQt5.QtCore import Qt, QEventLoop, QSize
 import ruta_principal as mod_rp
-global ruta_principal, ruta_codigo, ruta_constantes, ruta_nuevo_sui, ruta_archivos, ruta_guardar_archivos
+global ruta_principal, ruta_codigo, ruta_constantes, ruta_nuevo_sui, ruta_archivos, ruta_guardar_archivos, ruta_fuentes
 ruta_principal = mod_rp.v_ruta_principal()
 ruta_constantes = mod_rp.v_constantes()
 ruta_nuevo_sui = mod_rp.v_nuevo_sui()
 ruta_codigo = mod_rp.v_codigo()
+ruta_fuentes = mod_rp.v_fuentes()
 ruta_archivos = mod_rp.v_archivos()
 ruta_guardar_archivos = mod_rp.v_guardar_archivos()
 sys.path.append(os.path.abspath(ruta_codigo))
@@ -23,7 +27,7 @@ import archivo_interfaz as mod_9
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Constantes globales
 # * -------------------------------------------------------------------------------------------------------
-global version, lista_meses, lista_empresas,lista_anios,dic_reportes,lista_reportes_generales,reportes_generados,lista_reportes_totales,t_i,t_f,lista_reportes_generados,cantidad_datos_estilo_excel,fecha_actual,dic_meses,dic_filiales,trimestre_mes,anio_actual,fecha_actual_texto,lista_archivo_desviaciones
+global version, lista_meses, lista_empresas,lista_anios,dic_reportes,lista_reportes_generales,reportes_generados,lista_reportes_totales,t_i,t_f,lista_reportes_generados,cantidad_datos_estilo_excel,fecha_actual,dic_meses,dic_filiales,trimestre_mes,anio_actual,fecha_actual_texto,lista_archivo_desviaciones,ruta_fuente,ruta_fuente_negrilla
 version = "1.0"
 lista_anios = list(mod_2.leer_archivos_json(ruta_constantes+"anios.json")["datos"].values())
 dic_meses = mod_2.leer_archivos_json(ruta_constantes+"tabla_18.json")["datos"]
@@ -48,6 +52,8 @@ fecha_actual = datetime.now()
 anio_actual = fecha_actual.year
 fecha_actual_texto = f"{fecha_actual.day} de {lista_meses[int(fecha_actual.month)-1]} del {anio_actual}"
 lista_archivo_desviaciones = ["DS56","DS57","DS58"]
+ruta_fuente = ruta_fuentes + "Muli.ttf"
+ruta_fuente_negrilla = ruta_fuentes + "Muli-Bold.ttf"
 
 def crear_lista_reportes_totales():
     dic = mod_2.leer_archivos_json(ruta_constantes+"/reportes_disponibles.json")["datos"]
@@ -363,25 +369,11 @@ def menu_configuracion_inicial(option,valor):
             mod_1.mostrar_tiempo(t_f, t_i)
     #? Agregar un nuevo año
     elif option == "2":
-        centinela = True
-        while centinela:
-            anio = input("Ingrese el nuevo año a almacenar: ")
-            try:
-                valor = int(anio)
-                if valor > 2024:
-                    centinela = False
-                else:
-                    print("\nEl año ingresado no es válido\n")
-            except TypeError:
-                print("\nEl año ingresado no es válido\n")
-            except ValueError:
-                print("\nEl año ingresado no es válido\n")
-        lista_menu_1 = ["Sí","No"]
-        option_1,valor_1 = confirmacion_seleccion(lista_menu_1, f"¿Desea ingresar el año {valor} a las carpetas de archivos?")
-        if option_1 == "1":
-            t_i = time.time()
+        anio = str(anio_actual)
+        t_i = time.time()
+        if int(anio) > 2024:
             print(f"\nInicio de procesamiento para: {valor}\n\n")
-            mod_2.cambiar_diccionario(str(valor))
+            mod_2.cambiar_diccionario(str(anio))
             mod_3.configuracion_inicial()
             t_f = time.time()
             mod_1.mostrar_tiempo(t_f, t_i)
@@ -389,11 +381,20 @@ def menu_configuracion_inicial(option,valor):
     elif option == "3":
         t_i = time.time()
         print(f"\nInicio de procesamiento para: {valor}\n\n")
+        #elegir_reporte
+        """reporte = "GRC1"
+        mod_1.editar_json_reporte(reporte+"_json")"""
         t_f = time.time()
         mod_1.mostrar_tiempo(t_f, t_i)
     #? Agregar un nuevo tipo de reporte
+    elif option == "4":
         t_i = time.time()
         print(f"\nInicio de procesamiento para: {valor}\n\n")
+        #elegir_clasificacion
+        #elegir_reporte
+        """clasificacion = "Comercial"
+        reporte = "GRTT3"
+        mod_1.agregar_json_reporte(clasificacion, reporte+"_json")"""
         t_f = time.time()
         mod_1.mostrar_tiempo(t_f, t_i)
 
@@ -1831,7 +1832,7 @@ def menu_inicial(lista, nombre):
         os.system("exit")
     elif option == "1":
         lista_menu = ["Creación de espacio de trabajo (Carpetas)",
-                        "Agregar un nuevo año",
+                        "Agregar año actual",
                         "Editar un reporte existente",
                         "Agregar un nuevo tipo de reporte",
                         "Regresar al menú inicial"]
@@ -2367,32 +2368,25 @@ def mostrar_inicio_app():
 
 # TODO: Pendientes Urgentes
     #Terminar slides Canva
-    #Automatizar almacenamiento de sides
+    #Automatizar almacenamiento de slides
     #Creación de mapa de suspensiones
-    #Almacenamiento de archivos json como Excel
-    #Generar aplicativo
 
 # TODO Documento:
     #Incluir tiempo estimado promedio por mes para la documentación de explicación
     #Pruebas de tiempo con otros dispositivos
 
 # TODO Opcionales:
-    # Revisión reportes anuales de calidad de la info
+    # Creación doc unión GRC1/GRTT2 y/o GRC2
+    # Revisión O3
     # Generar un archivo CSV en la comparación del GRC1/CLD/PRD si la cantidad de NIU no encontrados es mayor al 1% de la muestra total
+
 
 def crear_app():
     app, window, central_widget, dimensiones = mod_9.crear_pantalla_incial()
     info_app = app, window, central_widget, dimensiones
     window.closeEvent = lambda event: on_close(event, app)
+    mod_9.pantalla_inicio(app, window, central_widget, dimensiones)
     return info_app
-
-def iniciar_app(info_app):
-    app, window, central_widget, dimensiones = info_app
-    estado = mod_9.pantalla_inicio(app, window, central_widget, dimensiones)
-    if estado:
-        print(f"Función: {estado}")
-        iniciar_app(info_app)
-    sys.exit(app.exec_())
 
 def on_close(event, app):
     app.closeAllWindows()
@@ -2400,7 +2394,61 @@ def on_close(event, app):
     subprocess.run(['taskkill', '/F', '/IM', 'pwsh.exe', '/T'], check=True)
     os.system("exit")
 
+def iniciar_app(info_app):
+    app, window, central_widget, dimensiones = info_app
+    estado, info = mod_9.menu_inicial(app, window, central_widget, dimensiones)
+    if estado:
+        #activar_funciones(info_app, estado, info)
+        print(estado, "\n")
+        print(info)
+    iniciar_app(info_app)
+    sys.exit(app.exec_())
 
-print(lista_anios, dic_meses, lista_meses, lista_trimestres)
+def activar_funciones(info_app, estado, info):
+    if estado == "almacenar_archivos":
+        titulo = "Almacenamiento de archivos"
+        almacenar_archivos_v2(info_app, titulo)
+
+def crear_boton(texto, content_widget, font="normal", color="blue", font_size=32, padding=20, radius = 15):
+    boton = QPushButton(texto, content_widget)
+    if font == "normal":
+        font_id = QFontDatabase().addApplicationFont(ruta_fuente)
+    elif font == "bold":
+        font_id = QFontDatabase().addApplicationFont(ruta_fuente_negrilla)
+    font_family = QFontDatabase().applicationFontFamilies(font_id)[0]
+    boton.setStyleSheet(f"""QPushButton {{color: {color};padding: {padding}px;font-size: {font_size}px;
+                            border: 0.5px solid white;border-radius: {radius}px;font-family: '{font_family}';background-color: #ffffff;}}""")
+    return boton
+
+
+def almacenar_archivos_v2(info_app, titulo):
+    app, window, central_widget, dimensiones = info_app
+    ventana = QDialog(central_widget)
+    ventana.setWindowTitle(titulo)
+    ventana.setGeometry(central_widget.geometry().left(), central_widget.geometry().top(), int(central_widget.width()*0.9), int(central_widget.height()*0.9))
+    ventana.setStyleSheet(f"""QWidget{{background-color: #030918; border: 5px solid #030918}}""")
+    layout = QVBoxLayout()
+    font_size = 20
+    font_id = QFontDatabase().addApplicationFont(ruta_fuente)
+    font_family = QFontDatabase().applicationFontFamilies(font_id)[0]
+    font_id_1 = QFontDatabase().addApplicationFont(ruta_fuente_negrilla)
+    font_family_1 = QFontDatabase().applicationFontFamilies(font_id_1)[0]
+    content_widget = QWidget()
+    content_widget.setLayout(layout)
+    scroll_area = QScrollArea()
+    scroll_area.setWidget(content_widget)
+    scroll_area.setWidgetResizable(True)
+    scroll_area.setStyleSheet(f"""
+        QScrollArea {{border: 5px solid white;}}
+        QScrollBar:vertical {{background-color: #030918;width: 25px;border-radius: 6px;}}
+        QScrollBar:horizontal {{background-color: #030918;height: 12px;border-radius: 6px;}}
+        QScrollBar::handle:vertical {{background-color: white;border-radius: 12px;}}
+        QScrollBar::handle:horizontal {{background-color: white;border-radius: 6px;}}""")
+    ventana_layout = QVBoxLayout(ventana)
+    ventana_layout.addWidget(scroll_area)
+    ventana.setLayout(ventana_layout)
+    ventana.exec_()
+
+
 iniciar_app(crear_app())
 #iniciar_menu()

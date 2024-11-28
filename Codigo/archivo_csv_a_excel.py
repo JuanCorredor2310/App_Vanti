@@ -117,17 +117,6 @@ def definir_tipo_texto(sheet, reporte_DANE=False):
                 valor = str(valor).replace("np.int64","").replace("np.float64","")
                 celda.value = valor
                 celda.number_format = "General"
-"""for row in range(2, ws.max_row + 1):
-        # Formato para la columna A (cantidad de dinero)
-        celda_a = ws.cell(row=row, column=1)
-        # Usar formato de moneda con separador de miles y sin decimales
-        celda_a.number_format = '_("$"* #,##0_);_("$"* (#,##0);_("$"* "-"??_);_(@_)'
-        
-        # Formato para la columna B (números)
-        celda_b = ws.cell(row=row, column=2)
-        # Usar formato de número con separador de miles y sin decimales
-        celda_b.number_format = '#,##0'"""
-
 
 def ajustar_ancho_columna(sheet):
     for column in sheet.columns:

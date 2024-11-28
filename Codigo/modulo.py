@@ -17,6 +17,9 @@ import warnings
 import unicodedata
 import re
 from decimal import Decimal
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QHBoxLayout, QSpacerItem, QSizePolicy, QDialog, QPushButton, QScrollArea, QLineEdit
+from PyQt5.QtGui import QPalette, QColor, QFont, QFontDatabase, QPixmap, QIcon
+from PyQt5.QtCore import Qt, QEventLoop, QSize
 import ruta_principal as mod_rp
 global ruta_principal, ruta_codigo, ruta_constantes, ruta_nuevo_sui, ruta_archivos
 ruta_principal = mod_rp.v_ruta_principal()
@@ -302,6 +305,103 @@ def lista_a_texto(lista, separador, salto=False):
     if salto:
         texto += "\n"
     return texto
+
+# * -------------------------------------------------------------------------------------------------------
+# *                                             Edición reportes
+# * -------------------------------------------------------------------------------------------------------
+
+def listas_iguales(lista_1, lista_2):
+    if len(lista_1) == len(lista_2):
+        for i in lista_1:
+            if i not in lista_2:
+                return False
+        return True
+    else:
+        return False
+
+def editar_json_reporte(reporte):
+    archivo = ruta_constantes+reporte+".xlsx"
+    lista_hojas = ["generales", "generales_no_float", "generales_float", "generales_hora", "generales_fecha", "seleccionados"]
+    if os.path.exists(archivo):
+        v_hojas = mod_5.hojas_disponibles(archivo)
+        dic_xlsx_json = {}
+        if listas_iguales(lista_hojas, v_hojas):
+            for hoja in lista_hojas:
+                df = mod_5.lectura_hoja_xlsx(archivo, hoja)[0]
+                dic_xlsx_json[hoja] = df
+            v_convertir_dic_json = convertir_dic_json(dic_xlsx_json)
+            archivo_json = archivo.replace(".xlsx",".json").replace("_json","")
+            almacenar_json(v_convertir_dic_json, archivo_json)
+            informar_archivo_creado(archivo_json, True)
+            return True
+        else:
+            print("El archivo .xlsx no posee las hojas necesarias")
+            print(f"Las hojas aceptadas son: {lista_a_texto(lista_hojas, ', ')}")
+    else:
+        print(f"No existe el archivo {archivo}")
+    return False
+
+def agregar_json_reporte(clasificacion, reporte):
+    valor = editar_json_reporte(reporte)
+    if valor:
+        cambiar_diccionario(clasificacion, reporte)
+
+def cambiar_diccionario(clasificacion, reporte):
+        ruta = ruta_constantes+"reportes_disponibles.txt"
+        texto = f"{clasificacion},{reporte}"
+        try:
+            with open(ruta, 'r', encoding='utf-8') as archivo:
+                    lineas = archivo.readlines()
+            lineas = [str(linea.strip()) for linea in lineas]
+            if texto not in lineas:
+                    lineas.append(texto)
+            with open(ruta, 'w', encoding='utf-8') as archivo:
+                    for linea in lineas:
+                            archivo.write(linea + '\n')
+        except IOError:
+                pass
+
+def convertir_dic_json(dic_xlsx_json):
+    dic_json = {}
+    for key, value in dic_xlsx_json.items():
+        if key == "generales":
+            valor = list(value["nombre_formato"])
+            dic_json[key] = dict(zip(valor, list(value["nombre_no_formato"])))
+        else:
+            if len(value[key]):
+                dic_json[key] = list(value[key])
+            else:
+                dic_json[key] = []
+    dic_json["cantidad_columnas"] = len(dic_xlsx_json["generales_float"])+len(dic_xlsx_json["generales_no_float"])+len(dic_xlsx_json["generales_hora"])+len(dic_xlsx_json["generales_fecha"])
+    return dic_json
+
+def almacenar_json(diccionario, nombre_archivo):
+        with open(nombre_archivo, 'w') as file:
+                json.dump(diccionario, file, indent=4)
+
+"""
+generales_carga = ["NIU","Fecha_medicion","Hora_medicion","Tipo_gas","Presion_medida","Metodo","Sustancia_odorante",
+                                "Nivel_concentracion_minimo","Nivel_concentracion_medido","Observaciones"]
+                generales_presentacion = ["NIU","Fecha de medición","Hora de medición","Tipo de Gas","Presion Medida (mbar)","Método","Sustancia Odorante",
+                                        "Nivel de Concentración Mínimo","Nivel de Concentración Medido ( mg/m³ )","Observaciones"]
+                seleccionados = ["NIU","Fecha_medicion","Hora_medicion","Tipo_gas","Metodo","Sustancia_odorante",
+                                "Observaciones"]
+                generales_no_float = ["NIU","Tipo_gas","Metodo","Sustancia_odorante","Observaciones"]
+                generales_float = ["Presion_medida","Nivel_concentracion_minimo","Nivel_concentracion_medido"]
+                generales_hora = ["Hora_medicion"]
+                generales_fecha = ["Fecha_medicion"]
+                seleccionados = ["NIU","Fecha_medicion","Hora_medicion","Tipo_gas","Metodo","Sustancia_odorante",
+                                "Observaciones","Presion_medida","Nivel_concentracion_minimo","Nivel_concentracion_medido"]
+                total = len(generales_float)+len(generales_no_float)+len(generales_hora)+len(generales_fecha)
+                datos = {"generales":dict(zip(generales_carga, generales_presentacion)),
+                        "generales_no_float":generales_no_float,
+                        "generales_float":generales_float,
+                        "generales_hora":generales_hora,
+                        "generales_fecha":generales_fecha,
+                        "seleccionados": seleccionados,
+                        "cantidad_columnas":total}
+                guardar_diccionario_ruta(datos, n_archivo)
+"""
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Creación de carpetas
@@ -2351,11 +2451,14 @@ def listas_iguales(lista_1, lista_2):
         return False,lista_1
 
 def convertir_fecha(fecha):
-    fecha_str = str(fecha).zfill(8)
-    dia = fecha_str[0:2]
-    mes = fecha_str[2:4]
-    anio = fecha_str[4:]
-    return f"{dia}-{mes}-{anio}"
+    fecha_str = str(fecha)
+    if len(fecha_str) == 8:
+        dia = fecha_str[0:2]
+        mes = fecha_str[2:4]
+        anio = fecha_str[4:]
+        return f"{dia}-{mes}-{anio}"
+    else:
+        return ""
 
 def errores_lista(lista, indicador_SUI_filial, dic_filial_mercado, dic_filial_DANE):
     columnas_error = []
@@ -3108,6 +3211,13 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                 dic_reporte[indicador_SUI_filial] += len(df)
                 columnas = list(df.columns)[:-2]
                 df = df[columnas]
+                df["FECHA_VISITA"] = df["FECHA_VISITA"].fillna("").astype(str)
+                df['FECHA_VISITA'] = df['FECHA_VISITA'].astype(str).replace('-', "").replace('/', '').replace('_', '').replace("NaN","").replace("nan","")
+                df["FECHA_VISITA"] = pd.to_numeric(df["FECHA_VISITA"], errors='coerce').fillna(0).astype(int)
+                df['FECHA_VISITA'] = df['FECHA_VISITA'].astype(str).replace('0', "")
+                df["FECHA_VISITA"] = df["FECHA_VISITA"].apply(lambda x: '0' + x if len(x) == 7 else x)
+                df['FECHA_VISITA'] = df['FECHA_VISITA'].apply(convertir_fecha)
+                df['FECHA_VISITA'] = pd.to_datetime(df['FECHA_VISITA'], errors='coerce', dayfirst=True).dt.strftime('%d-%m-%Y')
                 mask = pd.Series([True] * len(df))
                 for col in columnas:
                     if col == 'SERVICIO':
@@ -3386,11 +3496,6 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                             else:
                                 texto = f"{len(df_error)} errores en la columna {col}. Los valores no se encuentran en la Tabla_30"
                             dic_error[col] = [texto, df_error]
-                        with warnings.catch_warnings():
-                            warnings.simplefilter("ignore", category=UserWarning)
-                            df['FECHA_VISITA'] = pd.to_datetime(df['FECHA_VISITA'], errors='coerce', dayfirst=True)
-                            df['FECHA_VISITA'] = df['FECHA_VISITA'].fillna("")
-                            df['FECHA_VISITA'] = df['FECHA_VISITA'].apply(lambda x: x.strftime('%d-%m-%Y') if pd.notnull(x) else "")
                         df_error = df[(df[col]==1)&(df['FECHA_VISITA']=="")].reset_index(drop=True)
                         if len(df_error):
                             conteo_error += 1
@@ -3410,7 +3515,8 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                         lista_df_error = []
                         if len(df_filtro):
                             conteo_error += 1
-                            df_filtro['FECHA_VISITA'] = pd.to_datetime(df_filtro['FECHA_VISITA'], errors='coerce', dayfirst=True).dt.strftime('%d-%m-%Y')
+                            #df_filtro['FECHA_VISITA'] = pd.to_datetime(df_filtro['FECHA_VISITA'], errors='coerce', dayfirst=True).dt.strftime('%d-%m-%Y')
+                            df_filtro["FECHA_VISITA"] = df_filtro["FECHA_VISITA"].fillna("").astype(str)
                             filas_minimas_c = filas_minimas.copy()
                             filas_minimas_c.append(col)
                             df_filtro = df_filtro[filas_minimas_c]
@@ -3451,7 +3557,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                         mask &= (df[col].astype(str).str.len() > 0)
                 nombre = archivo.replace("_HC","").replace("_GC","")
                 df_filtrado = df[mask].copy()
-                df_filtrado['FECHA_VISITA'] = pd.to_datetime(df_filtrado['FECHA_VISITA'], errors='coerce', dayfirst=True).dt.strftime('%d-%m-%Y')
+                df_filtrado["FECHA_VISITA"] = df_filtrado["FECHA_VISITA"].dt.strftime('%d-%m-%Y')
                 lista_reporte.append(df_filtrado)
                 if conteo_error:
                     lista_archivo = archivo.split("\\")
@@ -3525,6 +3631,13 @@ def apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos,filial,fecha,
                 df = pd.concat(lista_df, ignore_index=True)
                 columnas = list(df.columns)[:-2]
                 df = df[columnas]
+                df["FECHA_VISITA"] = df["FECHA_VISITA"].fillna("").astype(str)
+                df['FECHA_VISITA'] = df['FECHA_VISITA'].astype(str).replace('-', "").replace('/', '').replace('_', '').replace("NaN","").replace("nan","")
+                df["FECHA_VISITA"] = pd.to_numeric(df["FECHA_VISITA"], errors='coerce').fillna(0).astype(int)
+                df['FECHA_VISITA'] = df['FECHA_VISITA'].astype(str).replace('0', "")
+                df["FECHA_VISITA"] = df["FECHA_VISITA"].apply(lambda x: '0' + x if len(x) == 7 else x)
+                df['FECHA_VISITA'] = df['FECHA_VISITA'].apply(convertir_fecha)
+                df['FECHA_VISITA'] = pd.to_datetime(df['FECHA_VISITA'], errors='coerce', dayfirst=True).dt.strftime('%d-%m-%Y')
                 mask = pd.Series([True] * len(df))
                 for col in columnas:
                     if col == 'SERVICIO':
@@ -3711,11 +3824,6 @@ def apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos,filial,fecha,
                             else:
                                 texto = f"{len(df_error)} errores en la columna {col}. Los valores no se encuentran en la Tabla_30"
                             dic_error[col] = [texto, df_error]
-                        with warnings.catch_warnings():
-                            warnings.simplefilter("ignore", category=UserWarning)
-                            df['FECHA_VISITA'] = pd.to_datetime(df['FECHA_VISITA'], errors='coerce', dayfirst=True)
-                            df['FECHA_VISITA'] = df['FECHA_VISITA'].fillna("")
-                            df['FECHA_VISITA'] = df['FECHA_VISITA'].apply(lambda x: x.strftime('%d-%m-%Y') if pd.notnull(x) else "")
                         df_error = df[(df[col]==1)&(df['FECHA_VISITA']=="")].reset_index(drop=True)
                         if len(df_error):
                             conteo_error += 1
@@ -3775,10 +3883,11 @@ def apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos,filial,fecha,
                     elif col == "OBSERVACION":
                         df.loc[df[col] == "", 'OBSERVACION'] = "NA"
                         df.loc[df[col] == " ", 'OBSERVACION'] = "NA"
+                        df[col] = df[col].fillna('NA')
                         mask &= (df[col].astype(str).str.len() > 0)
                 nombre = archivo.replace("_HC","").replace("_GC","")
                 df_filtrado = df[mask].copy()
-                df_filtrado['FECHA_VISITA'] = pd.to_datetime(df_filtrado['FECHA_VISITA'], errors='coerce', dayfirst=True).dt.strftime('%d-%m-%Y')
+                df_filtrado["FECHA_VISITA"] = df_filtrado["FECHA_VISITA"].dt.strftime('%d-%m-%Y')
                 lista_reporte.append(df_filtrado)
                 if conteo_error:
                     lista_archivo = archivo.split("\\")

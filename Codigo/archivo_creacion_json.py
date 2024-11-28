@@ -118,9 +118,17 @@ def creacion_directorio_carpetas_principales():
         almacenar_json(carpetas_3, ruta_constantes+"carpetas_3.json")
 
 def cambiar_diccionario(anio):
+        ruta = ruta_constantes+"Anios.txt"
         try:
-                with open(ruta_constantes+"Anios.txt", 'a') as file:
-                        file.write(anio + '\n')
+                with open(ruta, 'r', encoding='utf-8') as archivo:
+                        lineas = archivo.readlines()[1:]  # Omitir la primera línea
+                lineas = [str(linea.strip()) for linea in lineas]
+                if anio not in lineas:
+                        lineas.append(anio)
+                with open(ruta, 'w', encoding='utf-8') as archivo:
+                        archivo.write("Anios" + '\n')
+                        for linea in lineas:
+                                archivo.write(linea + '\n')
         except IOError:
                 pass
 
@@ -228,7 +236,7 @@ def variables_reportes(reporte):
                                         "Poder_calorifico_bruto","Facturacion_por_suministro","Facturacion_por_remuneracion_gestor_mercado",
                                         "Punto_entrega_energia_comprador","Codigo_DANE_punto_entrega_energia_comprado",
                                         "Transporte","Componente_fijo_pareja_cargos","Facturacion_por_demanda_volumen","Facturacion_por_demanda_capacidad",
-                                        "Tarifa","Cuota_fomento","Servicio Transporte","Codigo punto entrada","Codigo punto salida","Codigo_tramo_entrada",
+                                        "Tarifa","Cuota_fomento","Servicio_transporte","Codigo_punto_entrada","Codigo_punto_salida","Codigo_tramo_entrada",
                                         "Codigo_tramo_salida","Codigo_DANE_punto_entrada","Codigo_DANE_punto_salida","NIU","Cargo_distribucion",
                                         "Cargo_comercializacion","Volumen","Numero_operacion_suministro_Segas_utilizado",
                                         "Numero_operacion_transporte_Segas_utilizado","Codigo_DANE","Ubicacion","Informacion_predial_utilizada","Cedula_catastral",
@@ -548,24 +556,15 @@ def variables_reportes(reporte):
                         "cantidad_columnas":total}
                 guardar_diccionario_ruta(datos, n_archivo)
         elif reporte == "reportes_disponibles":
+                with open(ruta_constantes+"reportes_disponibles.txt", 'r') as archivo:
+                        lineas = archivo.readlines()
+                lista_info = [linea.strip().split(",") for linea in lineas]
+                data = {}
+                for elemento in lista_info:
+                        if elemento[0] not in data:
+                                data[elemento[0]] = []
+                        data[elemento[0]].append(elemento[1])
                 desc = reporte
-                data = {"Tarifario":["GRT1",
-                                "GRT3"],
-                        "Comercial":[
-                                "GRC1",
-                                "GRC2",
-                                "GRC3",
-                                "GRTT2SAP",
-                                "GRTT2",
-                                "DS56",
-                                "DS57",
-                                "DS58"],
-                        "Tecnico":["GRCS1",
-                                "GRCS2",
-                                "GRCS3",
-                                "GRCS7",
-                                "GRCS9",
-                                "GRS1"]}
                 datos = {"descripcion":desc,
                         "datos":data}
                 guardar_diccionario_ruta(datos, n_archivo)

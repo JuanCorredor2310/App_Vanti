@@ -533,7 +533,7 @@ def grafico_usuarios(archivo):
         df_filtro = df[(df['Filial'] == grupo_vanti) & (df["Tipo de usuario"] == "Total")].reset_index(drop=True)
         df_filtro["Diferencia Cantidad de usuarios"] = (round(df_filtro["Diferencia Cantidad de usuarios"])).astype(int)
         df_filtro["Cantidad de usuarios"] = (round(df_filtro["Cantidad de usuarios"])).astype(int)
-        df_filtro["Cantidad de usuarios millones"] = (round(df_filtro["Cantidad de usuarios"] / 1000000,2)).astype(str) + ' M'
+        df_filtro["Cantidad de usuarios millones"] = (round(df_filtro["Cantidad de usuarios"] / 1000000,2)).astype(str)
         lista_periodos = list(df_filtro["Fecha"])
         lista_usuarios = list(df_filtro["Cantidad de usuarios"])
         lista_usuarios_millones = list(df_filtro["Cantidad de usuarios millones"])
@@ -551,7 +551,7 @@ def grafico_usuarios(archivo):
         x = range(len(lista_periodos))
         bar_width = 0.75
         lista_colores = [dic_colores["azul_v"], "white"]
-        line3, = ax.plot(lista_periodos, lista_usuarios, marker='o', label='Cantidad de usuarios (millones)', color=dic_colores["amarillo_v"], alpha=0.6, linewidth=8)
+        line3, = ax.plot(lista_periodos, lista_usuarios, marker='o', label='Cantidad de usuarios (M)', color=dic_colores["amarillo_v"], alpha=0.6, linewidth=8)
         ax1 = ax.twinx()
         line2, = ax1.plot(lista_periodos, lista_usuarios_nuevos, marker='o', label='Nuevos usuarios', color="white", alpha=0.3, linewidth=8)
         for i in range(len(lista_periodos)):
@@ -572,9 +572,9 @@ def grafico_usuarios(archivo):
         ax.set_xticks(x)
         ax.tick_params(axis='x')
         ax.set_xticklabels(lista_periodos, fontsize=24)
-        ax.set_ylabel('Cantidad de usuarios (millones)', color=dic_colores["amarillo_v"], fontsize=38)
+        ax.set_ylabel('Cantidad de usuarios (M)', color=dic_colores["amarillo_v"], fontsize=42)
         ax.tick_params(axis='y', labelcolor=dic_colores["amarillo_v"])
-        ax1.set_ylabel('Nuevos usuarios', color="white",fontsize=38)
+        ax1.set_ylabel('Nuevos usuarios', color="white",fontsize=42)
         ax1.tick_params(axis='y', labelcolor=dic_colores["azul_v"])
         ax.set_ylim(v_min1, v_max)
         ax1.set_ylim(v_min_ax1, v_max_ax1)
@@ -975,15 +975,15 @@ def grafica_DS(archivo, dic_metricas):
             spine.set_visible(False)
         ax.set_xticks(x)
         ax.tick_params(axis='x')
-        ax.set_xticklabels(lista_periodos, fontsize=44, color=dic_colores["azul_v"])
-        ax.yaxis.set_major_locator(ticker.AutoLocator())
-        ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: f'{x/1e3:.1f} m'))
+        ax.set_xticklabels(lista_periodos, fontsize=52, color=dic_colores["azul_v"])
+        ax.yaxis.set_major_locator(ticker.MaxNLocator(nbins=5))
+        ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: f'{x/1e3:.1f}'))
         for tick in ax.yaxis.get_major_ticks():
             tick.label1.set_color(dic_colores["azul_v"])
-            tick.label1.set_fontsize(60)
+            tick.label1.set_fontsize(68)
             tick.set_pad(8)
-        ax.set_ylabel('Desviaciones totales', color=dic_colores["azul_v"], fontsize=90)
-        ax.grid(axis='y', color='gray', linestyle='--', linewidth=3)
+        ax.set_ylabel('Desviaciones totales (m)', color=dic_colores["azul_v"], fontsize=90)
+        ax.grid(axis='y', color='gray', linestyle='--', linewidth=5)
         #dic_filiales_cambio = {valor: clave for clave, valor in dic_filiales.items()}
         nombre = archivo_copia.replace('.csv',f'.png')
         plt.savefig(nombre, transparent=True)
@@ -1764,20 +1764,20 @@ def grafica_deuda_subsidios(archivo, archivo_1, dic_metricas):
         lista_colores = [dic_colores["azul_v"], dic_colores["rojo_c"]]
         fig, ax = plt.subplots(figsize=(30,15))
         ax.fill_between(x, df["Deuda"], color=lista_colores[0], label='Deuda MME')
-        ax.fill_between(x, df["Pagado"], color=lista_colores[1], alpha=0.7, label='Girado MME')
-        ax.yaxis.set_major_locator(ticker.AutoLocator())
+        ax.fill_between(x, df["Pagado"], color=lista_colores[1], alpha=0.8, label='Girado MME')
+        ax.yaxis.set_major_locator(ticker.MaxNLocator(nbins=5))
         ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: f'{x/1e9:.1f} m M'))
         for tick in ax.yaxis.get_major_ticks():
             tick.label1.set_color(dic_colores["azul_v"])
-            tick.label1.set_fontsize(18)
+            tick.label1.set_fontsize(28)
             tick.set_pad(8)
         ax.set_xticks(x)
-        ax.set_xticklabels(anios, color=dic_colores["azul_v"], fontsize=18)
+        ax.set_xticklabels(anios, color=dic_colores["azul_v"], fontsize=24)
         for spine in ax.spines.values():
             spine.set_visible(False)
         ax.legend(bbox_to_anchor=(0.5, -0.08), loc='upper center',
                     ncol=2, borderaxespad=0.0, fontsize=18)
-        ax.grid(axis='y', color='gray', linestyle='--', linewidth=0.5)
+        ax.grid(axis='y', color='gray', linestyle='--', linewidth=4, alpha=0.75)
         plt.savefig(archivo_copia, transparent=True)
         plt.close()
         imagen = Image.open(archivo_copia)

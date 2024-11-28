@@ -1,9 +1,12 @@
-Tarifario,GRT1
-Tarifario,GRT3
 Comercial,GRC1
 Comercial,GRC2
 Comercial,GRC3
 Comercial,GRTT2
+Comercial,DS56
+Comercial,DS57
+Comercial,DS58
+Tarifario,GRT1
+Tarifario,GRT3
 Tecnico,GRCS1
 Tecnico,GRCS2
 Tecnico,GRCS3

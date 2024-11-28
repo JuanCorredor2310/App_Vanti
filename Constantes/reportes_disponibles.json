@@ -1,19 +1,18 @@
 {
     "descripcion": "reportes_disponibles",
     "datos": {
-        "Tarifario": [
-            "GRT1",
-            "GRT3"
-        ],
         "Comercial": [
             "GRC1",
             "GRC2",
             "GRC3",
-            "GRTT2SAP",
             "GRTT2",
             "DS56",
             "DS57",
             "DS58"
+        ],
+        "Tarifario": [
+            "GRT1",
+            "GRT3"
         ],
         "Tecnico": [
             "GRCS1",
