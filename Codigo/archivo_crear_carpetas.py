@@ -1,5 +1,7 @@
 import os
 import sys
+import unicodedata
+import re
 import ruta_principal as mod_rp
 global ruta_principal, ruta_codigo, ruta_constantes, ruta_nuevo_sui, ruta_archivos
 ruta_principal = mod_rp.v_ruta_principal()
@@ -86,6 +88,15 @@ def iniciar_funcion_crear_carpetas():
     mod_2.almacenar_json(dic_DANE, ruta_constantes+"mercado_relevante.json")
     mod_2.almacenar_json(dic_mercado_rele_id, ruta_constantes+"mercado_relevante_id.json")
     mod_2.almacenar_json(dic_mercado_rele_DANE, ruta_constantes+"mercado_relevante_DANE.json")
+    dic_mercado_rele_DANE_nombres = {}
+    for llave, valor in dic_DANE.items():
+        texto = formatear_texto(valor["Nombre_municipio"])
+        if "Bogota" in texto:
+            texto = "Bogota DC"
+        dic_mercado_rele_DANE_nombres[llave] = texto
+    mod_2.almacenar_json(dic_mercado_rele_DANE_nombres, ruta_constantes+"mercado_relevante_DANE_nombres.json")
+    dic_mercado_rele_DANE_nombres_inicio = {valor: llave for llave, valor in dic_mercado_rele_DANE_nombres.items()}
+    mod_2.almacenar_json(dic_mercado_rele_DANE_nombres_inicio, ruta_constantes+"mercado_relevante_DANE_nombres_inicio.json")
     df = mod_1.leer_dataframe(ruta_constantes+"mercado_relevante_resumen.csv")
     dic_mercado_rele = {}
     for i in range(len(df)):
@@ -95,3 +106,10 @@ def iniciar_funcion_crear_carpetas():
                                                 "Latitud":str(df["Latitud"][i]),
                                                 "Longitud":str(df["Longitud"][i])}
     mod_2.almacenar_json(dic_mercado_rele, ruta_constantes+"mercado_relevante_resumen.json")
+
+def formatear_texto(texto):
+    texto = unicodedata.normalize('NFKD', texto).encode('ascii', 'ignore').decode('utf-8')
+    regex = r"[^\w\s]"
+    texto = re.sub(regex, "", texto)
+    texto = texto.title()
+    return texto

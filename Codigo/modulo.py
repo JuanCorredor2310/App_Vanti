@@ -17,11 +17,12 @@ import warnings
 import unicodedata
 import re
 from decimal import Decimal
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QHBoxLayout, QSpacerItem, QSizePolicy, QDialog, QPushButton, QScrollArea, QLineEdit
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QHBoxLayout, QSpacerItem, QSizePolicy, QDialog, QPushButton, QScrollArea, QLineEdit, QMessageBox
 from PyQt5.QtGui import QPalette, QColor, QFont, QFontDatabase, QPixmap, QIcon
-from PyQt5.QtCore import Qt, QEventLoop, QSize
+from PyQt5.QtCore import Qt, QEventLoop, QSize, QThread, pyqtSignal
+import random
 import ruta_principal as mod_rp
-global ruta_principal, ruta_codigo, ruta_constantes, ruta_nuevo_sui, ruta_archivos
+global ruta_principal, ruta_codigo, ruta_constantes, ruta_nuevo_sui, ruta_archivos, ruta_guardar_archivos
 ruta_principal = mod_rp.v_ruta_principal()
 ruta_constantes = mod_rp.v_constantes()
 ruta_nuevo_sui = mod_rp.v_nuevo_sui()
@@ -30,6 +31,7 @@ ruta_archivos = mod_rp.v_archivos()
 sys.path.append(os.path.abspath(ruta_codigo))
 import archivo_csv_a_excel as mod_5
 import archivo_df_a_doc as mod_8
+ruta_guardar_archivos = mod_rp.v_guardar_archivos().replace('\\', '\\\\')
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Archivos json
@@ -47,9 +49,10 @@ def leer_archivos_json(archivo):
 # *                                             Constantes globales
 # * -------------------------------------------------------------------------------------------------------
 
-global lista_meses, lista_empresas, lista_anios, dic_reportes, lista_reportes_generales, reportes_generados, lista_reportes_totales,chunksize,llaves_dic_reporte, dic_carpetas, dic_filiales,antidad_datos_excel, dic_nit, cantidad_datos_estilo_excel,grupo_vanti,mercado_relevante,mercado_relevante_resumen,mercado_relevante_id,tabla_3,tabla_11,fecha_actual,lista_trimestres, dic_meses_abre,lista_clasi_reportes,categoria_matriz_requerimientos,lista_archivo_desviaciones,tabla_2_DS,tabla_3_DS,tabla_4_DS,tabla_5_DS,tabla_6_DS,tabla_8_DS,indicador_SUI,tabla_30,tabla_8_DS_categoria,tabla_71,tabla_16, tabla_3_data
+global lista_meses, lista_empresas, lista_anios, dic_reportes, lista_reportes_generales, reportes_generados, lista_reportes_totales,chunksize,llaves_dic_reporte, dic_carpetas, dic_filiales,antidad_datos_excel, dic_nit, cantidad_datos_estilo_excel,grupo_vanti,mercado_relevante,mercado_relevante_resumen,mercado_relevante_id,tabla_3,tabla_11,fecha_actual,lista_trimestres, dic_meses_abre,lista_clasi_reportes,categoria_matriz_requerimientos,lista_archivo_desviaciones,tabla_2_DS,tabla_3_DS,tabla_4_DS,tabla_5_DS,tabla_6_DS,tabla_8_DS,indicador_SUI,tabla_30,tabla_8_DS_categoria,tabla_71,tabla_16, tabla_3_data,lista_carpetas_extra
 grupo_vanti = "Grupo Vanti"
 dic_carpetas = leer_archivos_json(ruta_constantes+"carpetas.json")
+lista_carpetas_extra = leer_archivos_json(ruta_constantes+"carpetas_extra.json")
 lista_anios = list(leer_archivos_json(ruta_constantes+"anios.json")["datos"].values())
 lista_meses = list(leer_archivos_json(ruta_constantes+"tabla_18.json")["datos"].values())
 dic_meses_abre = leer_archivos_json(ruta_constantes+"meses_abre.json")["datos"]
@@ -289,11 +292,10 @@ def mostrar_tiempo(t_f, t_i):
         minutos = round(tiempo//60)
         segundos = round(tiempo%60,4)
         if minutos == 1:
-            print(f"\nTiempo de procesamiento: {minutos} minuto y {segundos} segundos")
-        else:
-            print(f"\nTiempo de procesamiento: {minutos} minutos y {segundos} segundos")
+            texto = f"t: {minutos} min, {segundos} seg"
     else:
-        print(f"\nTiempo de procesamiento: {tiempo:.4f} segundos")
+        texto = f"t: {round(tiempo, 4) } seg"
+    return texto
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Edición de textos
@@ -5323,3 +5325,156 @@ def mostrar_titulo(texto, principal, tipo):
         mostrar_texto("", "linea")
         if principal:
             mostrar_texto("", "salto")
+
+# * -------------------------------------------------------------------------------------------------------
+# *                                            Aplicativo
+# * -------------------------------------------------------------------------------------------------------
+class Envio_mensajes(QThread):
+    message_sent = pyqtSignal(str, str)
+    finished = pyqtSignal()
+    def __init__(self, estado):
+        super().__init__()
+        self.ruta_guardar_archivos = ruta_guardar_archivos
+        self.estado = estado
+    def run(self):
+        try:
+            self.message_sent.emit("Inicio de procesamiento de archivos\n", "green")
+            t_i = time.time()
+            if self.estado == "almacenar_archivos":
+                almacenar_archivos_2(self.ruta_guardar_archivos, self)
+            else:
+                almacenar_archivos_2(self.ruta_guardar_archivos, self)
+            self.message_sent.emit("\nFin de procesamiento de archivos\n", "green")
+            t_f = time.time()
+            tiempo = mostrar_tiempo(t_f, t_i)
+            self.message_sent.emit(f"{tiempo}\n", "white")
+            self.finished.emit()
+        except BaseException:
+            pass
+
+def almacenar_archivos_2(ruta_guardar_archivos, thread):
+    archivos_aceptados_constantes(busqueda_archivos_tipo(ruta_guardar_archivos))
+    lista_archivos = busqueda_archivos_tipo(ruta_guardar_archivos)
+    lista_archivos = archivos_tipo_csv_txt(lista_archivos)
+    lista_carpetas = buscar_carpetas(ruta_nuevo_sui)
+    ubi = None
+    for i in lista_carpetas:
+        if dic_carpetas["carpeta_2"][0] in i:
+            ubi = i
+    lista_fallidos = []
+    lista_fallidos = conversion_archivos_CSV(lista_archivos, lista_fallidos=lista_fallidos)
+    lista_fallidos = conversion_archivos_lista(lista_archivos, "TXT", "txt", informar=True, lista_fallidos=lista_fallidos)
+    lista_fallidos = conversion_archivos_lista(lista_archivos, "txt", "csv", informar=True, lista_fallidos=lista_fallidos)
+    lista_fallidos = evaluar_archivos_prueba(lista_archivos, lista_fallidos=lista_fallidos)
+    lista_fallidos = list(set(lista_fallidos))
+    lista_archivos = busqueda_archivos_tipo(ruta_guardar_archivos, lista_fallidos=lista_fallidos)
+    lista_archivos = retirar_archivos_fallidos(lista_archivos, lista_fallidos)
+    lista_archivos = cantidad_minima_info_archivo(lista_archivos)
+    for archivo in lista_archivos:
+        bool_DS = False
+        bool_GRTT2SAP = False
+        try:
+            nombre_archivo = archivo.split("\\")[-1].replace(" ", "_")
+            for i in range(9):
+                j = 10 - i
+                nombre_archivo = nombre_archivo.replace("_" * j, "_")
+            nombre_archivo_lista = nombre_archivo.split(".")
+            nombre_archivo_lista[0] = nombre_archivo_lista[0].upper()
+            lista_nombre_aux = nombre_archivo_lista[0].split("_")
+            nombre_archivo_lista[0] = formato_ext_archivo(lista_nombre_aux, texto=True)
+            nombre_archivo = lista_a_texto(nombre_archivo_lista, ".")
+            ext_archivo = nombre_archivo.split("_")
+            ext_archivo[-1] = ext_archivo[-1].split(".")[0]
+            ext_archivo = formato_ext_archivo(ext_archivo)
+            tipo = ext_archivo[0]
+            if tipo == "GRTT2SAP":
+                tipo = "GRTT2"
+                bool_GRTT2SAP = True
+            elif tipo in lista_archivo_desviaciones:
+                tipo = "DS"
+                ext_archivo[4] = ext_archivo[4].upper()
+                bool_DS = True
+            categoria = encontrar_categoria_reporte(tipo)
+            ext_archivo[3] = ext_archivo[3].lower().capitalize()
+            ext_archivo.append(categoria)
+            if None not in ext_archivo:
+                if comprobar_info_nombre_archivo(ext_archivo):
+                    ubi_1 = encontrar_nueva_ubi_archivo(ubi, ext_archivo)
+                    nueva_ubi = ubi_1 + "\\" + nombre_archivo
+                    if bool_GRTT2SAP:
+                        lista_nueva_ubi = nueva_ubi.split("\\")
+                        valor = lista_nueva_ubi[-1]
+                        lista_nueva_ubi[-1] = "00. GRTT2"
+                        lista_nueva_ubi.append(valor)
+                        nueva_ubi = lista_a_texto(lista_nueva_ubi, "\\")
+                    if bool_DS:
+                        lista_nueva_ubi = nueva_ubi.split("\\")
+                        valor = lista_nueva_ubi[-1]
+                        lista_nueva_ubi[-1] = "11. DS"
+                        lista_nueva_ubi.append(valor)
+                        nueva_ubi = lista_a_texto(lista_nueva_ubi, "\\")
+                    shutil.move(archivo, nueva_ubi)
+                    if thread:
+                        thread.message_sent.emit(f"Archivo creado: {acortar_nombre(nueva_ubi)}", "white")
+        except FileNotFoundError:
+            pass
+        except PermissionError:
+            pass
+        except BaseException:
+            pass
+
+class Crear_ventana_texto(QDialog):
+    def __init__(self,texto, estado, parent=None):
+        super().__init__(parent)
+        self.result = None
+        self.initUI(texto, estado)
+    def initUI(self, texto, estado):
+        self.setGeometry(50, 50, 1700, 1030)
+        self.setStyleSheet("""QWidget { background-color: #030918; border: 5px solid #030918; }""")
+        self.setWindowTitle(texto)
+        main_layout = QVBoxLayout()
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setStyleSheet("""QScrollArea { border: 5px solid white; }
+            QScrollBar:vertical {background-color: #030918;width: 25px;border-radius: 6px;}
+            QScrollBar::handle:vertical {background-color: white;border-radius: 12px;}""")
+        self.content_widget = QWidget()
+        self.content_layout = QVBoxLayout(self.content_widget)
+        self.scroll_area.setWidget(self.content_widget)
+        main_layout.addWidget(self.scroll_area)
+        self.setLayout(main_layout)
+        self.start_generation(estado)
+    def start_generation(self, estado):
+        self.thread = Envio_mensajes(estado)
+        self.thread.message_sent.connect(self.add_message)
+        self.thread.finished.connect(self.show_buttons)
+        self.thread.start()
+    def add_message(self, message, color):
+        label = QLabel(message)
+        label.setStyleSheet(f"color: {color};font-size: 22px;")
+        label.setWordWrap(True)
+        self.content_layout.addWidget(label)
+        self.scroll_area.verticalScrollBar().setValue(self.scroll_area.verticalScrollBar().maximum())
+    def show_buttons(self):
+        button_widget = QWidget()
+        button_layout = QHBoxLayout(button_widget)
+        #cancel_button = QPushButton("Cancel")
+        #cancel_button.setStyleSheet("""QPushButton {color: #030918;padding: 2px;
+        #        font-size: 15px;border: 0.5px solid white;border-radius: 5px;background-color: #ffffff;}""")
+        #cancel_button.clicked.connect(lambda: self.close_dialog(False))
+        #button_layout.addWidget(cancel_button)
+        continue_button = QPushButton("Continuar")
+        continue_button.setStyleSheet("""QPushButton {color: #030918;padding: 2px;
+                font-size: 22px;border: 0.5px solid white;border-radius: 5px;background-color: #ffffff;}""")
+        continue_button.clicked.connect(lambda: self.close_dialog(True))
+        button_layout.addWidget(continue_button)
+        self.content_layout.addWidget(button_widget)
+        self.scroll_area.verticalScrollBar().setValue(self.scroll_area.verticalScrollBar().maximum())
+    def close_dialog(self, choice):
+        self.result = choice
+        self.accept()
+
+def run_app(texto, estado):
+    dialog = Crear_ventana_texto(texto, estado)
+    result = dialog.exec_()
+    return dialog.result

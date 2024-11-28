@@ -7,7 +7,7 @@ import json
 import time
 from datetime import datetime, timedelta
 
-global ruta_principal, ruta_codigo, ruta_constantes, ruta_nuevo_sui, ruta_archivos, ruta_fuentes, ruta_imagenes, fuente_texto, azul_vanti, dic_colores, nombre_aplicativo, lista_anios, dic_meses, lista_meses, lista_trimestres,reportes_disponibles,fecha_actual
+global ruta_principal, ruta_codigo, ruta_constantes, rutanuevo_sui, ruta_archivos, ruta_fuentes, ruta_imagenes, fuente_texto, azul_vanti, dic_colores, nombre_aplicativo, lista_anios, dic_meses, lista_meses, lista_trimestres,reportes_disponibles,fecha_actual,lista_carpetas_extra,dic_DANE_nombres,dic_DANE_nombres_inicio
 global ruta_fuente, grupo_vanti,ruta_fuente_negrilla
 ruta_principal = mod_rp.v_ruta_principal()
 ruta_constantes = mod_rp.v_constantes()
@@ -25,17 +25,21 @@ def leer_archivos_json(archivo):
             data = json.load(file)
     return data
 dic_colores = leer_archivos_json(ruta_constantes+"colores.json")["datos"]
+lista_carpetas_extra = leer_archivos_json(ruta_constantes+"carpetas_extra.json")["carpeta_2"]
 lista_anios = list(leer_archivos_json(ruta_constantes+"anios.json")["datos"].values())
 dic_meses = leer_archivos_json(ruta_constantes+"tabla_18.json")["datos"]
 lista_meses = list(dic_meses.values())
 lista_trimestres = list(leer_archivos_json(ruta_constantes+"trimestres.json")["datos"].values())
 reportes_disponibles = leer_archivos_json(ruta_constantes+"reportes_disponibles.json")["datos"]
 fecha_actual = datetime.now()
+dic_DANE_nombres = leer_archivos_json(ruta_constantes+"mercado_relevante_DANE_nombres.json")
+dic_DANE_nombres_inicio = leer_archivos_json(ruta_constantes+"mercado_relevante_DANE_nombres_inicio.json")
 
 def crear_label(texto, central_widget, font="normal", color="white", font_size=30, background_color="#030918", line_edit=False):
     if line_edit:
         label = QLineEdit("", central_widget)
-        label.setPlaceholderText("Nombre: ")
+        label.setPlaceholderText(texto)
+        label.setFixedWidth(800)
     else:
         label = QLabel(texto, central_widget)
     label.setStyleSheet(f"color: {color}; background-color: {background_color};")
@@ -132,31 +136,17 @@ def pantalla_inicio(app, window, central_widget, dimensiones):
     button.move(x,800)
     button.setParent(central_widget)
     mostrar_label(button)
-
-    """v_line_edit = crear_label("Nombre: ", central_widget, font_size=30, line_edit=True)
-    v_line_edit.move(700,700)
-    v_line_edit.setParent(central_widget)
-    mostrar_label(v_line_edit)"""
     event_loop = QEventLoop()
-    """def guardar_nombre():
-        nombre = v_line_edit.text()
-        print("Nombre ingresado:", nombre)"""
-
     def on_button_clicked():
         event_loop.quit()
         esconder_label(app_vanti)
         esconder_label(titulo_1)
         esconder_label(titulo_2)
         esconder_label(button)
-
-        #esconder_label(v_line_edit)
-
-        #estado, info = menu_inicial(app, window, central_widget, dimensiones)
     button.clicked.connect(on_button_clicked)
-    #v_line_edit.returnPressed.connect(guardar_nombre)
     event_loop.exec_()
 
-def menu_inicial(app, window, central_widget, dimensiones):
+def menu_inicial(app, window, central_widget, dimensiones, estado=None, info=None):
     screen_width = dimensiones[0]
     titulo = "INICIO"
     label_1 = crear_label(titulo, central_widget, font="bold", font_size=80)
@@ -221,12 +211,9 @@ def menu_inicial(app, window, central_widget, dimensiones):
                 "Reportes técnicos":"Actividades con reportes técnicos como indicadores técnicos (IPLI,IO,IRST-EG) o\nreporte de suspensiones",
                 "Cumplimientos de reportes regulatorios":"Indicadores de cumplimientos de reportes regulatorios como porcentaje de atención a solicitudes,\nreportes trimestrales, matriz de requerimientos, gastos AOM, pagos contribuciones MME o\ntarifas distribuidoras de GN en Colombia",
                 "Dashboard":"Creación y almacenamiento slides Dashboard "}
-    estado = None
-    info = None
     event_loop = QEventLoop()
     def on_button_clicked(evento):
-        nonlocal estado
-        nonlocal info
+        nonlocal estado, info
         event_loop.quit()
         esconder_label(label_1)
         esconder_label(image_button)
@@ -350,17 +337,13 @@ def menu_config_inicial(app, window, central_widget, dimensiones):
     event_loop.exec_()
     return estado, info
 
-def menu_edicion_archivos(app, window, central_widget, dimensiones):
+def menu_edicion_archivos(app, window, central_widget, dimensiones, estado=None, info={}):
     screen_width = dimensiones[0]
-    estado = None
-    info = None
-
     titulo = "Edición de archivos"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=75)
     x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
     titulo_espacios.move(x, 40)
     mostrar_label(titulo_espacios)
-
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"flecha.png")
     icon = QIcon(pixmap)
@@ -368,7 +351,6 @@ def menu_edicion_archivos(app, window, central_widget, dimensiones):
     image_button.setIconSize(pixmap.size())
     image_button.move(20,20)
     mostrar_label(image_button)
-
     image_button_1 = QPushButton("", central_widget)
     pixmap_1 = QPixmap(ruta_imagenes+"lupa.png")
     icon_1 = QIcon(pixmap_1)
@@ -434,7 +416,7 @@ def menu_edicion_archivos(app, window, central_widget, dimensiones):
         elif texto == "almacenar_archivos":
             estado = texto
         else:
-            print(texto)
+            #TODO: Llamar selección para cada carpeta
             estado, info = menu_inicial(app, window, central_widget, dimensiones)
     image_button.clicked.connect(lambda:on_button_clicked("volver"))
     boton_1.clicked.connect(lambda:on_button_clicked("convertir_archivos"))
@@ -447,11 +429,8 @@ def menu_edicion_archivos(app, window, central_widget, dimensiones):
     event_loop.exec_()
     return estado, info
 
-def menu_reportes_comerciales(app, window, central_widget, dimensiones):
+def menu_reportes_comerciales(app, window, central_widget, dimensiones, estado=None, info={}):
     screen_width = dimensiones[0]
-    estado = None
-    info = None
-
     titulo = "Reportes comerciales"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=75)
     x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
@@ -520,8 +499,7 @@ def menu_reportes_comerciales(app, window, central_widget, dimensiones):
 
     event_loop = QEventLoop()
     def on_button_clicked(texto):
-        nonlocal estado
-        nonlocal info
+        nonlocal estado, info
         estado = texto
         event_loop.quit()
         esconder_label(titulo_espacios)
@@ -537,7 +515,7 @@ def menu_reportes_comerciales(app, window, central_widget, dimensiones):
         if texto == "volver":
             estado,info = menu_inicial(app, window, central_widget, dimensiones)
         elif texto == "reporte_comercial":
-            estado,info = menu_reporte_comercial(app, window, central_widget, dimensiones)
+            estado,info = menu_reporte_comercial(app, window, central_widget, dimensiones, estado, info)
         else:
             estado,info = menu_inicial(app, window, central_widget, dimensiones)
     image_button.clicked.connect(lambda:on_button_clicked("volver"))
@@ -552,10 +530,8 @@ def menu_reportes_comerciales(app, window, central_widget, dimensiones):
     event_loop.exec_()
     return estado,info
 
-def menu_reporte_comercial(app, window, central_widget, dimensiones):
+def menu_reporte_comercial(app, window, central_widget, dimensiones, estado=None, info={}):
     screen_width = dimensiones[0]
-    estado = None
-    info = {}
 
     titulo = "Reportes comerciales\npor sector de consumo"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=75)
@@ -613,7 +589,7 @@ def menu_reporte_comercial(app, window, central_widget, dimensiones):
             estado,info = menu_reportes_comerciales(app, window, central_widget, dimensiones)
         else:
             estado = texto
-            estado,info = menu_seleccion(app, window, central_widget, dimensiones, "menu_reporte_comercial", estado=estado, info=info)
+            estado,info = menu_seleccion(app, window, central_widget, dimensiones, "menu_reporte_comercial", estado, info)
     image_button.clicked.connect(lambda:on_button_clicked("volver"))
     boton_1.clicked.connect(lambda:on_button_clicked("reporte_comercial_sector_consumo"))
     boton_2.clicked.connect(lambda:on_button_clicked("reporte_comercial_sector_consumo_subsidio"))
@@ -793,6 +769,15 @@ def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=Non
                 dic_botones_filiales[key][2] = valor
                 boton_for.setParent(central_widget)
                 mostrar_label(boton_for)
+        if dic_botones_filiales["VANTI"][0].text() == "X" and dic_botones_filiales["GNCR"][0].text() and dic_botones_filiales["GNCB"][0].text() and dic_botones_filiales["GOR"][0].text():
+            dic_botones_filiales["Todas"][2] = True
+            dic_botones_filiales["Todas"][0].setText("X")
+            mostrar_label(dic_botones_filiales["Todas"][0])
+        if dic_botones_filiales["Todas"][0].text() == "X":
+            for llave in dic_botones_filiales:
+                dic_botones_filiales[llave][2] = True
+                dic_botones_filiales[llave][0].setText("X")
+                mostrar_label(dic_botones_filiales[llave][0])
 
     def cambiar_botones_x(boton):
         nonlocal anual
@@ -802,6 +787,24 @@ def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=Non
         elif boton.text() == "":
             boton.setText("X")
             anual = True
+        if anual:
+            llave_activa = boton_fecha_selected()
+            print(llave_activa)
+            if llave_activa:
+                cambio = False
+                contador = 0
+                for llave, valor in dic_fechas.items():
+                    valor[2].setText("")
+                    valor[1] = False
+                for i, (llave, valor) in enumerate(reversed(dic_fechas.items())):
+                    if llave == llave_activa:
+                        cambio = True
+                    if cambio:
+                        valor[2].setText("X")
+                        valor[1] = True
+                        contador += 1
+                    if contador > 12:
+                        cambio = False
 
     def cambiar_botones_fecha(llave):
         nonlocal dic_fechas
@@ -815,13 +818,22 @@ def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=Non
         mostrar_label(boton)
         comprobar_anual(llave)
 
+    def boton_fecha_selected():
+        nonlocal dic_fechas
+        for llave, valor in reversed(dic_fechas.items()):
+            if valor[1]:
+                return llave
+        return None
+
     def comprobar_anual(llave_sel):
         nonlocal anual
         nonlocal dic_fechas
         if anual:
+            #llave_activa = boton_fecha_selected()
+            #if llave_activa:
+
             cambio = False
             contador = 0
-            largo = len(dic_fechas)
             for llave, valor in dic_fechas.items():
                 valor[2].setText("")
                 valor[1] = False
@@ -834,6 +846,7 @@ def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=Non
                     contador += 1
                 if contador > 12:
                     cambio = False
+            
 
     def limpiar_botones(boton):
         nonlocal dic_fechas, dic_botones_filiales, anual, boton_2
@@ -847,8 +860,7 @@ def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=Non
             value[2] = False
 
     def on_button_clicked(texto):
-        nonlocal estado
-        nonlocal info
+        nonlocal estado, info
         if (texto == "aceptar" and comprobar_aceptar()) or (texto == "volver"):
             event_loop.quit()
             esconder_label(titulo_espacios)
@@ -877,7 +889,7 @@ def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=Non
             elif texto == "aceptar":
                 info["Fecha"] = dic_fechas
                 info["Filial"] = dic_botones_filiales
-                estado,info = seleccionar_reporte(app, window, central_widget, dimensiones, estado=estado, info=info)
+                estado,info = seleccionar_reporte(app, window, central_widget, dimensiones, estado, info)
 
     f1.clicked.connect(lambda: cambiar_botones("VANTI"))
     f2.clicked.connect(lambda: cambiar_botones("GNCB"))
@@ -1009,6 +1021,7 @@ def seleccionar_reporte(app, window, central_widget, dimensiones, estado=None, i
                 estado, info = menu_seleccion(app, window, central_widget, dimensiones)
             elif texto == "aceptar":
                 info["Reporte"] = dic_reportes
+                estado, info = seleccionar_carpetas(app, window, central_widget, dimensiones, estado, info)
 
     image_button.clicked.connect(lambda:on_button_clicked("volver"))
     boton_1.clicked.connect(lambda:on_button_clicked("aceptar"))
@@ -1016,6 +1029,107 @@ def seleccionar_reporte(app, window, central_widget, dimensiones, estado=None, i
     for llave, dic_llave in dic_reportes.items():
         for reporte, lista_reporte in dic_llave.items():
             lista_reporte[1].clicked.connect(lambda _, l=llave, v=reporte: cambiar_botones_reporte(l, v))
+    event_loop.exec_()
+    return estado,info
+
+def seleccionar_carpetas(app, window, central_widget, dimensiones, estado=None, info={}):
+    screen_width = dimensiones[0]
+
+    titulo = "Selección de carpetas"
+    titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=60)
+    x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
+    titulo_espacios.move(x, 10)
+    titulo_espacios.setParent(central_widget)
+    mostrar_label(titulo_espacios)
+
+    #reportes_disponibles
+    dic_carpetas = {}
+    lista_x_reportes = [50, 900]
+    c_x = 0
+    c_y = 300
+    c_c = 0
+    for valor in lista_carpetas_extra:
+        if valor not in dic_carpetas:
+            dic_carpetas[valor] = None
+        boton_for = crear_boton("", central_widget, font_size=48, padding=10, radius=10)
+        label_for = crear_label(valor, central_widget, font_size=30)
+        boton_for.setFixedSize(80,80)
+        boton_for.setParent(central_widget)
+        label_for.setParent(central_widget)
+        boton_for.move(lista_x_reportes[c_x] + 80, c_y)
+        label_for.move(lista_x_reportes[c_x] + 180, c_y - 25)
+        dic_carpetas[valor] = [False, boton_for, label_for]
+        mostrar_label(label_for)
+        mostrar_label(boton_for)
+        c_c += 1
+        c_y += 120
+        if c_c > 5:
+            c_x += 1
+            c_c = 0
+            c_y = 300
+    boton_1 = crear_boton("Aceptar", central_widget, font_size=25)
+    x = round((((screen_width*0.5)-boton_1.sizeHint().width())*0.5)+(screen_width*0.53))
+    boton_1.move(x,1100)
+    boton_1.setParent(central_widget)
+    mostrar_label(boton_1)
+
+    image_button = QPushButton("", central_widget)
+    pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    icon = QIcon(pixmap)
+    image_button.setIcon(icon)
+    image_button.setIconSize(pixmap.size())
+    image_button.move(20,20)
+    mostrar_label(image_button)
+
+    image_button_1 = QPushButton("", central_widget)
+    pixmap_1 = QPixmap(ruta_imagenes+"lupa.png")
+    icon_1 = QIcon(pixmap_1)
+    image_button_1.setIcon(icon_1)
+    image_button_1.setIconSize(QSize(80, 80))  # Ajusta el tamaño del ícono
+    image_button_1.setFixedSize(150, 150)
+    x = round((screen_width-(image_button_1.sizeHint().width()))*0.95)
+    image_button_1.move(x,5)
+    mostrar_label(image_button_1)
+    dic_texto = {"Carpeta 1":"info","Carpeta 2":"info","Carpeta 3":"info","Carpeta 4":"info","Carpeta 5":"info"}
+    event_loop = QEventLoop()
+    def cambiar_botones_reporte(valor):
+        nonlocal dic_carpetas
+        boton = dic_carpetas[valor][1]
+        if boton.text() == "X":
+            boton.setText("")
+            dic_carpetas[valor][0] = False
+        elif boton.text() == "":
+            boton.setText("X")
+            dic_carpetas[valor][0] = True
+        mostrar_label(boton)
+    def comprobar_dic(dic, pos):
+        for llave, valor in dic.items():
+            if valor[pos]:
+                    return True
+        return False
+    def comprobar_aceptar():
+        return comprobar_dic(dic_carpetas, 0)
+    def on_button_clicked(texto):
+        nonlocal estado, info
+        if (texto == "aceptar" and comprobar_aceptar()) or (texto == "volver"):
+            event_loop.quit()
+            esconder_label(titulo_espacios)
+            esconder_label(image_button)
+            esconder_label(boton_1)
+            esconder_label(image_button_1)
+            for llave, valor in dic_carpetas.items():
+                esconder_label(valor[1])
+                esconder_label(valor[2])
+            if texto == "volver":
+                estado, info = seleccionar_reporte(app, window, central_widget, dimensiones, estado, info)
+            elif texto == "aceptar":
+                info["Carpetas"] = dic_carpetas
+                estado, info = opciones_adicionales(app, window, central_widget, dimensiones, estado=estado, info=info)
+    image_button.clicked.connect(lambda:on_button_clicked("volver"))
+    boton_1.clicked.connect(lambda:on_button_clicked("aceptar"))
+    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto))
+    for llave, valor in dic_carpetas.items():
+        valor[1].clicked.connect(lambda _, l=llave: cambiar_botones_reporte(l))
     event_loop.exec_()
     return estado,info
 
@@ -1072,28 +1186,179 @@ def confirmacion_seleccion(app, window, central_widget, dimensiones, texto, op, 
     event_loop.exec_()
     return estado, info
 
-def opciones_adicionales(app, window, central_widget, dimensiones, opciones=[]):
+def lista_codigo_DANE(texto):
+    lista_texto = texto.split(",")
+    valores_aceptados = []
+    for elemento in lista_texto:
+        elemento = elemento.strip()
+        num = None
+        if elemento in dic_DANE_nombres:
+            num = int(elemento)
+        elif elemento in dic_DANE_nombres_inicio:
+            num = int(dic_DANE_nombres_inicio[elemento])
+        if num:
+            if num not in valores_aceptados:
+                valores_aceptados.append(num)
+    lista_texto_dane = [str(i) for i in valores_aceptados]
+    return valores_aceptados, ", ".join(lista_texto_dane)
+
+def opciones_adicionales(app, window, central_widget, dimensiones, opciones=[], estado=None, info=None, estado_anterior=None):
+    opciones = {"regenerar":True, "codigo_DANE":True, "sumatoria":True, "valor_facturado":True, "facturas":True}
     dic_adicionales = {"codigo_DANE":False, "valor_facturado":False, "cantidad_filas":False, "inventario":False, "regenerar":False,
                         "reportes_mensuales":False, "texto_regenerar":"_form_estandar, _resumen",
                     "usuarios_activos":False, "sumatoria":False, "reporte_consumo_anual":False, "facturas":False}
+    dic_adicionales_texto = {"codigo_DANE":"Código DANE", "valor_facturado":"Valor total facturado", "cantidad_filas":"Cantidad de filas", "inventario":"Inventario de suscriptores", "regenerar":"Regenerar archivos necesarios",
+                        "reportes_mensuales":"Reportes mensuales", "texto_regenerar":"_form_estandar, _resumen",
+                    "usuarios_activos":"Info. usuarios activos", "sumatoria":f"Sumatoria {grupo_vanti}","facturas":"Cantidad de facturas emitidas"}
     if not len(opciones):
         return dic_adicionales
     screen_width = dimensiones[0]
 
+    #ventana_secundaria
+    lista_cod_DANE = [f"{l}, {v}" for l,v in dic_DANE_nombres.items()]
+    dic_texto_2 = {f"Códigos DANE {grupo_vanti}": lista_cod_DANE}
     titulo = "Opciones adicionales"
-    titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=60)
+    titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=50)
     x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
     titulo_espacios.move(x, 10)
     titulo_espacios.setParent(central_widget)
     mostrar_label(titulo_espacios)
 
-    #regenerar=True, codigo_DANE=True, sumatoria=True, valor_facturado=True, facturas=True
-    dic_adicionales_preguntar = {}
-    for opcion in opciones:
-        dic_adicionales_preguntar[opcion] = True
-    return {}
+    label_codigo_DANE = crear_label("", central_widget, font="bold", font_size=12)
+    label_codigo_DANE.move(50, 980)
+    label_codigo_DANE.setParent(central_widget)
+    esconder_label(label_codigo_DANE)
 
-def ventana_secundaria(central_widget, titulo, dic_texto):
+    cambio = 120
+    if "codigo_DANE" in opciones:
+        if opciones["codigo_DANE"]:
+            v_line_edit = crear_label("Código DANE: ", central_widget, font_size=15, line_edit=True)
+            x = round((screen_width-v_line_edit.sizeHint().width())*0.5)
+            v_line_edit.move(x,1000)
+            v_line_edit.setParent(central_widget)
+            mostrar_label(v_line_edit)
+            codigo_DANE = True
+            cambio = 150
+    label_check = QPushButton("", central_widget)
+    pixmap_check = QPixmap(ruta_imagenes+"check.png")
+    pixmap_check = pixmap_check.scaled(320,80, aspectRatioMode=1)
+    icon_check = QIcon(pixmap_check)
+    label_check.setIcon(icon_check)
+    label_check.setIconSize(pixmap_check.size())
+    label_check.move(1660,980)
+    esconder_label(label_check)
+    lista_x_pos = [50, 780, 1400]
+    c_x = 0
+    c_y = 200
+    c_c = 0
+    dic_opciones_botones = {}
+    for llave, valor in opciones.items():
+        if llave != "codigo_DANE":
+            if llave not in dic_opciones_botones:
+                dic_opciones_botones[llave] = None
+            boton_for = crear_boton("", central_widget, font_size=48, padding=10, radius=10)
+            label_for = crear_label(dic_adicionales_texto[llave], central_widget, font_size=20)
+            boton_for.setFixedSize(80,80)
+            boton_for.setParent(central_widget)
+            label_for.setParent(central_widget)
+            boton_for.move(lista_x_pos[c_x] + 80, c_y)
+            label_for.move(lista_x_pos[c_x] + 150, c_y - 25)
+            dic_opciones_botones[llave] = [False, boton_for, label_for]
+            mostrar_label(label_for)
+            mostrar_label(boton_for)
+            c_c += 1
+            c_y += cambio
+            if c_c > 5:
+                c_x += 1
+                c_c = 0
+                c_y = 200
+    boton_1 = crear_boton("Aceptar", central_widget, font_size=25)
+    x = round((((screen_width*0.5)-boton_1.sizeHint().width())*0.5)+(screen_width*0.53))
+    boton_1.move(x,1100)
+    boton_1.setParent(central_widget)
+    mostrar_label(boton_1)
+
+    image_button = QPushButton("", central_widget)
+    pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    icon = QIcon(pixmap)
+    image_button.setIcon(icon)
+    image_button.setIconSize(pixmap.size())
+    image_button.move(20,20)
+    mostrar_label(image_button)
+
+    image_button_1 = QPushButton("", central_widget)
+    pixmap_1 = QPixmap(ruta_imagenes+"lupa.png")
+    icon_1 = QIcon(pixmap_1)
+    image_button_1.setIcon(icon_1)
+    image_button_1.setIconSize(QSize(80, 80))
+    image_button_1.setFixedSize(150, 150)
+    x = round((screen_width-(image_button_1.sizeHint().width()))*0.95)
+    image_button_1.move(x,5)
+    image_button_2 = QPushButton("", central_widget)
+    pixmap_2 = QPixmap(ruta_imagenes+"lupa.png")
+    icon_2 = QIcon(pixmap_2)
+    image_button_2.setIcon(icon_2)
+    image_button_2.setIconSize(QSize(45, 45))
+    image_button_2.setFixedSize(45, 45)
+    image_button_2.move(740,1000)
+    mostrar_label(image_button_1)
+    mostrar_label(image_button_2)
+    dic_texto = {"Opción 1":"info","Opción 2":"info","Opción 3":"info","Opción 4":"info","Opción 5":"info"}
+
+    event_loop = QEventLoop()
+    def cambiar_botones_reporte(llave):
+        nonlocal dic_opciones_botones
+        boton = dic_opciones_botones[llave][1]
+        if boton.text() == "X":
+            boton.setText("")
+            dic_opciones_botones[llave][0] = False
+        elif boton.text() == "":
+            boton.setText("X")
+            dic_opciones_botones[llave][0] = True
+        mostrar_label(boton)
+    def guardar_nombre(label_codigo_DANE):
+        nonlocal dic_opciones_botones
+        codigo = v_line_edit.text()
+        if len(codigo):
+            dane_num, dane_text = lista_codigo_DANE(codigo)
+            dic_opciones_botones["codigo_DANE"] = dane_num
+            QApplication.processEvents()
+            label_codigo_DANE.setText(dane_text)
+            mostrar_label(label_codigo_DANE)
+            QApplication.processEvents()
+            mostrar_label(label_check)
+    def on_button_clicked(texto):
+        nonlocal estado, info
+        if texto == "aceptar" or texto == "volver":
+            event_loop.quit()
+            esconder_label(titulo_espacios)
+            esconder_label(v_line_edit)
+            esconder_label(label_check)
+            esconder_label(image_button)
+            esconder_label(boton_1)
+            esconder_label(label_codigo_DANE)
+            esconder_label(image_button_1)
+            esconder_label(image_button_2)
+            for llave, valor in dic_opciones_botones.items():
+                if llave != "codigo_DANE":
+                    esconder_label(valor[1])
+                    esconder_label(valor[2])
+            if texto == "volver":
+                estado, info = seleccionar_carpetas(app, window, central_widget, dimensiones, estado, info)
+            elif texto == "aceptar":
+                info["Opciones_adicionales"] = dic_opciones_botones
+    image_button.clicked.connect(lambda:on_button_clicked("volver"))
+    boton_1.clicked.connect(lambda:on_button_clicked("aceptar"))
+    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto))
+    image_button_2.clicked.connect(lambda: ventana_secundaria(central_widget,"Códigos DANE disponibles",dic_texto_2, lista=False))
+    v_line_edit.returnPressed.connect(lambda: guardar_nombre(label_codigo_DANE))
+    for llave, valor in dic_opciones_botones.items():
+        if llave != "codigo_DANE":
+            valor[1].clicked.connect(lambda _, l=llave: cambiar_botones_reporte(l))
+    event_loop.exec_()
+    return estado, info
+
+def ventana_secundaria(central_widget, titulo, dic_texto, lista=True):
     ventana = QDialog(central_widget)
     ventana.setWindowTitle(titulo)
     ventana.setGeometry(central_widget.geometry().left(), central_widget.geometry().top(), int(central_widget.width()*0.9), int(central_widget.height()*0.9))
@@ -1113,13 +1378,19 @@ def ventana_secundaria(central_widget, titulo, dic_texto):
             label_1.setStyleSheet(f"color: white;font-size: {font_size}px;font-family: '{font_family}'")
             layout.addWidget(label_1)
         elif isinstance(valor, list):
-            for elemento in valor:
-                label_2 = QLabel(elemento[0], ventana)
-                label_2.setStyleSheet(f"color: white;font-size: {int(font_size*1.4)}px;font-family: '{font_family_1}'")
-                layout.addWidget(label_2)
-                label_3 = QLabel(elemento[1], ventana)
-                label_3.setStyleSheet(f"color: white;font-size: {font_size}px;font-family: '{font_family}'")
-                layout.addWidget(label_3)
+            if lista:
+                for elemento in valor:
+                    label_2 = QLabel(elemento[0], ventana)
+                    label_2.setStyleSheet(f"color: white;font-size: {int(font_size*1.4)}px;font-family: '{font_family_1}'")
+                    layout.addWidget(label_2)
+                    label_3 = QLabel(elemento[1], ventana)
+                    label_3.setStyleSheet(f"color: white;font-size: {font_size}px;font-family: '{font_family}'")
+                    layout.addWidget(label_3)
+            else:
+                for elemento in valor:
+                    label_2 = QLabel(elemento, ventana)
+                    label_2.setStyleSheet(f"color: white;font-size: {int(font_size*1.4)}px;font-family: '{font_family_1}'")
+                    layout.addWidget(label_2)
     content_widget = QWidget()
     content_widget.setLayout(layout)
     scroll_area = QScrollArea()

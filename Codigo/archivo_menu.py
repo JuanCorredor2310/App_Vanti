@@ -2365,7 +2365,6 @@ def mostrar_inicio_app():
     mod_1.mostrar_titulo("Regulación, Márgenes y Tarifas", None, "down")
     iniciar_menu()
 
-
 # TODO: Pendientes Urgentes
     #Terminar slides Canva
     #Automatizar almacenamiento de slides
@@ -2379,7 +2378,6 @@ def mostrar_inicio_app():
     # Creación doc unión GRC1/GRTT2 y/o GRC2
     # Revisión O3
     # Generar un archivo CSV en la comparación del GRC1/CLD/PRD si la cantidad de NIU no encontrados es mayor al 1% de la muestra total
-
 
 def crear_app():
     app, window, central_widget, dimensiones = mod_9.crear_pantalla_incial()
@@ -2398,57 +2396,19 @@ def iniciar_app(info_app):
     app, window, central_widget, dimensiones = info_app
     estado, info = mod_9.menu_inicial(app, window, central_widget, dimensiones)
     if estado:
-        #activar_funciones(info_app, estado, info)
-        print(estado, "\n")
-        print(info)
+        activar_funciones(info_app, estado, info)
     iniciar_app(info_app)
     sys.exit(app.exec_())
 
 def activar_funciones(info_app, estado, info):
+    app, window, central_widget, dimensiones = info_app
     if estado == "almacenar_archivos":
         titulo = "Almacenamiento de archivos"
-        almacenar_archivos_v2(info_app, titulo)
+        estado = mod_1.run_app(titulo, estado)
+    elif estado:
+        print(estado, "\n")
+        print(info, "\n"*2)
 
-def crear_boton(texto, content_widget, font="normal", color="blue", font_size=32, padding=20, radius = 15):
-    boton = QPushButton(texto, content_widget)
-    if font == "normal":
-        font_id = QFontDatabase().addApplicationFont(ruta_fuente)
-    elif font == "bold":
-        font_id = QFontDatabase().addApplicationFont(ruta_fuente_negrilla)
-    font_family = QFontDatabase().applicationFontFamilies(font_id)[0]
-    boton.setStyleSheet(f"""QPushButton {{color: {color};padding: {padding}px;font-size: {font_size}px;
-                            border: 0.5px solid white;border-radius: {radius}px;font-family: '{font_family}';background-color: #ffffff;}}""")
-    return boton
-
-
-def almacenar_archivos_v2(info_app, titulo):
-    app, window, central_widget, dimensiones = info_app
-    ventana = QDialog(central_widget)
-    ventana.setWindowTitle(titulo)
-    ventana.setGeometry(central_widget.geometry().left(), central_widget.geometry().top(), int(central_widget.width()*0.9), int(central_widget.height()*0.9))
-    ventana.setStyleSheet(f"""QWidget{{background-color: #030918; border: 5px solid #030918}}""")
-    layout = QVBoxLayout()
-    font_size = 20
-    font_id = QFontDatabase().addApplicationFont(ruta_fuente)
-    font_family = QFontDatabase().applicationFontFamilies(font_id)[0]
-    font_id_1 = QFontDatabase().addApplicationFont(ruta_fuente_negrilla)
-    font_family_1 = QFontDatabase().applicationFontFamilies(font_id_1)[0]
-    content_widget = QWidget()
-    content_widget.setLayout(layout)
-    scroll_area = QScrollArea()
-    scroll_area.setWidget(content_widget)
-    scroll_area.setWidgetResizable(True)
-    scroll_area.setStyleSheet(f"""
-        QScrollArea {{border: 5px solid white;}}
-        QScrollBar:vertical {{background-color: #030918;width: 25px;border-radius: 6px;}}
-        QScrollBar:horizontal {{background-color: #030918;height: 12px;border-radius: 6px;}}
-        QScrollBar::handle:vertical {{background-color: white;border-radius: 12px;}}
-        QScrollBar::handle:horizontal {{background-color: white;border-radius: 6px;}}""")
-    ventana_layout = QVBoxLayout(ventana)
-    ventana_layout.addWidget(scroll_area)
-    ventana.setLayout(ventana_layout)
-    ventana.exec_()
-
-
-iniciar_app(crear_app())
-#iniciar_menu()
+if __name__ == "__main__":
+    iniciar_app(crear_app())
+    #iniciar_menu()
