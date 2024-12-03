@@ -2535,9 +2535,42 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
         if lista_df_SAP and lista_df_previo:
             for df in lista_df_SAP:
                 df = df.reset_index(drop=True)
+                columnas = list(df.columns)
+                df["NIU"] = pd.to_numeric(df["NIU"], errors='coerce').fillna(0).astype(int)
+                df["Tipo_usuario"] = pd.to_numeric(df["Tipo_usuario"], errors='coerce').fillna(0).astype(int)
+                df["ID_Comercializador"] = pd.to_numeric(df["ID_Comercializador"], errors='coerce').fillna(0).astype(int)
+                df["ID_Comercializador"] = df["ID_Comercializador"].astype(str)
+                df["ID_Mercado"] = pd.to_numeric(df["ID_Mercado"], errors='coerce').fillna(0).astype(int)
+                df["ID_Mercado"] = df["ID_Mercado"].astype(str)
+                df["Codigo_DANE"] = pd.to_numeric(df["Codigo_DANE"], errors='coerce').fillna(0).astype(int)
+                df["Codigo_DANE"] = df["Codigo_DANE"].astype(str)
+                df["Codigo_DANE"] = df["Codigo_DANE"].apply(completar_codigo_DANE)
+                df["Ubicacion"] = df["Ubicacion"].astype(str)
+                df["Ubicacion"] = df["Ubicacion"].str.upper()
+                df["Ubicacion"] = df["Ubicacion"].apply(
+                            lambda x: 1 if x=="R" else
+                                    3 if x=="C" else 2)
+                df["Direccion"] = df["Direccion"].astype(str)
+                df["Direccion"] = df["Direccion"].str.replace(r"\s{2,}", "", regex=True)
+                df["Direccion"] = df["Direccion"].fillna("")
+                df["Cedula_Catastral"] = df["Cedula_Catastral"].apply(lambda x: int(Decimal(x)) if pd.notna(x) and str(x).replace('.', '', 1).isdigit() else Decimal(0))
+                df["Cedula_Catastral"] = df["Cedula_Catastral"].astype(str).replace("0", "").replace("nan", "")
+                df["Estrato"] = pd.to_numeric(df["Estrato"], errors='coerce').fillna(0).astype(int)
+                df["Estrato"] = df["Estrato"].astype(str)
+                df["Altitud"] = pd.to_numeric(df["Altitud"], errors='coerce').fillna(0).astype(int)
+                df["Latitud"] = pd.to_numeric(df["Latitud"], errors='coerce').fillna(-100).astype(float)
+                df["Longitud"] = pd.to_numeric(df["Longitud"], errors='coerce').fillna(-100).astype(float)
+                df["Estado"] = pd.to_numeric(df["Estado"], errors='coerce').fillna(0).astype(int)
+                df["Estado"] = df["Estado"].astype(str)
+                df.loc[(df['Codigo_DANE'] == '11001000') & (df['Cedula_Catastral'].str.len() < 21), 'Cedula_Catastral'] = df.loc[(df['Codigo_DANE'] == '11001000') & (df['Cedula_Catastral'].str.len() < 21), 'Cedula_Catastral'].str.zfill(21)
+                df['Informacion_predial_actualizada'] = df['Cedula_Catastral'].apply(
+                    lambda x: 2 if len(x) == 30 else
+                            1 if len(x) == 21 else 4)
+                df["Fecha_ajuste"] = inicio_mes_str
+                if "STS_Regularizacion" in columnas:
+                    df["STS_Regularizacion"] = df["STS_Regularizacion"].str.capitalize()
                 for col in columnas_SAP:
                     if col == "NIU":
-                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
                         df_filter = df[df[col] > 0].reset_index(drop=True)
                         df_error = df[df[col] == 0].reset_index(drop=True)
                         if len(df_error):
@@ -2545,7 +2578,6 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                                 dic_error[col] = []
                             dic_error[col].append(df_error)
                     elif col == "Tipo_usuario":
-                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
                         df_filter = df[df[col] == 1].reset_index(drop=True)
                         df_error = df[df[col] != 1].reset_index(drop=True)
                         if len(df_error):
@@ -2553,8 +2585,6 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                                 dic_error[col] = []
                             dic_error[col].append(df_error)
                     elif col == "ID_Comercializador":
-                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
-                        df[col] = df[col].astype(str)
                         df_filter = df[df[col] == indicador_SUI_filial].reset_index(drop=True)
                         df_error = df[df[col] != indicador_SUI_filial].reset_index(drop=True)
                         if len(df_error):
@@ -2562,8 +2592,6 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                                 dic_error[col] = []
                             dic_error[col].append(df_error)
                     elif col == "ID_Mercado":
-                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
-                        df[col] = df[col].astype(str)
                         df_filter = df[df[col].isin(dic_filial_mercado)].reset_index(drop=True)
                         df_error = df[~df[col].isin(dic_filial_mercado)].reset_index(drop=True)
                         if len(df_error):
@@ -2571,9 +2599,6 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                                 dic_error[col] = []
                             dic_error[col].append(df_error)
                     elif col == "Codigo_DANE":
-                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
-                        df[col] = df[col].astype(str)
-                        df[col] = df[col].apply(completar_codigo_DANE)
                         df_filter = df[df[col].isin(dic_filial_DANE)].reset_index(drop=True)
                         df_error = df[~df[col].isin(dic_filial_DANE)].reset_index(drop=True)
                         if len(df_error):
@@ -2581,15 +2606,8 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                                 dic_error[col] = []
                             dic_error[col].append(df_error)
                     elif col == "Ubicacion":
-                        df[col] = df[col].astype(str)
-                        df[col] = df[col].str.upper()
                         df_filter = df.copy()
-                        df_filter[col] = df_filter[col].apply(
-                            lambda x: 1 if x=="R" else
-                                    3 if x=="C" else 2)
                     elif col == "Direccion":
-                        df[col] = df[col].astype(str)
-                        df[col] = df[col].str.replace(r"\s{2,}", "", regex=True)
                         df_filter = df[~(df[col].isna()) & ~(df[col] == '') & ~(df[col]==' ')].reset_index(drop=True)
                         df_error = df[df[col].isna() | (df[col] == ' ') | (df[col]=='')].reset_index(drop=True)
                         if len(df_error):
@@ -2598,11 +2616,7 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                             dic_error[col].append(df_error)
                     elif col == "Cedula_Catastral":
                         df_filter = df.copy()
-                        df_filter[col] = df_filter[col].apply(lambda x: int(Decimal(x)) if pd.notna(x) and str(x).replace('.', '', 1).isdigit() else Decimal(0))
-                        df_filter[col] = df_filter[col].astype(str).replace("0", "").replace("nan", "")
                     elif col == "Estrato":
-                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
-                        df[col] = df[col].astype(str)
                         df_filter = df[df[col].isin(tabla_3_data)].reset_index(drop=True)
                         df_error = df[~df[col].isin(tabla_3_data)].reset_index(drop=True)
                         if len(df_error):
@@ -2610,7 +2624,6 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                                 dic_error[col] = []
                             dic_error[col].append(df_error)
                     elif col == "Altitud":
-                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
                         df_filter = df[(df[col] > 0) & (df[col] < 6000)].reset_index(drop=True)
                         df_error = df[(df[col] < 0) | (df[col] >= 6000)].reset_index(drop=True)
                         if len(df_error):
@@ -2618,14 +2631,10 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                                 dic_error[col] = []
                             dic_error[col].append(df_error)
                     elif col == "Longitud":
-                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(-100).astype(float)
                         df_filter = df[(df[col] <= -66.848333) & (df[col] >= -79.006389)].reset_index(drop=True)
                     elif col == "Latitud":
-                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(-100).astype(float)
                         df_filter = df[(df[col] <= 12.4627780) & (df[col] >= -4.225)].reset_index(drop=True)
                     elif col == "Estado":
-                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
-                        df[col] = df[col].astype(str)
                         df_filter = df[df[col].isin(tabla_30)].reset_index(drop=True)
                         df_error = df[~df[col].isin(tabla_30)].reset_index(drop=True)
                         if len(df_error):
@@ -2641,17 +2650,10 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                                 dic_error[col] = []
                             dic_error[col].append(df_error)
                     df = df_filter.copy()
-                df["Fecha_ajuste"] = inicio_mes_str
-                df["Cedula_Catastral"] = df["Cedula_Catastral"].astype(str)
-                df.loc[(df['Codigo_DANE'] == '11001000') & (df['Cedula_Catastral'].str.len() < 21), 'Cedula_Catastral'] = df.loc[(df['Codigo_DANE'] == '11001000') & (df['Cedula_Catastral'].str.len() < 21), 'Cedula_Catastral'].str.zfill(21)
-                df['Informacion_predial_actualizada'] = df['Cedula_Catastral'].apply(
-                    lambda x: 2 if len(x) == 30 else
-                            1 if len(x) == 21 else 4)
                 df["Longitud"] = df["Latitud"].apply(lambda x: -100 if x == -100 else x)
                 df["Latitud"] = df["Longitud"].apply(lambda x: -100 if x == -100 else x)
                 df["Longitud"] = df["Longitud"].apply(lambda x: "" if x==-100 else x)
                 df["Latitud"] = df["Latitud"].apply(lambda x: "" if x==-100 else x)
-                df["Direccion"] = df["Direccion"].fillna("")
                 lista_aceptado.append(df)
             df_SAP_preliminar = pd.concat(lista_aceptado, ignore_index=True)
             df_SAP_preliminar = df_SAP_preliminar[columnas_GRTT2]
@@ -2665,7 +2667,6 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                 if niu > 0:
                     if str(niu) not in dic_NIU_SAP:
                         dic_NIU_SAP[str(niu)] = df_SAP_preliminar.iloc[i].tolist()
-            print("Lectura actual ***")
             for df in lista_df_previo:
                 df = df.reset_index(drop=True)
                 df = df[columnas_GRTT2]
@@ -2681,7 +2682,6 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                     if niu > 0:
                         if str(niu) not in dic_NIU_previo:
                             dic_NIU_previo[str(niu)] = df.iloc[i].tolist()
-            print("Lectura previo ***")
             if len(dic_error):
                 lista_df_error = []
                 dic_error_2 = {}
@@ -2720,28 +2720,6 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                     print(f"No es posible acceder al archivo {acortar_nombre(nombre_error_pdf)}")
                 df_error = pd.concat(lista_df_error, ignore_index=True)
                 columnas = list(df_error.columns)
-                df_error["Tipo_usuario"] = pd.to_numeric(df_error["Tipo_usuario"], errors='coerce').fillna(0).astype(int)
-                df_error["ID_Comercializador"] = df_error["ID_Comercializador"].astype(str)
-                df_error["ID_Mercado"] = df_error["ID_Mercado"].astype(str)
-                df["Codigo_DANE"] = df["Codigo_DANE"].astype(str)
-                df["Codigo_DANE"] = df["Codigo_DANE"].apply(completar_codigo_DANE)
-                df_error["Ubicacion"] = df_error["Ubicacion"].astype(str)
-                df_error["Ubicacion"] = df_error["Ubicacion"].str.upper()
-                df_error["Ubicacion"] = df_error["Ubicacion"].apply(
-                            lambda x: 1 if x=="R" else
-                                    3 if x=="C" else 2)
-                df_error["Direccion"] = df_error["Direccion"].fillna("")
-                df_error["Cedula_Catastral"] = df_error["Cedula_Catastral"].apply(lambda x: int(Decimal(x)) if pd.notna(x) and str(x).replace('.', '', 1).isdigit() else Decimal(0))
-                df_error["Cedula_Catastral"] = df_error["Cedula_Catastral"].astype(str).replace("0", "").replace("nan", "")
-                df_error["Estrato"] = df_error["Estrato"].astype(str)
-                df_error["Altitud"] = pd.to_numeric(df_error["Altitud"], errors='coerce').fillna(0).astype(int)
-                df_error["Estado"] = df_error["Estado"].astype(str)
-                if "STS_Regularizacion" in columnas:
-                    df_error["STS_Regularizacion"] = df_error["STS_Regularizacion"].str.capitalize()
-                df_error.loc[(df_error['Codigo_DANE'] == '11001000') & (df_error['Cedula_Catastral'].str.len() < 21), 'Cedula_Catastral'] = df_error.loc[(df_error['Codigo_DANE'] == '11001000') & (df_error['Cedula_Catastral'].str.len() < 21), 'Cedula_Catastral'].str.zfill(21)
-                df_error['Informacion_predial_actualizada'] = df_error['Cedula_Catastral'].apply(
-                    lambda x: 2 if len(x) == 30 else
-                            1 if len(x) == 21 else 4)
                 df_error["Longitud"] = df_error["Latitud"].apply(lambda x: -100 if x == -100 else x)
                 df_error["Latitud"] = df_error["Longitud"].apply(lambda x: -100 if x == -100 else x)
                 df_error["Longitud"] = pd.to_numeric(df_error["Longitud"], errors='coerce').fillna(-100).astype(float)
@@ -2755,7 +2733,6 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                 df_error_col = pd.DataFrame(lista_errores, columns=columnas)
                 nombre = archivo_SAP.replace("_resumen","_error").replace("_apoyo_error","_error")
                 almacenar_df_csv_y_excel(df_error_col, nombre, almacenar_excel=False)
-            print("Inicio comparación")
             lista_cambios = []
             lista_nuevos = []
             lista_completo = []
