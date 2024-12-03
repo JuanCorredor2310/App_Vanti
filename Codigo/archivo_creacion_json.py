@@ -275,7 +275,7 @@ def variables_reportes(reporte):
                                         "Poder_calorifico_bruto","Facturacion_por_suministro","Facturacion_por_remuneracion_gestor_mercado",
                                         "Punto_entrega_energia_comprador","Codigo_DANE_punto_entrega_energia_comprado",
                                         "Transporte","Componente_fijo_pareja_cargos","Facturacion_por_demanda_volumen","Facturacion_por_demanda_capacidad",
-                                        "Tarifa","Cuota_fomento","Servicio Transporte","NIU","Cargo_distribucion",
+                                        "Tarifa","Cuota_fomento","Servicio_transporte","NIU","Cargo_distribucion",
                                         "Cargo_comercializacion","Volumen","Numero_operacion_suministro_Segas_utilizado",
                                         "Numero_operacion_transporte_Segas_utilizado","Codigo_DANE","Ubicacion",
                                         "Altitud","Longitud","Latitud","Numero_operacion_Segas","Cantidad_refacturacion","Valor_refacturacion",
@@ -477,10 +477,10 @@ def variables_reportes(reporte):
         elif reporte == "GRTT2SAP":
                 generales_carga = ["NIU","Tipo_usuario","ID_Comercializador","ID_Mercado","Codigo_DANE","Ubicacion","Direccion","Informacion_predial_actualizada",
                                 "Cedula_Catastral","Estrato","Altitud","Longitud","Latitud","Estado","Fecha_ajuste",
-                                "Desc_tipo_usuario","ID_Sociedad_SAP","Municipio","Llave_Signature","Tipo_tarifa", "STS_Regularizacion","Codigo_SAP"]
+                                "Desc_tipo_usuario","ID_Sociedad_SAP","Municipio","Llave_Signatura","Tipo_tarifa", "STS_Regularizacion","Codigo_SAP"]
                 generales_presentacion = ["NIU","Tipo_usuario","ID_Comercializador","ID_Mercado","Codigo_DANE","Ubicacion","Direccion","Informacion_predial_actualizada",
                                 "Cedula_Catastral","Estrato","Altitud","Longitud","Latitud","Estado","Fecha_ajuste",
-                                "Desc_tipo_usuario","ID_Sociedad_SAP","Municipio","Llave_Signature","Tipo_tarifa", "STS_Regularizacion","Codigo_SAP"]
+                                "Desc_tipo_usuario","ID_Sociedad_SAP","Municipio","Llave_Signatura","Tipo_tarifa", "STS_Regularizacion","Codigo_SAP"]
                 generales_no_float = ["NIU","Tipo_usuario","ID_Comercializador","ID_Mercado","Codigo_DANE","Ubicacion","Direccion","Informacion_predial_actualizada",
                                         "Cedula_Catastral","Estrato","Altitud","Estado"]
                 generales_float = ["Longitud","Latitud"]

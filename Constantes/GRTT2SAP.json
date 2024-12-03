@@ -18,7 +18,7 @@
         "Desc_tipo_usuario": "Desc_tipo_usuario",
         "ID_Sociedad_SAP": "ID_Sociedad_SAP",
         "Municipio": "Municipio",
-        "Llave_Signature": "Llave_Signature",
+        "Llave_Signatura": "Llave_Signatura",
         "Tipo_tarifa": "Tipo_tarifa",
         "STS_Regularizacion": "STS_Regularizacion",
         "Codigo_SAP": "Codigo_SAP"
@@ -64,7 +64,7 @@
         "Desc_tipo_usuario",
         "ID_Sociedad_SAP",
         "Municipio",
-        "Llave_Signature",
+        "Llave_Signatura",
         "Tipo_tarifa",
         "STS_Regularizacion",
         "Codigo_SAP"

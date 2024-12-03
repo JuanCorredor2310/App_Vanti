@@ -14,7 +14,7 @@ import archivo_creacion_json as mod_2
 import modulo as mod_1
 
 # * -------------------------------------------------------------------------------------------------------
-# *                                             Configuración inicial
+# *                                             Configuración dane
 # * -------------------------------------------------------------------------------------------------------
 def configuracion_inicial():
     mod_2.crear_archivos_json_principales()

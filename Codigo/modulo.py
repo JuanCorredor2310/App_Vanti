@@ -31,6 +31,8 @@ ruta_archivos = mod_rp.v_archivos()
 sys.path.append(os.path.abspath(ruta_codigo))
 import archivo_csv_a_excel as mod_5
 import archivo_df_a_doc as mod_8
+import archivo_crear_carpetas as mod_3
+import archivo_creacion_json as mod_2
 ruta_guardar_archivos = mod_rp.v_guardar_archivos().replace('\\', '\\\\')
 
 # * -------------------------------------------------------------------------------------------------------
@@ -49,7 +51,7 @@ def leer_archivos_json(archivo):
 # *                                             Constantes globales
 # * -------------------------------------------------------------------------------------------------------
 
-global lista_meses, lista_empresas, lista_anios, dic_reportes, lista_reportes_generales, reportes_generados, lista_reportes_totales,chunksize,llaves_dic_reporte, dic_carpetas, dic_filiales,antidad_datos_excel, dic_nit, cantidad_datos_estilo_excel,grupo_vanti,mercado_relevante,mercado_relevante_resumen,mercado_relevante_id,tabla_3,tabla_11,fecha_actual,lista_trimestres, dic_meses_abre,lista_clasi_reportes,categoria_matriz_requerimientos,lista_archivo_desviaciones,tabla_2_DS,tabla_3_DS,tabla_4_DS,tabla_5_DS,tabla_6_DS,tabla_8_DS,indicador_SUI,tabla_30,tabla_8_DS_categoria,tabla_71,tabla_16, tabla_3_data,lista_carpetas_extra
+global lista_meses, lista_empresas, lista_anios, dic_reportes, lista_reportes_generales, reportes_generados, lista_reportes_totales,chunksize,llaves_dic_reporte, dic_carpetas, dic_filiales,antidad_datos_excel, dic_nit, cantidad_datos_estilo_excel,grupo_vanti,mercado_relevante,mercado_relevante_resumen,mercado_relevante_id,tabla_3,tabla_11,fecha_actual,lista_trimestres, dic_meses_abre,lista_clasi_reportes,categoria_matriz_requerimientos,lista_archivo_desviaciones,tabla_2_DS,tabla_3_DS,tabla_4_DS,tabla_5_DS,tabla_6_DS,tabla_8_DS,indicador_SUI,tabla_30,tabla_8_DS_categoria,tabla_71,tabla_16, tabla_3_data,lista_carpetas_extra,anio_actual
 grupo_vanti = "Grupo Vanti"
 dic_carpetas = leer_archivos_json(ruta_constantes+"carpetas.json")
 lista_carpetas_extra = leer_archivos_json(ruta_constantes+"carpetas_extra.json")
@@ -96,6 +98,8 @@ def crear_lista_reportes_totales():
     return lista
 lista_reportes_totales = crear_lista_reportes_totales()
 fecha_actual = datetime.now()
+anio_actual = fecha_actual.year
+
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Uso de librería Geopy
@@ -291,10 +295,9 @@ def mostrar_tiempo(t_f, t_i):
     if tiempo > 60:
         minutos = round(tiempo//60)
         segundos = round(tiempo%60,4)
-        if minutos == 1:
-            texto = f"t: {minutos} min, {segundos} seg"
+        texto = f"t: {minutos} min, {segundos} seg"
     else:
-        texto = f"t: {round(tiempo, 4) } seg"
+        texto = f"t: {round(tiempo, 3) } seg"
     return texto
 
 # * -------------------------------------------------------------------------------------------------------
@@ -312,7 +315,7 @@ def lista_a_texto(lista, separador, salto=False):
 # *                                             Edición reportes
 # * -------------------------------------------------------------------------------------------------------
 
-def listas_iguales(lista_1, lista_2):
+def v_listas_iguales(lista_1, lista_2):
     if len(lista_1) == len(lista_2):
         for i in lista_1:
             if i not in lista_2:
@@ -327,26 +330,26 @@ def editar_json_reporte(reporte):
     if os.path.exists(archivo):
         v_hojas = mod_5.hojas_disponibles(archivo)
         dic_xlsx_json = {}
-        if listas_iguales(lista_hojas, v_hojas):
+        if v_listas_iguales(lista_hojas, v_hojas):
             for hoja in lista_hojas:
-                df = mod_5.lectura_hoja_xlsx(archivo, hoja)[0]
+                df,valor = mod_5.lectura_hoja_xlsx(archivo, hoja)
+                if not valor:
+                    return "error", f"Revisar el archivo {archivo}"
                 dic_xlsx_json[hoja] = df
             v_convertir_dic_json = convertir_dic_json(dic_xlsx_json)
             archivo_json = archivo.replace(".xlsx",".json").replace("_json","")
             almacenar_json(v_convertir_dic_json, archivo_json)
-            informar_archivo_creado(archivo_json, True)
-            return True
+            return "complete", f"Archivo {archivo_json} creado"
         else:
-            print("El archivo .xlsx no posee las hojas necesarias")
-            print(f"Las hojas aceptadas son: {lista_a_texto(lista_hojas, ', ')}")
+            return "no_complete", lista_hojas
     else:
-        print(f"No existe el archivo {archivo}")
-    return False
+        return "no_exist", archivo
 
 def agregar_json_reporte(clasificacion, reporte):
-    valor = editar_json_reporte(reporte)
-    if valor:
+    op, valor = editar_json_reporte(reporte)
+    if op == "complete":
         cambiar_diccionario(clasificacion, reporte)
+    return op, valor
 
 def cambiar_diccionario(clasificacion, reporte):
         ruta = ruta_constantes+"reportes_disponibles.txt"
@@ -2374,8 +2377,8 @@ def encontrar_errores_inventario_suscriptores(dic_archivos, seleccionar_reporte)
     lista_fechas = generar_listas_fechas(list(dic_archivos.keys()))
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for union in lista_fechas:
-        lista_archivos_filial = []
         for filial in lista_filiales_archivo:
+            lista_archivos_filial = []
             proceso_GRTT2 = False
             proceso_GRTT2SAP = False
             for archivo in dic_archivos[union[0]]:
@@ -2550,6 +2553,7 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                                 dic_error[col] = []
                             dic_error[col].append(df_error)
                     elif col == "ID_Comercializador":
+                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
                         df[col] = df[col].astype(str)
                         df_filter = df[df[col] == indicador_SUI_filial].reset_index(drop=True)
                         df_error = df[df[col] != indicador_SUI_filial].reset_index(drop=True)
@@ -2558,6 +2562,7 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                                 dic_error[col] = []
                             dic_error[col].append(df_error)
                     elif col == "ID_Mercado":
+                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
                         df[col] = df[col].astype(str)
                         df_filter = df[df[col].isin(dic_filial_mercado)].reset_index(drop=True)
                         df_error = df[~df[col].isin(dic_filial_mercado)].reset_index(drop=True)
@@ -2566,9 +2571,9 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                                 dic_error[col] = []
                             dic_error[col].append(df_error)
                     elif col == "Codigo_DANE":
+                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
                         df[col] = df[col].astype(str)
-                        df[col] = df[col].apply(lambda x: '0' + x if len(x) == 7 else x)
-                        df[col] = df[col].apply(lambda x: x[:-3] + '000' if len(x) >= 3 else x)
+                        df[col] = df[col].apply(completar_codigo_DANE)
                         df_filter = df[df[col].isin(dic_filial_DANE)].reset_index(drop=True)
                         df_error = df[~df[col].isin(dic_filial_DANE)].reset_index(drop=True)
                         if len(df_error):
@@ -2596,6 +2601,7 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                         df_filter[col] = df_filter[col].apply(lambda x: int(Decimal(x)) if pd.notna(x) and str(x).replace('.', '', 1).isdigit() else Decimal(0))
                         df_filter[col] = df_filter[col].astype(str).replace("0", "").replace("nan", "")
                     elif col == "Estrato":
+                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
                         df[col] = df[col].astype(str)
                         df_filter = df[df[col].isin(tabla_3_data)].reset_index(drop=True)
                         df_error = df[~df[col].isin(tabla_3_data)].reset_index(drop=True)
@@ -2618,6 +2624,7 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                         df[col] = pd.to_numeric(df[col], errors='coerce').fillna(-100).astype(float)
                         df_filter = df[(df[col] <= 12.4627780) & (df[col] >= -4.225)].reset_index(drop=True)
                     elif col == "Estado":
+                        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
                         df[col] = df[col].astype(str)
                         df_filter = df[df[col].isin(tabla_30)].reset_index(drop=True)
                         df_error = df[~df[col].isin(tabla_30)].reset_index(drop=True)
@@ -2636,14 +2643,15 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                     df = df_filter.copy()
                 df["Fecha_ajuste"] = inicio_mes_str
                 df["Cedula_Catastral"] = df["Cedula_Catastral"].astype(str)
+                df.loc[(df['Codigo_DANE'] == '11001000') & (df['Cedula_Catastral'].str.len() < 21), 'Cedula_Catastral'] = df.loc[(df['Codigo_DANE'] == '11001000') & (df['Cedula_Catastral'].str.len() < 21), 'Cedula_Catastral'].str.zfill(21)
                 df['Informacion_predial_actualizada'] = df['Cedula_Catastral'].apply(
                     lambda x: 2 if len(x) == 30 else
-                            3 if len(x) == 11 else
-                            1 if 21 <= len(x) <= 56 else 4)
+                            1 if len(x) == 21 else 4)
                 df["Longitud"] = df["Latitud"].apply(lambda x: -100 if x == -100 else x)
                 df["Latitud"] = df["Longitud"].apply(lambda x: -100 if x == -100 else x)
                 df["Longitud"] = df["Longitud"].apply(lambda x: "" if x==-100 else x)
                 df["Latitud"] = df["Latitud"].apply(lambda x: "" if x==-100 else x)
+                df["Direccion"] = df["Direccion"].fillna("")
                 lista_aceptado.append(df)
             df_SAP_preliminar = pd.concat(lista_aceptado, ignore_index=True)
             df_SAP_preliminar = df_SAP_preliminar[columnas_GRTT2]
@@ -2657,12 +2665,12 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                 if niu > 0:
                     if str(niu) not in dic_NIU_SAP:
                         dic_NIU_SAP[str(niu)] = df_SAP_preliminar.iloc[i].tolist()
+            print("Lectura actual ***")
             for df in lista_df_previo:
                 df = df.reset_index(drop=True)
                 df = df[columnas_GRTT2]
                 df["Codigo_DANE"] = df["Codigo_DANE"].astype(str)
-                df["Codigo_DANE"] = df["Codigo_DANE"].apply(lambda x: '0' + x if len(x) == 7 else x)
-                df["Codigo_DANE"] = df["Codigo_DANE"].apply(lambda x: x[:-3] + '000' if len(x) >= 3 else x)
+                df["Codigo_DANE"] = df["Codigo_DANE"].apply(completar_codigo_DANE)
                 df["Cedula_Catastral"] = df["Cedula_Catastral"].apply(lambda x: int(Decimal(x)) if pd.notna(x) and str(x).replace('.', '', 1).isdigit() else Decimal(0))
                 df["Cedula_Catastral"] = df["Cedula_Catastral"].astype(str)
                 df['Fecha_ajuste'] = df['Fecha_ajuste'].astype(str).replace('-', "").replace('/', '').replace('_', '')
@@ -2673,6 +2681,7 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                     if niu > 0:
                         if str(niu) not in dic_NIU_previo:
                             dic_NIU_previo[str(niu)] = df.iloc[i].tolist()
+            print("Lectura previo ***")
             if len(dic_error):
                 lista_df_error = []
                 dic_error_2 = {}
@@ -2714,14 +2723,14 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                 df_error["Tipo_usuario"] = pd.to_numeric(df_error["Tipo_usuario"], errors='coerce').fillna(0).astype(int)
                 df_error["ID_Comercializador"] = df_error["ID_Comercializador"].astype(str)
                 df_error["ID_Mercado"] = df_error["ID_Mercado"].astype(str)
-                df_error["Codigo_DANE"] = df_error["Codigo_DANE"].astype(str)
-                df_error["Codigo_DANE"] = df_error["Codigo_DANE"].apply(lambda x: '0' + x if len(x) == 7 else x)
-                df_error["Codigo_DANE"] = df_error["Codigo_DANE"].apply(lambda x: x[:-3] + '000' if len(x) >= 3 else x)
+                df["Codigo_DANE"] = df["Codigo_DANE"].astype(str)
+                df["Codigo_DANE"] = df["Codigo_DANE"].apply(completar_codigo_DANE)
                 df_error["Ubicacion"] = df_error["Ubicacion"].astype(str)
                 df_error["Ubicacion"] = df_error["Ubicacion"].str.upper()
                 df_error["Ubicacion"] = df_error["Ubicacion"].apply(
                             lambda x: 1 if x=="R" else
                                     3 if x=="C" else 2)
+                df_error["Direccion"] = df_error["Direccion"].fillna("")
                 df_error["Cedula_Catastral"] = df_error["Cedula_Catastral"].apply(lambda x: int(Decimal(x)) if pd.notna(x) and str(x).replace('.', '', 1).isdigit() else Decimal(0))
                 df_error["Cedula_Catastral"] = df_error["Cedula_Catastral"].astype(str).replace("0", "").replace("nan", "")
                 df_error["Estrato"] = df_error["Estrato"].astype(str)
@@ -2729,10 +2738,10 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                 df_error["Estado"] = df_error["Estado"].astype(str)
                 if "STS_Regularizacion" in columnas:
                     df_error["STS_Regularizacion"] = df_error["STS_Regularizacion"].str.capitalize()
+                df_error.loc[(df_error['Codigo_DANE'] == '11001000') & (df_error['Cedula_Catastral'].str.len() < 21), 'Cedula_Catastral'] = df_error.loc[(df_error['Codigo_DANE'] == '11001000') & (df_error['Cedula_Catastral'].str.len() < 21), 'Cedula_Catastral'].str.zfill(21)
                 df_error['Informacion_predial_actualizada'] = df_error['Cedula_Catastral'].apply(
                     lambda x: 2 if len(x) == 30 else
-                            3 if len(x) == 11 else
-                            1 if 21 <= len(x) <= 56 else 4)
+                            1 if len(x) == 21 else 4)
                 df_error["Longitud"] = df_error["Latitud"].apply(lambda x: -100 if x == -100 else x)
                 df_error["Latitud"] = df_error["Longitud"].apply(lambda x: -100 if x == -100 else x)
                 df_error["Longitud"] = pd.to_numeric(df_error["Longitud"], errors='coerce').fillna(-100).astype(float)
@@ -2746,6 +2755,7 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                 df_error_col = pd.DataFrame(lista_errores, columns=columnas)
                 nombre = archivo_SAP.replace("_resumen","_error").replace("_apoyo_error","_error")
                 almacenar_df_csv_y_excel(df_error_col, nombre, almacenar_excel=False)
+            print("Inicio comparación")
             lista_cambios = []
             lista_nuevos = []
             lista_completo = []
@@ -3099,8 +3109,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS56(lista_archivos,filial,fecha,
                         mask &= (df[col].astype(str).str.len() > 0)
                     elif col == 'CODIGO_DANE_NIU':
                         df[col] = df[col].astype(str)
-                        df[col] = df[col].apply(lambda x: '0' + x if len(x) == 7 else x)
-                        df[col] = df[col].apply(lambda x: x[:-3] + '000' if len(x) >= 3 else x)
+                        df[col] = df[col].apply(completar_codigo_DANE)
                         lista = list(df[col].unique())
                         dic_indicador_SUI_filial = mercado_relevante_DANE[str(indicador_SUI_filial)]
                         lista_df_error = []
@@ -3175,6 +3184,10 @@ def apoyo_generar_reporte_desviaciones_mensual_DS56(lista_archivos,filial,fecha,
         return df_reporte, nombre
     else:
         return None, None
+
+def completar_codigo_DANE(valor):
+    valor = valor[:-3] + '000'
+    return valor.zfill(8)
 
 def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,filas_minimas,reporte,dic_reporte,dic_reporte_empresa,informar=True):
     lista_reporte = []
@@ -3314,8 +3327,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                         mask &= df[col].astype(str).isin(dic_indicador_SUI_filial)
                     elif col == 'CODIGO_DANE_NIU':
                         df[col] = df[col].astype(str)
-                        df[col] = df[col].apply(lambda x: '0' + x if len(x) == 7 else x)
-                        df[col] = df[col].apply(lambda x: x[:-3] + '000' if len(x) >= 3 else x)
+                        df[col] = df[col].apply(completar_codigo_DANE)
                         lista = list(df[col].unique())
                         dic_indicador_SUI_filial = mercado_relevante_DANE[str(indicador_SUI_filial)]
                         lista_df_error = []
@@ -3478,6 +3490,8 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                         mask &= (df[col] >= 0)
                     elif col in ['REQUIERE_VISITA',"REALIZO_VISITA"]:
                         df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
+                        if col == "REQUIERE_VISITA":
+                            df.loc[df[col] == 2, 'REALIZO_VISITA'] = 2
                         df.loc[df[col] == 2, 'FECHA_VISITA'] = np.nan
                         df.loc[df[col] == 2, 'RESULTADO_FINAL_VISITA'] = 9
                         lista = list(df[col].unique())
@@ -3498,18 +3512,19 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                             else:
                                 texto = f"{len(df_error)} errores en la columna {col}. Los valores no se encuentran en la Tabla_30"
                             dic_error[col] = [texto, df_error]
-                        df_error = df[(df[col]==1)&(df['FECHA_VISITA']=="")].reset_index(drop=True)
-                        if len(df_error):
-                            conteo_error += 1
-                            filas_minimas_c = filas_minimas.copy()
-                            filas_minimas_c.append(col)
-                            filas_minimas_c.append("FECHA_VISITA")
-                            df_error = df_error[filas_minimas_c]
-                            if len(df_error) == 1:
-                                texto = f"1 error en la columna {col}. Cuando el valor de {col} es 1, los valores de FECHA_VISITA no deben ser vacios"
-                            else:
-                                texto = f"{(len(df_error))} errores en la columna {col}. Cuando el valor de {col} es 1, los valores de FECHA_VISITA no deben ser vacios"
-                            dic_error[col] = [texto, df_error]
+                        if col == "REALIZO_VISITA":
+                            df_error = df[(df["REQUIERE_VISITA"]==1)&(df["REALIZO_VISITA"]==1)&(df['FECHA_VISITA']==np.nan)].reset_index(drop=True)
+                            if len(df_error):
+                                conteo_error += 1
+                                filas_minimas_c = filas_minimas.copy()
+                                filas_minimas_c.append(col)
+                                filas_minimas_c.append("FECHA_VISITA")
+                                df_error = df_error[filas_minimas_c]
+                                if len(df_error) == 1:
+                                    texto = f"1 error en la columna {col}. Cuando el valor de REQUIERE_VISITA es 1 y {col} es 1, los valores de FECHA_VISITA no deben ser vacios"
+                                else:
+                                    texto = f"{(len(df_error))} errores en la columna {col}. Cuando el valor de REQUIERE_VISITA es 1 y {col} es 1, los valores de FECHA_VISITA no deben ser vacios"
+                                dic_error[col] = [texto, df_error]
                         mask &= df[col].astype(str).isin(tabla_30)
                     elif col == "FECHA_VISITA":
                         df['FECHA_VISITA'] = pd.to_datetime(df['FECHA_VISITA'], errors='coerce', dayfirst=True)
@@ -3517,7 +3532,6 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                         lista_df_error = []
                         if len(df_filtro):
                             conteo_error += 1
-                            #df_filtro['FECHA_VISITA'] = pd.to_datetime(df_filtro['FECHA_VISITA'], errors='coerce', dayfirst=True).dt.strftime('%d-%m-%Y')
                             df_filtro["FECHA_VISITA"] = df_filtro["FECHA_VISITA"].fillna("").astype(str)
                             filas_minimas_c = filas_minimas.copy()
                             filas_minimas_c.append(col)
@@ -3560,6 +3574,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                 nombre = archivo.replace("_HC","").replace("_GC","")
                 df_filtrado = df[mask].copy()
                 df_filtrado["FECHA_VISITA"] = df_filtrado["FECHA_VISITA"].dt.strftime('%d-%m-%Y')
+                df_filtrado["FECHA_VISITA"] = df_filtrado["FECHA_VISITA"].fillna('')
                 lista_reporte.append(df_filtrado)
                 if conteo_error:
                     lista_archivo = archivo.split("\\")
@@ -3595,26 +3610,26 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
 def apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos,filial,fecha,filas_minimas,reporte,informar=True):
     lista_reporte = []
     lista_fecha = fecha.split(" - ")
-    v_fecha_anterior = fecha_anterior(lista_fecha[0], lista_fecha[1])
-    mes = v_fecha_anterior[1]
-    anio = v_fecha_anterior[0]
+    v_fecha_reporte = fecha_anterior(lista_fecha[0], lista_fecha[1])
+    mes_reporte = v_fecha_reporte[1]
+    anio_reporte = v_fecha_reporte[0]
 
-    v_fecha_siguiente = fecha_siguiente(anio, mes)
-    mes_siguiente = v_fecha_siguiente[1]
-    anio_siguiente = v_fecha_siguiente[0]
-    ultimo_dia = calendar.monthrange(int(anio_siguiente), lista_meses.index(mes_siguiente)+1)[1]
-    pos_mes = lista_meses.index(mes)+1
+    v_fecha_anterior = fecha_anterior(anio_reporte, mes_reporte)
+    mes_anterior = v_fecha_anterior[1]
+    anio_anterior = v_fecha_anterior[0]
+    ultimo_dia = calendar.monthrange(int(anio_reporte), lista_meses.index(mes_reporte)+1)[1]
+    pos_mes = lista_meses.index(mes_anterior)+1
     if pos_mes < 10:
         pos_mes = "0" + str(pos_mes)
     else:
         pos_mes = str(pos_mes)
-    pos_mes_1 = lista_meses.index(mes_siguiente)+1
+    pos_mes_1 = lista_meses.index(mes_reporte)+1
     if pos_mes_1 < 10:
         pos_mes_1 = "0" + str(pos_mes_1)
     else:
         pos_mes_1 = str(pos_mes_1)
-    inicio_mes = f"01-{pos_mes}-{anio}"
-    fin_mes = f"{ultimo_dia}-{pos_mes_1}-{anio_siguiente}"
+    inicio_mes = f"01-{pos_mes}-{anio_anterior}"
+    fin_mes = f"{ultimo_dia}-{pos_mes_1}-{anio_reporte}"
     inicio_mes_dt = pd.to_datetime(inicio_mes, dayfirst=True)
     inicio_mes_str = inicio_mes_dt.strftime('%d-%m-%Y')
     fin_mes_dt = pd.to_datetime(fin_mes, dayfirst=True)
@@ -3730,8 +3745,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos,filial,fecha,
                         mask &= df[col].astype(str).isin(dic_indicador_SUI_filial)
                     elif col == 'CODIGO_DANE_NIU':
                         df[col] = df[col].astype(str)
-                        df[col] = df[col].apply(lambda x: '0' + x if len(x) == 7 else x)
-                        df[col] = df[col].apply(lambda x: x[:-3] + '000' if len(x) >= 3 else x)
+                        df[col] = df[col].apply(completar_codigo_DANE)
                         lista = list(df[col].unique())
                         dic_indicador_SUI_filial = mercado_relevante_DANE[str(indicador_SUI_filial)]
                         lista_df_error = []
@@ -3826,13 +3840,14 @@ def apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos,filial,fecha,
                             else:
                                 texto = f"{len(df_error)} errores en la columna {col}. Los valores no se encuentran en la Tabla_30"
                             dic_error[col] = [texto, df_error]
-                        df_error = df[(df[col]==1)&(df['FECHA_VISITA']=="")].reset_index(drop=True)
+                        df_error = df[(df[col]==1)&(df['FECHA_VISITA']==np.nan)].reset_index(drop=True)
                         if len(df_error):
                             conteo_error += 1
                             filas_minimas_c = filas_minimas.copy()
                             filas_minimas_c.append(col)
                             filas_minimas_c.append("FECHA_VISITA")
                             df_error = df_error[filas_minimas_c]
+                            df_error["FECHA_VISITA"] = df_error["FECHA_VISITA"].fillna('')
                             if len(df_error) == 1:
                                 texto = f"1 error en la columna {col}. Cuando el valor de {col} es 1, los valores de FECHA_VISITA no deben ser vacios"
                             else:
@@ -3841,13 +3856,11 @@ def apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos,filial,fecha,
                         mask &= df[col].astype(str).isin(tabla_30)
                     elif col == "FECHA_VISITA":
                         df['FECHA_VISITA'] = pd.to_datetime(df['FECHA_VISITA'], errors='coerce', dayfirst=True)
-                        #TODO: Cambio fecha visita Formato 58
-                        #df_filtro = df[(df['FECHA_VISITA']<inicio_mes_dt)|(df["FECHA_VISITA"]>fin_mes_dt)].reset_index(drop=True)
-                        df_filtro = pd.DataFrame()
+                        df_filtro = df[(df['FECHA_VISITA']<inicio_mes_dt)|(df["FECHA_VISITA"]>fin_mes_dt)].reset_index(drop=True)
                         lista_df_error = []
                         if len(df_filtro):
                             conteo_error += 1
-                            df_filtro['FECHA_VISITA'] = pd.to_datetime(df_filtro['FECHA_VISITA'], errors='coerce', dayfirst=True).dt.strftime('%d-%m-%Y')
+                            df_filtro["FECHA_VISITA"] = df_filtro["FECHA_VISITA"].fillna("").astype(str)
                             filas_minimas_c = filas_minimas.copy()
                             filas_minimas_c.append(col)
                             df_filtro = df_filtro[filas_minimas_c]
@@ -3856,8 +3869,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos,filial,fecha,
                             else:
                                 texto = f"{len(df_filtro)} errores en la columna {col}. Las fechas no se encuentran en el rango de fecha {inicio_mes_str} a {fin_mes_str}"
                             dic_error[col] = [texto, df_filtro]
-                        #TODO: Cambio fecha visita Formato 58
-                        #mask &= ((df['FECHA_VISITA'] > inicio_mes_dt) & (df["FECHA_VISITA"] < fin_mes_dt)) | (df['FECHA_VISITA'].isna())
+                        mask &= ((df['FECHA_VISITA'] > inicio_mes_dt) & (df["FECHA_VISITA"] < fin_mes_dt)) | (df['FECHA_VISITA'].isna())
                     elif col == "RESULTADO_FINAL_VISITA":
                         df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
                         with warnings.catch_warnings():
@@ -3890,6 +3902,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos,filial,fecha,
                 nombre = archivo.replace("_HC","").replace("_GC","")
                 df_filtrado = df[mask].copy()
                 df_filtrado["FECHA_VISITA"] = df_filtrado["FECHA_VISITA"].dt.strftime('%d-%m-%Y')
+                df_filtrado["FECHA_VISITA"] = df_filtrado["FECHA_VISITA"].fillna('')
                 lista_reporte.append(df_filtrado)
                 if conteo_error:
                     lista_archivo = archivo.split("\\")
@@ -3900,14 +3913,14 @@ def apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos,filial,fecha,
                     largo = 0
                     for valor in dic_error.values():
                         largo += len(valor[1])
-                    op = mod_8.almacenar_errores(dic_error, filial, indicador_SUI[filial], mes, anio, nombre_error_doc, largo, reporte[2:], clasi)
+                    op = mod_8.almacenar_errores(dic_error, filial, indicador_SUI[filial], mes_reporte, anio_reporte, nombre_error_doc, largo, reporte[2:], clasi)
                     if op:
                         informar_archivo_creado(nombre_error_pdf, True)
                     else:
                         print(f"No es posible acceder al archivo {acortar_nombre(nombre_error_pdf)}")
     if len(lista_reporte):
         df_reporte = pd.concat(lista_reporte, ignore_index=True)
-        ext = f"Desviaciones_{indicador_SUI_filial}_58_{pos_mes}{v_fecha_anterior[0]}.csv"
+        ext = f"Desviaciones_{indicador_SUI_filial}_58_{pos_mes_1}{v_fecha_reporte[0]}.csv"
         lista_nombre = nombre.split("\\")
         carpeta = lista_nombre[-1]
         lista_nombre[-1] = ext
@@ -5191,6 +5204,8 @@ def union_archivos_mensuales_anual(dic_archivos, seleccionar_reporte, informar=T
         lista_nombre[-5] = "00. Compilado"
         lista_nombre[-3] = "00. Compilado"
         ext_nombre = lista_nombre[-1].split("_")
+        if "DS" in ext_nombre and "metricas" in ext_nombre:
+            ext_nombre.pop(0)
         ext_nombre.pop(0)
         ext_nombre[0] = fecha_nombre
         lista_nombre[-1] = lista_a_texto(ext_nombre, "_")
@@ -5329,21 +5344,79 @@ def mostrar_titulo(texto, principal, tipo):
 # * -------------------------------------------------------------------------------------------------------
 # *                                            Aplicativo
 # * -------------------------------------------------------------------------------------------------------
+
+def obtener_reporte(info):
+    dic_reportes = info["Reporte"]
+    for llave, dic_llave in dic_reportes.items():
+        for reporte, lista_reporte in dic_llave.items():
+            if lista_reporte[0]:
+                return reporte
+    return None
+
+def obtener_categoria(info):
+    dic_categorias = info["Categoria"]
+    dic_categorias_c = {"Reportes comercial":"Comercial",
+                    "Reporte tarifario":"Tarifario",
+                    "Reporte técnico":"Tecnico"}
+    for llave, lista_llave in dic_categorias.items():
+        if lista_llave[0]:
+            if llave in dic_categorias_c:
+                return dic_categorias_c[llave]
+    return None
+
 class Envio_mensajes(QThread):
     message_sent = pyqtSignal(str, str)
     finished = pyqtSignal()
-    def __init__(self, estado):
+    def __init__(self, estado, info):
         super().__init__()
         self.ruta_guardar_archivos = ruta_guardar_archivos
         self.estado = estado
+        self.info = info
     def run(self):
         try:
             self.message_sent.emit("Inicio de procesamiento de archivos\n", "green")
             t_i = time.time()
-            if self.estado == "almacenar_archivos":
-                almacenar_archivos_2(self.ruta_guardar_archivos, self)
-            else:
-                almacenar_archivos_2(self.ruta_guardar_archivos, self)
+            match self.estado:
+                case "almacenar_archivos":
+                    almacenar_archivos_2(self.ruta_guardar_archivos, self)
+                case "crear_carpetas":
+                    mod_3.configuracion_inicial()
+                    self.message_sent.emit("\nConfiguración inicial completa\n", "green")
+                    self.message_sent.emit("\nSe recomienda recargar el aplicativo para almacenar los cambios\n", "yellow")
+                case "agregar_anio":
+                    anio = str(anio_actual)
+                    mod_2.cambiar_diccionario(str(anio))
+                    mod_3.configuracion_inicial()
+                    self.message_sent.emit(f"\nAño {anio_actual} ingresado correctamente\n", "green")
+                    self.message_sent.emit("\nConfiguración inicial completa\n", "green")
+                    self.message_sent.emit("\nSe recomienda recargar el aplicativo para almacenar los cambios\n", "yellow")
+                case "editar_reporte":
+                    if self.info:
+                        reporte = obtener_reporte(self.info)
+                        if reporte:
+                            op, info = editar_json_reporte(reporte+"_json")
+                            if op == "no_complete":
+                                self.message_sent.emit("\nEl archivo .xlsx no posee las hojas necesarias\n", "red")
+                                self.message_sent.emit(f"\nLas hojas aceptadas son: {lista_a_texto(info, ', ')}\n", "red")
+                            elif op == "no_exist":
+                                self.message_sent.emit(f"\nNo existe el archivo {info}\n", "red")
+                            else:
+                                self.message_sent.emit(f"\n{info}\n", "green")
+                case "agregar_reporte":
+                    if self.info:
+                        reporte = self.info["Nuevo_reporte"]
+                        categoria = obtener_categoria(self.info)
+                        if categoria:
+                            op, info = agregar_json_reporte(categoria, reporte+"_json")
+                            if op == "no_complete":
+                                self.message_sent.emit("\nEl archivo .xlsx no posee las hojas necesarias\n", "red")
+                                self.message_sent.emit(f"\nLas hojas aceptadas son: {lista_a_texto(info, ', ')}\n", "red")
+                            elif op == "no_exist":
+                                self.message_sent.emit(f"\nNo existe el archivo {info}\n", "red")
+                            else:
+                                self.message_sent.emit(f"\n{info}\n", "green")
+                case _:
+                    almacenar_archivos_2(self.ruta_guardar_archivos, self)
             self.message_sent.emit("\nFin de procesamiento de archivos\n", "green")
             t_f = time.time()
             tiempo = mostrar_tiempo(t_f, t_i)
@@ -5424,11 +5497,11 @@ def almacenar_archivos_2(ruta_guardar_archivos, thread):
             pass
 
 class Crear_ventana_texto(QDialog):
-    def __init__(self,texto, estado, parent=None):
+    def __init__(self,texto, estado, info, parent=None):
         super().__init__(parent)
         self.result = None
-        self.initUI(texto, estado)
-    def initUI(self, texto, estado):
+        self.initUI(texto, estado, info)
+    def initUI(self, texto, estado, info):
         self.setGeometry(50, 50, 1700, 1030)
         self.setStyleSheet("""QWidget { background-color: #030918; border: 5px solid #030918; }""")
         self.setWindowTitle(texto)
@@ -5443,9 +5516,9 @@ class Crear_ventana_texto(QDialog):
         self.scroll_area.setWidget(self.content_widget)
         main_layout.addWidget(self.scroll_area)
         self.setLayout(main_layout)
-        self.start_generation(estado)
-    def start_generation(self, estado):
-        self.thread = Envio_mensajes(estado)
+        self.start_generation(estado, info)
+    def start_generation(self, estado, info):
+        self.thread = Envio_mensajes(estado, info)
         self.thread.message_sent.connect(self.add_message)
         self.thread.finished.connect(self.show_buttons)
         self.thread.start()
@@ -5474,7 +5547,7 @@ class Crear_ventana_texto(QDialog):
         self.result = choice
         self.accept()
 
-def run_app(texto, estado):
-    dialog = Crear_ventana_texto(texto, estado)
+def run_app(texto, estado, info=None):
+    dialog = Crear_ventana_texto(texto, estado, info)
     result = dialog.exec_()
     return dialog.result

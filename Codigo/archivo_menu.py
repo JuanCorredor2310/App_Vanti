@@ -40,7 +40,7 @@ lista_reportes_generales = mod_2.leer_archivos_json(ruta_constantes+"carpetas_1.
 reportes_generados = mod_2.leer_archivos_json(ruta_constantes+"carpetas_1.json")["carpeta_4"]
 trimestre_mes = mod_2.leer_archivos_json(ruta_constantes+"trimestre_mes.json")["datos"]
 lista_reportes_generados = ["_resumen","_form_estandar", #formatos generales
-                            "_reporte_consumo","_CLD","_PRD","_porcentaje_comparacion_SAP","_total_comparacion_SAP","SH","DANE","_reporte_DANE","_compilado_desviaciones","_compilado_DS_metricas",
+                            "_reporte_consumo","_CLD","_PRD","_porcentaje_comparacion_SAP","_total_comparacion_SAP","SH","DANE","_reporte_DANE","_compilado_desviaciones","_compilado_DS_metricas","SAP",
                             "_comparacion_iguales","_comparacion_diferentes","_subsidio","_info_comercial","_reporte_compensacion","_compilado_compensacion", #formatos comerciales
                             "_reporte_tarifario", #formatos tarifarios
                             "_indicador_tecnico","_reporte_suspension","_indicador_tecnico_IRST","_indicador_tecnico_IRST_minutos","_indicador_tecnico_IRST_horas", #formatos tecnicos
@@ -67,17 +67,25 @@ lista_reportes_totales = crear_lista_reportes_totales()
 # *                                             Procesamiento de opciones de menú
 # * -------------------------------------------------------------------------------------------------------
 def reodenar_lista(lista):
-    n_lista = []
-    l1 = []
-    l2 = []
-    for i in range(0,len(lista),2):
-        n_lista.append(lista[i])
-        l1.append(lista[i])
-    for i in range(1,len(lista),2):
-        n_lista.append(lista[i])
-        l2.append(lista[i])
-    return n_lista,l1,l2
+    largo = len(lista)
+    l1 = lista[:largo//2]
+    l2 = lista[largo//2:]
+    return l1,l2
 
+def cambiar_lista_fechas(lista):
+    lista_anios_c = []
+    lista_meses_c = []
+    lista_fechas = []
+    for i in lista:
+        elemento = i.split(" - ")
+        if elemento[0] not in lista_anios_c:
+            lista_anios_c.append(elemento[0])
+        if elemento[1] not in lista_meses_c:
+            lista_meses_c.append(elemento[1])
+    for j in lista_anios_c:
+        for i in lista_meses_c:
+            lista_fechas.append(j+" - "+i)
+    return lista_fechas
 
 def lista_opciones_menu(lista, separacion):
     dic_menu = {}
@@ -91,28 +99,23 @@ def lista_opciones_menu(lista, separacion):
             print(elemento)
             dic_menu[str(i+1)] = lista[i]
     else:
-        lista,l1,l2 = reodenar_lista(lista)
+        lista = cambiar_lista_fechas(lista)
+        l1,l2 = reodenar_lista(lista)
         for i in range(largo):
             elemento = str(i+1)+". "+lista[i]
             dic_menu[str(i+1)] = lista[i]
         n = 30
         largo_1 = len(l1)
         largo_2 = len(l2)
-        for i in range(largo_1):
-            if i < largo_1 and i < largo_2:
+        if largo_1 == largo_2:
+            for i in range(largo_1):
                 if i+1 < 10:
                     t1 = str(i+1)+".  "+l1[i]
-                    t2 = str(i+13)+". "+l2[i]
+                    t2 = str(i+largo_1+1)+". "+l2[i]
                 else:
                     t1 = str(i+1)+". "+l1[i]
-                    t2 = str(i+13)+". "+l2[i]
+                    t2 = str(i+largo_1+1)+". "+l2[i]
                 print(t1+" "*(n-len(t1))+t2)
-            elif i < largo_1:
-                if i+1 < 10:
-                    t1 = str(i+1)+".  "+l1[i]
-                else:
-                    t1 = str(i+1)+". "+l2[i]
-                print(t1)
     return dic_menu
 
 def comprobar_opcion_lista_menu(lista, opcion):
@@ -1074,6 +1077,7 @@ def menu_comercial_sectores_consumo(option,valor):
     #? Generación de información comercial por sectores de consumo mensual
     if option == "1":
         seleccionar_reporte = funcion_seleccionar_reportes("reporte_comercial_mensual")
+        print(seleccionar_reporte)
         if len(seleccionar_reporte["filial"]) == 4:
             op_add = anadir_opciones(regenerar=True, codigo_DANE=True, sumatoria=True, valor_facturado=True, facturas=True)
         else:
@@ -1095,6 +1099,7 @@ def menu_comercial_sectores_consumo(option,valor):
     #? Generación de información comercial por sectores de consumo anual
     elif option == "2":
         seleccionar_reporte = funcion_seleccionar_reportes("reporte_comercial_anual")
+        print(seleccionar_reporte)
         reporte = "_reporte_consumo.csv"
         if len(seleccionar_reporte["filial"]) == 4:
             op_add = anadir_opciones(regenerar=True, codigo_DANE=True, sumatoria=True, valor_facturado=True, reportes_mensuales=True,texto_regenerar_mensuales=f"{reporte}",reporte_consumo_anual=True, facturas=True)
@@ -1310,8 +1315,8 @@ def menu_comercial_analisis_previo(option,valor):
         t_i = time.time()
         print(f"\nInicio de procesamiento para: {valor}\n\n")
         if regenerar:
-            proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False)
-        proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, False, continuar=False, mostrar_dic=True)
+            proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False,evitar_extra=["SAP"])
+        proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, False, continuar=False, mostrar_dic=True, evitar_extra=["SAP"])
         if proceso:
             mod_1.encontrar_errores_inventario_suscriptores(dic_archivos, seleccionar_reporte)
         t_f = time.time()
@@ -1325,8 +1330,8 @@ def menu_comercial_analisis_previo(option,valor):
         t_i = time.time()
         print(f"\nInicio de procesamiento para: {valor}\n\n")
         if regenerar:
-            proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False)
-        proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, False, continuar=False, mostrar_dic=True)
+            proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False,evitar_extra=["SAP"])
+        proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, False, continuar=False, mostrar_dic=True, evitar_extra=["SAP"])
         if proceso:
             mod_1.corregir_errores_inventario_suscriptores(dic_archivos, seleccionar_reporte)
         t_f = time.time()
@@ -2401,14 +2406,28 @@ def iniciar_app(info_app):
     sys.exit(app.exec_())
 
 def activar_funciones(info_app, estado, info):
-    app, window, central_widget, dimensiones = info_app
-    if estado == "almacenar_archivos":
-        titulo = "Almacenamiento de archivos"
-        estado = mod_1.run_app(titulo, estado)
-    elif estado:
-        print(estado, "\n")
-        print(info, "\n"*2)
+    #app, window, central_widget, dimensiones = info_app
+    match estado:
+        case "almacenar_archivos":
+            titulo = "Almacenamiento de archivos"
+            estado = mod_1.run_app(titulo, estado)
+        case "crear_carpetas":
+            titulo = "Creación de carpetas"
+            estado = mod_1.run_app(titulo, estado)
+        case "agregar_anio":
+            titulo = "Agregar año actual"
+            estado = mod_1.run_app(titulo, estado)
+        case "editar_reporte":
+            titulo = "Editar reporte existente"
+            estado = mod_1.run_app(titulo, estado, info)
+        case "agregar_reporte":
+            titulo = "Agregar nuevo reporte"
+            estado = mod_1.run_app(titulo, estado, info)
+        case _:
+            print(estado, "\n")
+            print(info, "\n"*2)
 
 if __name__ == "__main__":
-    iniciar_app(crear_app())
-    #iniciar_menu()
+    #iniciar_app(crear_app())
+    iniciar_menu()
+    

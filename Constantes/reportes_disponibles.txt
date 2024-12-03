@@ -1,6 +1,7 @@
 Comercial,GRC1
 Comercial,GRC2
 Comercial,GRC3
+Comercial,GRTT2SAP
 Comercial,GRTT2
 Comercial,DS56
 Comercial,DS57

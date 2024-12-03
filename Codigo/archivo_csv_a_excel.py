@@ -163,6 +163,11 @@ def generar_borde_simple(sheet):
             cell.border = border_simple
 
 def lectura_hoja_xlsx(archivo, hoja):
+    workbook = load_workbook(archivo, read_only=True)
+    worksheet = workbook[hoja]
+    cantidad_filas = worksheet.max_row
+    if cantidad_filas > 30000:
+        return None, None
     try:
         df = pd.read_excel(archivo, sheet_name=hoja).reset_index(drop=True)
         return df, True
