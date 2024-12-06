@@ -1,0 +1,19 @@
+{
+    "descripcion": [
+        "Tarifas"
+    ],
+    "datos": {
+        "GNCB": "Tunja",
+        "GNCR": "Aguachica",
+        "LLANOGAS": "Villavicencio",
+        "VANTI": "Bogot\u00e1",
+        "EPM": "Medell\u00edn",
+        "GOR": "Bucaramanga",
+        "SURTIGAS": "Cartagena",
+        "EFIGAS": "Armenia",
+        "GASCARIBE": "Barranquilla",
+        "GDO": "Cali",
+        "METROGAS": "Floridablanca",
+        "ALCANOS": "Neiva"
+    }
+}

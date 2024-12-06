@@ -1064,6 +1064,23 @@ def variables_reportes(reporte):
                 datos = {"descripcion":desc,
                         "datos":data}
                 guardar_diccionario_ruta(datos, "tabla_8_DS_categoria")
+        elif reporte == "ciudades_tarifas":
+                desc = "Tarifas",
+                data = {"GNCB":"Tunja",
+                        "GNCR":"Aguachica",
+                        "LLANOGAS":"Villavicencio",
+                        "VANTI":"Bogotá",
+                        "EPM":"Medellín",
+                        "GOR":"Bucaramanga",
+                        "SURTIGAS":"Cartagena",
+                        "EFIGAS":"Armenia",
+                        "GASCARIBE":"Barranquilla",
+                        "GDO":"Cali",
+                        "METROGAS":"Floridablanca",
+                        "ALCANOS":"Neiva"}
+                datos = {"descripcion":desc,
+                        "datos":data}
+                guardar_diccionario_ruta(datos, n_archivo)
 
 def crear_archivos_json_principales():
         variables_reportes("GRT1")
@@ -1122,4 +1139,5 @@ def crear_archivos_json_principales():
         variables_reportes("DS56")
         variables_reportes("DS57")
         variables_reportes("DS58")
+        variables_reportes("ciudades_tarifas")
         creacion_directorio_carpetas_principales()

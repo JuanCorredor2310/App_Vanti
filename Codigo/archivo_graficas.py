@@ -73,6 +73,9 @@ ruta_fuente = ruta_fuentes+"Muli.ttf"
 ruta_fuente_negrilla = ruta_fuentes+"Muli-Bold.ttf"
 custom_font = FontProperties(fname=ruta_fuente)
 
+def conversion_decimales(texto):
+    return str(texto).replace(".",",")
+
 def union_listas_df_trimestre(df):
     lista = []
     for i in range(len(df)):
@@ -142,7 +145,11 @@ def grafica_barras_trimestre_reclamos(archivo):
         for filial in lista_filiales:
             df_filial = df_filtro[df_filtro['Filial'] == filial]
             lista_periodos = list(df_filial["Periodo_reportado_Periodo_reportado"].unique())
+            if len(lista_periodos) > 4:
+                lista_periodos = lista_periodos[-4:]
             lista_porcentaje = list(df_filial['Porcentaje_reclamos_fact_10000'])
+            if len(lista_porcentaje) > 4:
+                lista_porcentaje = lista_porcentaje[-4:]
             dic_grafica[filial] = lista_porcentaje
         cmap = LinearSegmentedColormap.from_list("", [dic_colores["rosa_p2"], dic_colores["rosa_p2"]])
         grad = np.atleast_2d(np.linspace(0, 1, 256)).T
@@ -179,11 +186,11 @@ def grafica_barras_trimestre_reclamos(archivo):
             if c == 0:
                 c+=1
                 imagen = Image.open(n_imagen)
-                recorte = (1100, 1428, imagen.width-1000, imagen.height)
+                recorte = (1100, 1570, imagen.width-1000, imagen.height)
                 imagen_recortada = imagen.crop(recorte)
                 imagen_recortada.save(archivo_copia.replace('.csv','_limite.png'))
             imagen = Image.open(n_imagen)
-            recorte = (330, 50, imagen.width-220, imagen.height-70)
+            recorte = (330, 50, imagen.width-220, imagen.height-90)
             imagen_recortada = imagen.crop(recorte)
             imagen_recortada.save(n_imagen)
             informar_imagen(n_imagen)
@@ -1745,7 +1752,7 @@ def grafica_deuda_subsidios(archivo, archivo_1, dic_metricas):
         archivo_copia = mod_1.lista_a_texto(lista_archivo,"\\")
         df = pd.read_csv(archivo, sep=",", encoding="utf-8-sig")
         df_1 = pd.read_csv(archivo_1, sep=",", encoding="utf-8-sig")
-        porcentaje = round(df_1["KPI"].mean(),2)
+        porcentaje = round(df_1.iloc[-1]["KPI"],2)
         meta_subsidios = 1.4
         error = (abs(meta_subsidios-porcentaje)/meta_subsidios)*100
         if porcentaje >= meta_subsidios:
@@ -1761,7 +1768,7 @@ def grafica_deuda_subsidios(archivo, archivo_1, dic_metricas):
         valor = round(list(df["Deuda"])[-1])
         texto = f"{valor/1e9:.1f} m M"
         dic_metricas["deuda_subsidios"] = texto
-        lista_colores = [dic_colores["azul_v"], dic_colores["rojo_c"]]
+        lista_colores = [ dic_colores["amarillo_v"],dic_colores["azul_v"]]
         fig, ax = plt.subplots(figsize=(30,15))
         ax.fill_between(x, df["Deuda"], color=lista_colores[0], label='Deuda MME')
         ax.fill_between(x, df["Pagado"], color=lista_colores[1], alpha=0.8, label='Girado MME')

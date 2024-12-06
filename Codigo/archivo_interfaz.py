@@ -165,7 +165,7 @@ def menu_inicial(app, window, central_widget, dimensiones, estado=None, info=Non
     boton_3 = crear_boton("Reportes comerciales", central_widget, font_size=35)
     boton_4 = crear_boton("Reportes tarifarios", central_widget, font_size=35)
     boton_5 = crear_boton("Reportes técnicos", central_widget, font_size=35)
-    boton_6 = crear_boton("Cumplimientos de reportes regulatorios", central_widget, font_size=35)
+    boton_6 = crear_boton("KPIs", central_widget, font_size=35)
     boton_7 = crear_boton("Dashboard", central_widget, font_size=50)
     botones = [boton_1, boton_2, boton_3, boton_4, boton_5, boton_6, boton_7]
     max_width = max([boton.sizeHint().width() for boton in botones])
@@ -763,7 +763,6 @@ def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=Non
             anual = True
         if anual:
             llave_activa = boton_fecha_selected()
-            print(llave_activa)
             if llave_activa:
                 cambio = False
                 contador = 0
@@ -825,7 +824,7 @@ def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=Non
             value[0].setText("")
             value[2] = False
     def on_button_clicked(texto):
-        nonlocal estado, info
+        nonlocal estado, info, anual
         if (texto == "aceptar" and comprobar_aceptar()) or (texto == "volver"):
             event_loop.quit()
             esconder_label(titulo_espacios)
@@ -851,10 +850,22 @@ def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=Non
             if texto == "volver":
                 if estado_anterior == "menu_reporte_comercial":
                     estado,info = menu_reporte_comercial(app, window, central_widget, dimensiones)
+                else:
+                    estado,info = menu_reporte_comercial(app, window, central_widget, dimensiones)
             elif texto == "aceptar":
                 info["Fecha"] = dic_fechas
                 info["Filial"] = dic_botones_filiales
-                estado,info = seleccionar_reporte(app, window, central_widget, dimensiones, estado, info)
+                if anual and "anual" not in estado:
+                    estado += "_anual"
+                elif "mensual" not in estado:
+                    estado += "_mensual"
+                if "reporte_comercial_sector_consumo" in estado:
+                    opciones = {"regenerar":True, "codigo_DANE":True, "sumatoria":True, "valor_facturado":True, "facturas":True}
+                    estado, info = opciones_adicionales(app, window, central_widget, dimensiones, estado_anterior="menu_seleccion", estado=estado, info=info, opciones=opciones)
+                else:
+                    opciones = {"regenerar":True, "codigo_DANE":True, "sumatoria":True, "valor_facturado":True, "facturas":True}
+                    estado, info = opciones_adicionales(app, window, central_widget, dimensiones, estado_anterior="menu_seleccion", estado=estado, info=info, opciones=opciones)
+                #estado,info = seleccionar_reporte(app, window, central_widget, dimensiones, estado, info)
 
     f1.clicked.connect(lambda: cambiar_botones("VANTI"))
     f2.clicked.connect(lambda: cambiar_botones("GNCB"))
@@ -1302,22 +1313,35 @@ def lista_codigo_DANE(texto):
         if num:
             if num not in valores_aceptados:
                 valores_aceptados.append(num)
+    valores_aceptados.sort()
     lista_texto_dane = [str(i) for i in valores_aceptados]
-    return valores_aceptados, ", ".join(lista_texto_dane)
+    lista_texto_dane_c = [",".join(lista_texto_dane[i:i+3]) for i in range(0, len(lista_texto_dane), 3)]
+    lista_texto_dane_c = "\n".join(lista_texto_dane_c)
+    return valores_aceptados, lista_texto_dane_c
 
-def opciones_adicionales(app, window, central_widget, dimensiones, opciones=[], estado=None, info=None, estado_anterior=None):
-    opciones = {"regenerar":True, "codigo_DANE":True, "sumatoria":True, "valor_facturado":True, "facturas":True}
+def opciones_adicionales(app, window, central_widget, dimensiones, opciones={}, estado=None, info=None, estado_anterior=None):
     dic_adicionales = {"codigo_DANE":False, "valor_facturado":False, "cantidad_filas":False, "inventario":False, "regenerar":False,
                         "reportes_mensuales":False, "texto_regenerar":"_form_estandar, _resumen",
                     "usuarios_activos":False, "sumatoria":False, "reporte_consumo_anual":False, "facturas":False}
-    dic_adicionales_texto = {"codigo_DANE":"Código DANE", "valor_facturado":"Valor total facturado", "cantidad_filas":"Cantidad de filas", "inventario":"Inventario de suscriptores", "regenerar":"Regenerar archivos necesarios",
+    dic_adicionales_texto = {"codigo_DANE":"Código DANE", "valor_facturado":"Valor total facturado", "cantidad_filas":"Cantidad de filas", "inventario":"Inventario de suscriptores", "regenerar":"Regenerar archivos necesarios (form_estandar, resumen)",
                         "reportes_mensuales":"Reportes mensuales", "texto_regenerar":"_form_estandar, _resumen",
                     "usuarios_activos":"Info. usuarios activos", "sumatoria":f"Sumatoria {grupo_vanti}","facturas":"Cantidad de facturas emitidas"}
     if not len(opciones):
         return dic_adicionales
     screen_width = dimensiones[0]
     lista_cod_DANE = [f"{l}, {v}" for l,v in dic_DANE_nombres.items()]
-    dic_texto_2 = {f"Códigos DANE {grupo_vanti}": lista_cod_DANE}
+    largo_lista_cod_DANE = len(lista_cod_DANE)
+    lista_cod_DANE_c = []
+    ancho_texto = 60
+    for i in range(0,largo_lista_cod_DANE,2):
+        t1 = str(lista_cod_DANE[i])
+        if i+1 < largo_lista_cod_DANE:
+            t2 = str(lista_cod_DANE[i+1])
+            espacio = " "*(ancho_texto-len(t1))
+            lista_cod_DANE_c.append(t1+espacio+t2)
+        else:
+            lista_cod_DANE_c.append(t1)
+    dic_texto_2 = {f"Códigos DANE {grupo_vanti}": lista_cod_DANE_c}
     titulo = "Opciones adicionales"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=50)
     x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
@@ -1336,7 +1360,6 @@ def opciones_adicionales(app, window, central_widget, dimensiones, opciones=[], 
             v_line_edit.move(x,1000)
             v_line_edit.setParent(central_widget)
             mostrar_label(v_line_edit)
-            codigo_DANE = True
             cambio = 150
     label_check = QPushButton("", central_widget)
     pixmap_check = QPixmap(ruta_imagenes+"check.png")
@@ -1419,11 +1442,12 @@ def opciones_adicionales(app, window, central_widget, dimensiones, opciones=[], 
         if len(codigo):
             dane_num, dane_text = lista_codigo_DANE(codigo)
             dic_opciones_botones["codigo_DANE"] = dane_num
-            QApplication.processEvents()
+            mostrar_label(label_check)
             label_codigo_DANE.setText(dane_text)
+            label_codigo_DANE.repaint()
             mostrar_label(label_codigo_DANE)
             QApplication.processEvents()
-            mostrar_label(label_check)
+            time.sleep(0.1)
     def on_button_clicked(texto):
         nonlocal estado, info
         if texto == "aceptar" or texto == "volver":
@@ -1441,7 +1465,11 @@ def opciones_adicionales(app, window, central_widget, dimensiones, opciones=[], 
                     esconder_label(valor[1])
                     esconder_label(valor[2])
             if texto == "volver":
-                estado, info = seleccionar_carpetas(app, window, central_widget, dimensiones, estado, info)
+                if estado_anterior == "menu_seleccion":
+                    estado,info = menu_seleccion(app, window, central_widget, dimensiones, estado=estado, info=info)
+                else:
+                    estado, info = menu_inicial(app, window, central_widget, dimensiones)
+                    #estado, info = seleccionar_carpetas(app, window, central_widget, dimensiones, estado, info)
             elif texto == "aceptar":
                 info["Opciones_adicionales"] = dic_opciones_botones
     image_button.clicked.connect(lambda:on_button_clicked("volver"))

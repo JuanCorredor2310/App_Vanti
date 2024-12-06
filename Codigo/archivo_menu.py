@@ -253,6 +253,17 @@ def elegir_facturas():
     else:
         return False
 
+def elegir_info_usuarios():
+    lista = ["Sí","No"]
+    lista.append("Regresar al menú inicial")
+    option,valor = opcion_menu_valida(lista, "Incluir la información general de los usuarios", False)
+    if option == str(len(lista)):
+        iniciar_menu()
+    elif option == "1":
+        return True
+    else:
+        return False
+
 def elegir_mostrar_archivos():
     lista = ["Sí","No"]
     lista.append("Regresar al menú inicial")
@@ -342,7 +353,7 @@ def anadir_opciones(regenerar=False, codigo_DANE=False, valor_facturado=False, c
         facturas = elegir_facturas()
     if (reportes_mensuales and usuarios_activos) or (reportes_mensuales == None and usuarios_activos):
         usuarios_activos = elegir_usuarios_activos()
-    return (calcular_tiempo, regenerar, codigo_DANE, valor_facturado, cantidad_filas, mostrar_archivos, reportes_mensuales, inventario, usuarios_activos, sumatoria,facturas)
+    return (calcular_tiempo, regenerar, codigo_DANE, valor_facturado, cantidad_filas, mostrar_archivos, reportes_mensuales, inventario, usuarios_activos, sumatoria, facturas)
 
 def especificar_lista_reportes_generados(lista_1):
     lista = lista_reportes_generados.copy()
@@ -1077,7 +1088,7 @@ def menu_comercial_sectores_consumo(option,valor):
     #? Generación de información comercial por sectores de consumo mensual
     if option == "1":
         seleccionar_reporte = funcion_seleccionar_reportes("reporte_comercial_mensual")
-        print(seleccionar_reporte)
+        #print(seleccionar_reporte)
         if len(seleccionar_reporte["filial"]) == 4:
             op_add = anadir_opciones(regenerar=True, codigo_DANE=True, sumatoria=True, valor_facturado=True, facturas=True)
         else:
@@ -1093,13 +1104,14 @@ def menu_comercial_sectores_consumo(option,valor):
             proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False)
         proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, False, continuar=False, mostrar_dic=True)
         if proceso:
+            #print(dic_archivos)
             mod_1.reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=codigo_DANE, total=sumatoria, valor_facturado=valor_facturado, facturas=facturas)
         t_f = time.time()
         mod_1.mostrar_tiempo(t_f, t_i)
     #? Generación de información comercial por sectores de consumo anual
     elif option == "2":
         seleccionar_reporte = funcion_seleccionar_reportes("reporte_comercial_anual")
-        print(seleccionar_reporte)
+        #print(seleccionar_reporte)
         reporte = "_reporte_consumo.csv"
         if len(seleccionar_reporte["filial"]) == 4:
             op_add = anadir_opciones(regenerar=True, codigo_DANE=True, sumatoria=True, valor_facturado=True, reportes_mensuales=True,texto_regenerar_mensuales=f"{reporte}",reporte_consumo_anual=True, facturas=True)
@@ -1124,6 +1136,7 @@ def menu_comercial_sectores_consumo(option,valor):
                 mod_1.reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=codigo_DANE, total=sumatoria, valor_facturado=valor_facturado, facturas=facturas)
         proceso,dic_archivos_anual = generar_archivos_extra_anual(seleccionar_reporte, reporte, ["_reporte_consumo", reporte.replace(".csv","")])
         if proceso:
+            #print(dic_archivos)
             mod_1.union_archivos_mensuales_anual_reporte_consumo(dic_archivos_anual, seleccionar_reporte, True)
         t_f = time.time()
         mod_1.mostrar_tiempo(t_f, t_i)
@@ -1391,7 +1404,7 @@ def menu_comercial_analisis_previo(option,valor):
         seleccionar_reporte = funcion_seleccionar_reportes("usuarios_unicos_anual")
         reporte_1 = "_usuarios_unicos.csv"
         reporte_2 = "_reporte_facturacion.csv"
-        op_add = anadir_opciones(True, reportes_mensuales=True,texto_regenerar_mensuales=f"{reporte_1}, {reporte_2}")
+        op_add = anadir_opciones(regenerar=True, reportes_mensuales=True,texto_regenerar_mensuales=f"{reporte_1}, {reporte_2}")
         t_i = time.time()
         regenerar = op_add[1]
         regenerar_reportes_mensuales = op_add[6]
@@ -1807,9 +1820,6 @@ def menu_creacion_dashboard():
             archivo = mod_1.gastos_AOM(dashboard=True, texto_fecha=texto_fecha)
             if archivo:
                 mod_6.grafica_gastos_AOM(archivo, anio_actual-1)
-            archivo = mod_1.generar_porcentaje_matriz_requerimientos(dashboard=True, texto_fecha=texto_fecha)
-            if archivo:
-                mod_6.grafica_matriz_requerimientos(archivo)
             archivo = mod_1.generar_porcentaje_cumplimientos_regulatorios(dashboard=True, texto_fecha=texto_fecha)
             if archivo:
                 mod_6.velocimetro_cumplimientos_regulatorios(archivo, v_fecha_anterior)
@@ -1819,9 +1829,28 @@ def menu_creacion_dashboard():
             dic_tarifas = mod_1.tarifas_distribuidoras_GN()
             if dic_tarifas:
                 dic_metricas["Tarifas_nacionales"] = dic_tarifas
+            for i, j in dic_metricas.items():
+                if i == "Tarifas_nacionales":
+                    print(i)
+                    for a,b in j.items():
+                        print(a)
+                        print(b)
+                elif i == "tarifas":
+                    print(i)
+                    for a,b in j.items():
+                        print(a)
+                        for c,d in b.items():
+                            print(c)
+                            print(d)
+                            print("\n")
+                else:
+                    print(i)
+                    print(j)
+                    print("\n")
+            archivo = mod_1.generar_porcentaje_matriz_requerimientos(dashboard=True, texto_fecha=texto_fecha)
+            if archivo:
+                mod_6.grafica_matriz_requerimientos(archivo)
             #mod_7.crear_slides(mod_1.lista_a_texto(archivo.split("\\")[:-2],"\\"),v_fecha_anterior,texto_fecha_completo, fecha_actual_texto, texto_fecha, lista_metricas_portada)
-            print(dic_metricas)
-
             t_f = time.time()
             mod_1.mostrar_tiempo(t_f, t_i)
 
@@ -2349,6 +2378,49 @@ def eleccion_fecha(seleccionar_reportes, lista_evaluar, opcion_extra, nombre, se
                 return seleccionar_reportes
 
 # * -------------------------------------------------------------------------------------------------------
+# *                                             Seleccionar reporte aplicativo
+# * -------------------------------------------------------------------------------------------------------
+def formato_seleccionar_reporte(dic_info, estado):
+    dic_info_reporte = {}
+    lista_seleccionar_reporte = []
+    opciones = {}
+    match estado:
+        case "reporte_comercial_sector_consumo_mensual":
+            ubi = ["Reportes Nuevo SUI"]
+            tipo = ["Comercial"]
+            clasificacion = ["GRC1","GRC2","GRTT2"]
+            filial = []
+            if "Filial" in dic_info:
+                if dic_info["Filial"]["Todas"][2]:
+                    filial = ["VANTI", "GNCB", "GNCR", "GOR"]
+                else:
+                    for llave, valor in dic_info["Filial"].items():
+                        if valor[2]:
+                            filial.append(llave)
+            if "Fecha" in dic_info:
+                for _, valor in dic_info["Fecha"].items():
+                    reporte = reset_reporte()
+                    if valor[1]:
+                        reporte["anios"] = [valor[0][0]]
+                        reporte["meses"] = [valor[0][1]]
+                        reporte["filial"] = filial
+                        reporte["tipo"] = tipo
+                        reporte["clasificacion"] = clasificacion
+                        reporte["ubicacion"] = ubi
+                        lista_seleccionar_reporte.append(reporte)
+            if "Opciones_adicionales" in dic_info:
+                for llave, valor in dic_info["Opciones_adicionales"].items():
+                    if llave == "codigo_DANE":
+                        opciones[llave] = valor
+                    elif valor[0]:
+                        opciones[llave] = valor[0]
+        case _:
+            pass
+    dic_info_reporte["Reportes"] = lista_seleccionar_reporte
+    dic_info_reporte["Opciones"] = opciones
+    return dic_info_reporte
+
+# * -------------------------------------------------------------------------------------------------------
 # *                                             Opciones de menú inicial
 # * -------------------------------------------------------------------------------------------------------
 def iniciar_menu():
@@ -2369,6 +2441,8 @@ def mostrar_inicio_app():
     mod_1.mostrar_titulo("Vicepresidencia de Estrategia y Finanzas", None, "up")
     mod_1.mostrar_titulo("Regulación, Márgenes y Tarifas", None, "down")
     iniciar_menu()
+
+
 
 # TODO: Pendientes Urgentes
     #Terminar slides Canva
@@ -2401,12 +2475,11 @@ def iniciar_app(info_app):
     app, window, central_widget, dimensiones = info_app
     estado, info = mod_9.menu_inicial(app, window, central_widget, dimensiones)
     if estado:
-        activar_funciones(info_app, estado, info)
+        activar_funciones(estado, info)
     iniciar_app(info_app)
     sys.exit(app.exec_())
 
-def activar_funciones(info_app, estado, info):
-    #app, window, central_widget, dimensiones = info_app
+def activar_funciones(estado, info):
     match estado:
         case "almacenar_archivos":
             titulo = "Almacenamiento de archivos"
@@ -2423,6 +2496,10 @@ def activar_funciones(info_app, estado, info):
         case "agregar_reporte":
             titulo = "Agregar nuevo reporte"
             estado = mod_1.run_app(titulo, estado, info)
+        case "reporte_comercial_sector_consumo_mensual":
+            titulo = "Reporte comercial sector consumo"
+            info = formato_seleccionar_reporte(info, estado)
+            estado = mod_1.run_app(titulo, estado, info)
         case _:
             print(estado, "\n")
             print(info, "\n"*2)
@@ -2430,4 +2507,3 @@ def activar_funciones(info_app, estado, info):
 if __name__ == "__main__":
     #iniciar_app(crear_app())
     iniciar_menu()
-    

@@ -2294,8 +2294,6 @@ def apoyo_reporte_usuarios_filial(lista_archivos,informar,filial,almacenar_excel
                     df = df[["NIU","Codigo_DANE","Direccion","Cedula_Catastral","Estrato","Longitud","Latitud","Estado"]]
                     df["Estrato"] = df["Estrato"].fillna(0).astype(int)
                     df["Estado"] = df["Estado"].fillna(0).astype(int)
-                    #df = df[df['Estrato'].apply(lambda x: isinstance(x, int))].reset_index(drop=True)
-                    #df = df[df['Estado'].apply(lambda x: isinstance(x, int))].reset_index(drop=True)
                     lista_estrato_texto = []
                     for j in range(len(df)):
                         try:
@@ -2557,9 +2555,16 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                 df["Cedula_Catastral"] = df["Cedula_Catastral"].astype(str).replace("0", "").replace("nan", "")
                 df["Estrato"] = pd.to_numeric(df["Estrato"], errors='coerce').fillna(0).astype(int)
                 df["Estrato"] = df["Estrato"].astype(str)
-                df["Altitud"] = pd.to_numeric(df["Altitud"], errors='coerce').fillna(0).astype(int)
-                df["Latitud"] = pd.to_numeric(df["Latitud"], errors='coerce').fillna(-100).astype(float)
-                df["Longitud"] = pd.to_numeric(df["Longitud"], errors='coerce').fillna(-100).astype(float)
+                df["Latitud"] = pd.to_numeric(df["Latitud"], errors="coerce").fillna(-100).astype(float)
+                df["Latitud"] = df["Latitud"].apply(lambda x: -100 if x > 12.462778 or x < -4.225 else x)
+                df["Longitud"] = pd.to_numeric(df["Longitud"], errors="coerce").fillna(-100).astype(float)
+                df["Longitud"] = df["Longitud"].apply(lambda x: -100 if x > -66.848333 or x < -79.006389 else x)
+                df["Latitud"] = df["Latitud"].apply(lambda x: "" if x == -100 else x)
+                df["Longitud"] = df["Longitud"].apply(lambda x: "" if x == -100 else x)
+                mask_latitud = df["Latitud"] == ""
+                mask_longitud = df["Longitud"] == ""
+                df.loc[mask_latitud, "Longitud"] = ""
+                df.loc[mask_longitud, "Latitud"] = ""
                 df["Estado"] = pd.to_numeric(df["Estado"], errors='coerce').fillna(0).astype(int)
                 df["Estado"] = df["Estado"].astype(str)
                 df.loc[(df['Codigo_DANE'] == '11001000') & (df['Cedula_Catastral'].str.len() < 21), 'Cedula_Catastral'] = df.loc[(df['Codigo_DANE'] == '11001000') & (df['Cedula_Catastral'].str.len() < 21), 'Cedula_Catastral'].str.zfill(21)
@@ -2625,15 +2630,11 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                             dic_error[col].append(df_error)
                     elif col == "Altitud":
                         df_filter = df[(df[col] > 0) & (df[col] < 6000)].reset_index(drop=True)
-                        df_error = df[(df[col] < 0) | (df[col] >= 6000)].reset_index(drop=True)
+                        df_error = df[(df[col] <= 0) | (df[col] >= 6000)].reset_index(drop=True)
                         if len(df_error):
                             if col not in dic_error:
                                 dic_error[col] = []
                             dic_error[col].append(df_error)
-                    elif col == "Longitud":
-                        df_filter = df[(df[col] <= -66.848333) & (df[col] >= -79.006389)].reset_index(drop=True)
-                    elif col == "Latitud":
-                        df_filter = df[(df[col] <= 12.4627780) & (df[col] >= -4.225)].reset_index(drop=True)
                     elif col == "Estado":
                         df_filter = df[df[col].isin(tabla_30)].reset_index(drop=True)
                         df_error = df[~df[col].isin(tabla_30)].reset_index(drop=True)
@@ -2650,10 +2651,6 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                                 dic_error[col] = []
                             dic_error[col].append(df_error)
                     df = df_filter.copy()
-                df["Longitud"] = df["Latitud"].apply(lambda x: -100 if x == -100 else x)
-                df["Latitud"] = df["Longitud"].apply(lambda x: -100 if x == -100 else x)
-                df["Longitud"] = df["Longitud"].apply(lambda x: "" if x==-100 else x)
-                df["Latitud"] = df["Latitud"].apply(lambda x: "" if x==-100 else x)
                 lista_aceptado.append(df)
             df_SAP_preliminar = pd.concat(lista_aceptado, ignore_index=True)
             df_SAP_preliminar = df_SAP_preliminar[columnas_GRTT2]
@@ -2720,12 +2717,6 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                     print(f"No es posible acceder al archivo {acortar_nombre(nombre_error_pdf)}")
                 df_error = pd.concat(lista_df_error, ignore_index=True)
                 columnas = list(df_error.columns)
-                df_error["Longitud"] = df_error["Latitud"].apply(lambda x: -100 if x == -100 else x)
-                df_error["Latitud"] = df_error["Longitud"].apply(lambda x: -100 if x == -100 else x)
-                df_error["Longitud"] = pd.to_numeric(df_error["Longitud"], errors='coerce').fillna(-100).astype(float)
-                df_error["Latitud"] = pd.to_numeric(df_error["Latitud"], errors='coerce').fillna(-100).astype(float)
-                df_error["Longitud"] = df_error["Longitud"].apply(lambda x: "" if x==-100 else x)
-                df_error["Latitud"] = df_error["Latitud"].apply(lambda x: "" if x==-100 else x)
                 columnas.append("Columna_error")
                 lista_errores = []
                 for i in range(len(df_error)):
@@ -2757,7 +2748,6 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
             nombre = archivo_SAP.replace("_resumen","_nuevo").replace("_apoyo_error","_nuevo")
             almacenar_df_csv_y_excel(df_nuevo, nombre, almacenar_excel=False)
     return None, None
-
 
 def reporte_usuarios_filial(dic_archivos, seleccionar_reporte, informar, almacenar_excel=True, usuarios_unicos=True):
     lista_filiales_archivo = seleccionar_reporte["filial"]
@@ -4070,31 +4060,23 @@ def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, alma
                                 if not math.isnan(valor_1) and valor_1 > 0:
                                     lista_reg[0] += valor_1
                                     dic_reg[valor][2] += valor_1
-                            except ValueError:
-                                pass
-                            except TypeError:
+                            except BaseException:
                                 pass
                             try:
                                 valor_1 = float(df["Valor_total_facturado"][i])
                                 if not math.isnan(valor_1) and valor_1 > 0:
                                     lista_reg[1] += valor_1
                                     dic_reg[valor][4] += valor_1
-                            except ValueError:
-                                pass
-                            except TypeError:
+                            except BaseException:
                                 pass
                             try:
                                 valor_1 = float(df["Facturacion_consumo"][i])
                                 if not math.isnan(valor_1) and valor_1 > 0:
                                     lista_reg[2] += valor_1
                                     dic_reg[valor][3] += valor_1
-                            except ValueError:
+                            except BaseException:
                                 pass
-                            except TypeError:
-                                pass
-                        except ValueError:
-                            pass
-                        except TypeError:
+                        except BaseException:
                             pass
         elif "GRC2" in archivo:
             lista_df = lectura_dataframe_chunk(archivo)
@@ -4173,9 +4155,7 @@ def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, alma
                             valor = int(df["NIU"][i])
                             if valor not in dic_GRTT2:
                                 dic_GRTT2[valor] = [df["Codigo_DANE"][i], df["Estrato"][i]]
-                        except ValueError:
-                            pass
-                        except TypeError:
+                        except BaseException:
                             pass
                 proceso_GRTT2 = True
     dic_NIU_factura = {"Clasificacion_usuario":[],
@@ -4423,6 +4403,13 @@ def reporte_info_reclamos(fi,ff,listas_unidas, dashboard=False, texto_fecha=None
         print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
         return None,None
 
+def convertir_fecha_2(fecha):
+    try:
+        #return pd.to_datetime(fecha, errors='coerce', dayfirst=True)
+        return pd.to_datetime(fecha, errors='coerce', dayfirst=False)
+    except (ValueError, TypeError):
+        return pd.NaT
+
 def generar_porcentaje_matriz_requerimientos(dashboard=False, texto_fecha=None):
     nombre = "Matriz requerimientos"
     hoja = "BD"
@@ -4440,7 +4427,13 @@ def generar_porcentaje_matriz_requerimientos(dashboard=False, texto_fecha=None):
                 texto = lista_a_texto(["Fecha de recibido","Entidad"],", ")
                 print(f"Algunas de las columnas {texto} no se encunetran en el archivo.")
                 return None
-            df['fecha_de_recibido'] = pd.to_datetime(df['fecha_de_recibido'], dayfirst=True)
+            df['fecha_de_recibido'] = (
+                df['fecha_de_recibido']
+                .fillna("")  # Reemplazar NaN con cadena vacía
+                .astype(str)  # Convertir a string
+                .apply(lambda x: x.replace(" 00:00:00", "").strip()))
+            df['fecha_de_recibido'] = (
+                df['fecha_de_recibido'].apply(convertir_fecha_2))
             df_filtrado = df[df['fecha_de_recibido'].dt.year == anio_actual]
             largo = len(df_filtrado)
             lista_elementos = list(df["entidad"].unique())
@@ -4739,6 +4732,7 @@ def tarifas_distribuidoras_GN():
                     for i in range(len(df_empresa_max)):
                         bola = int((df_empresa_max["Cuv"][i]/v_max)*max_bola)
                         dic_tarifas[df_empresa_max["Empresa"][i]]["Bola"] = bola
+                    dic_tarifas = dict(sorted(dic_tarifas.items(), key=lambda item: item[1]['Tarifa']))
                     return dic_tarifas
                 else:
                     return None
@@ -4882,20 +4876,23 @@ def generar_reporte_indicadores_tecnicos_mensual(dic_archivos, seleccionar_repor
             nuevo_nombre = lista_a_texto(lista_nombre,"\\")
             almacenar_df_csv_y_excel(df_total, nuevo_nombre, informar, almacenar_excel)
 
+def formato_fecha(fecha):
+    fecha = str(fecha).replace("-","").replace(":","").replace("/","").zfill(8)
+    return fecha
+
+def formato_hora(hora):
+    hora = str(hora).replace("-","").replace(":","").replace("/","").zfill(4)
+    return hora
+
 def diferencia_minutos_fechas(df, lista_dia_1, lista_hora_1, lista_dia_2, lista_hora_2):
     lista_dif_minutos = []
     for i in range(len(lista_dia_1)):
         try:
-            fecha_1 = datetime.strptime(str(lista_dia_1[i])+" "+str(lista_hora_1[i]), '%d-%m-%Y %H:%M')
-            fecha_2 = datetime.strptime(str(lista_dia_2[i])+" "+str(lista_hora_2[i]), '%d-%m-%Y %H:%M')
+            fecha_1 = datetime.strptime(f"{formato_fecha(lista_dia_1[i])} {formato_hora(lista_hora_1[i])}", '%d%m%Y %H%M')
+            fecha_2 = datetime.strptime(f"{formato_fecha(lista_dia_2[i])} {formato_hora(lista_hora_2[i])}", '%d%m%Y %H%M')
             diferencia = float(round((fecha_2-fecha_1).total_seconds() / 60))
-        except Exception:
-            try:
-                fecha_1 = datetime.strptime(str(lista_dia_1[i])+" "+str(lista_hora_1[i]), '%d/%m/%Y %H:%M')
-                fecha_2 = datetime.strptime(str(lista_dia_2[i])+" "+str(lista_hora_2[i]), '%d/%m/%Y %H:%M')
-                diferencia = float(round((fecha_2-fecha_1).total_seconds() / 60))
-            except Exception:
-                diferencia = float("inf")
+        except BaseException:
+            diferencia = float(0)
         lista_dif_minutos.append(diferencia)
     df["Cantidad_minutos"] = lista_dif_minutos
     return df
@@ -4935,7 +4932,7 @@ def apoyo_generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos, fili
         df['Observaciones'] = np.where(df['Observaciones'].str.contains('NO CONTR', case=False), 'NO CONTROLADO', df['Observaciones'])
         df['Observaciones'] = df['Observaciones'].str.strip().astype(str)
         df = diferencia_minutos_fechas(df, list(df["Fecha_solicitud"]), list(df["Hora_solicitud"]), list(df["Fecha_llegada_servicio_tecnico"]), list(df["Hora_llegada_servicio_tecnico"]))
-        df['Hora_solicitud'] = df['Hora_solicitud'].str.split(':').str[0].astype(int)
+        df['Hora_solicitud'] = pd.to_numeric(df["Hora_solicitud"], errors='coerce').fillna(0).astype(int)//100
         lista_eventos = list(df["Observaciones"].unique())
         dic_df_evento = {"Tipo_evento":[],
                         "Cantidad_eventos":[],
@@ -5392,6 +5389,15 @@ class Envio_mensajes(QThread):
                                 self.message_sent.emit(f"\nNo existe el archivo {info}\n", "red")
                             else:
                                 self.message_sent.emit(f"\n{info}\n", "green")
+                case "reporte_comercial_sector_consumo_mensual":
+                    if self.info:
+                        print(self.info)
+                        #TODO:
+                        #1. Buscar archivos
+                        #2. Regenerar archivos (informar)
+                        #3. Continuar?
+                        #4. Generar reporte sector de consumo (informar)
+                    time.sleep(0.1)
                 case _:
                     almacenar_archivos_2(self.ruta_guardar_archivos, self)
             self.message_sent.emit("\nFin de procesamiento de archivos\n", "green")
