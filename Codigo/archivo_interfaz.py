@@ -170,7 +170,7 @@ def menu_inicial(app, window, central_widget, dimensiones, estado=None, info=Non
     botones = [boton_1, boton_2, boton_3, boton_4, boton_5, boton_6, boton_7]
     max_width = max([boton.sizeHint().width() for boton in botones])
     for boton in botones:
-        boton.setFixedWidth(max_width)
+        boton.setFixedWidth(max_width+65)
     x = round(((screen_width*0.5)-max_width)*0.5)
     boton_1.move(x,400)
     boton_1.setParent(central_widget)
@@ -513,6 +513,9 @@ def menu_reportes_comerciales(app, window, central_widget, dimensiones, estado=N
             estado,info = menu_inicial(app, window, central_widget, dimensiones)
         elif texto == "reporte_comercial":
             estado,info = menu_reporte_comercial(app, window, central_widget, dimensiones, estado, info)
+        elif texto == "reporte_compensaciones":
+            estado = texto
+            estado,info = menu_seleccion(app, window, central_widget, dimensiones, "menu_reportes_comerciales", estado, info)
         else:
             estado,info = menu_inicial(app, window, central_widget, dimensiones)
     image_button.clicked.connect(lambda:on_button_clicked("volver"))
@@ -850,8 +853,10 @@ def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=Non
             if texto == "volver":
                 if estado_anterior == "menu_reporte_comercial":
                     estado,info = menu_reporte_comercial(app, window, central_widget, dimensiones)
+                elif estado_anterior == "menu_reportes_comerciales":
+                    estado,info = menu_reportes_comerciales(app, window, central_widget, dimensiones)
                 else:
-                    estado,info = menu_reporte_comercial(app, window, central_widget, dimensiones)
+                    estado,info = menu_reportes_comerciales(app, window, central_widget, dimensiones)
             elif texto == "aceptar":
                 info["Fecha"] = dic_fechas
                 info["Filial"] = dic_botones_filiales
@@ -860,7 +865,17 @@ def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=Non
                 elif "mensual" not in estado:
                     estado += "_mensual"
                 if "reporte_comercial_sector_consumo" in estado:
-                    opciones = {"regenerar":True, "codigo_DANE":True, "sumatoria":True, "valor_facturado":True, "facturas":True}
+                    opciones = {"regenerar":True, "codigo_DANE":True, "valor_facturado":True, "facturas":True}
+                    if dic_botones_filiales["Todas"][0].text() == "X":
+                        opciones["sumatoria"] = True
+                    estado, info = opciones_adicionales(app, window, central_widget, dimensiones, estado_anterior="menu_seleccion", estado=estado, info=info, opciones=opciones)
+                elif "reporte_comercial_sector_consumo_subsidio" in estado:
+                    opciones = {"regenerar":True, "codigo_DANE":True, "valor_facturado":True, "facturas":True}
+                    if dic_botones_filiales["Todas"][0].text() == "X":
+                        opciones["sumatoria"] = True
+                    estado, info = opciones_adicionales(app, window, central_widget, dimensiones, estado_anterior="menu_seleccion", estado=estado, info=info, opciones=opciones)
+                elif "reporte_compensaciones" in estado:
+                    opciones = {"regenerar":True, "inventario":True}
                     estado, info = opciones_adicionales(app, window, central_widget, dimensiones, estado_anterior="menu_seleccion", estado=estado, info=info, opciones=opciones)
                 else:
                     opciones = {"regenerar":True, "codigo_DANE":True, "sumatoria":True, "valor_facturado":True, "facturas":True}
@@ -1326,13 +1341,20 @@ def opciones_adicionales(app, window, central_widget, dimensiones, opciones={}, 
     dic_adicionales_texto = {"codigo_DANE":"Código DANE", "valor_facturado":"Valor total facturado", "cantidad_filas":"Cantidad de filas", "inventario":"Inventario de suscriptores", "regenerar":"Regenerar archivos necesarios (form_estandar, resumen)",
                         "reportes_mensuales":"Reportes mensuales", "texto_regenerar":"_form_estandar, _resumen",
                     "usuarios_activos":"Info. usuarios activos", "sumatoria":f"Sumatoria {grupo_vanti}","facturas":"Cantidad de facturas emitidas"}
+    dic_explicacion = {"codigo_DANE":"Código DANE de 8 dígitos relacionad con diversas entidades geográficas,\ncomo departamentos, municipios, y localidades.",
+                        "valor_facturado":"Incluir el valor facturado por los usuarios.\nValor de facturación por consumo y valor de facturación total.",
+                        "cantidad_filas":"Selección de cantidad de filas mínimo.",
+                        "inventario":"Incluir la información correspondiente del inventario de suscriptores.",
+                        "regenerar":"Regenerar archivos necesarios (form_estandar, resumen)",
+                        "reportes_mensuales":"Información a generar para los reportes mensuales",
+                        "texto_regenerar":"_form_estandar, _resumen"}
     if not len(opciones):
-        return dic_adicionales
+        return estado, info
     screen_width = dimensiones[0]
     lista_cod_DANE = [f"{l}, {v}" for l,v in dic_DANE_nombres.items()]
     largo_lista_cod_DANE = len(lista_cod_DANE)
     lista_cod_DANE_c = []
-    ancho_texto = 60
+    ancho_texto = 80
     for i in range(0,largo_lista_cod_DANE,2):
         t1 = str(lista_cod_DANE[i])
         if i+1 < largo_lista_cod_DANE:
@@ -1353,6 +1375,7 @@ def opciones_adicionales(app, window, central_widget, dimensiones, opciones={}, 
     label_codigo_DANE.setParent(central_widget)
     esconder_label(label_codigo_DANE)
     cambio = 120
+    codigo_DANE = False
     if "codigo_DANE" in opciones:
         if opciones["codigo_DANE"]:
             v_line_edit = crear_label("Código DANE: ", central_widget, font_size=15, line_edit=True)
@@ -1361,6 +1384,7 @@ def opciones_adicionales(app, window, central_widget, dimensiones, opciones={}, 
             v_line_edit.setParent(central_widget)
             mostrar_label(v_line_edit)
             cambio = 150
+            codigo_DANE = True
     label_check = QPushButton("", central_widget)
     pixmap_check = QPixmap(ruta_imagenes+"check.png")
     pixmap_check = pixmap_check.scaled(320,80, aspectRatioMode=1)
@@ -1374,7 +1398,9 @@ def opciones_adicionales(app, window, central_widget, dimensiones, opciones={}, 
     c_y = 200
     c_c = 0
     dic_opciones_botones = {}
+    dic_texto = {}
     for llave, valor in opciones.items():
+        dic_texto[dic_adicionales_texto[llave]] = dic_explicacion[llave]
         if llave != "codigo_DANE":
             if llave not in dic_opciones_botones:
                 dic_opciones_botones[llave] = None
@@ -1422,8 +1448,8 @@ def opciones_adicionales(app, window, central_widget, dimensiones, opciones={}, 
     image_button_2.setFixedSize(45, 45)
     image_button_2.move(740,1000)
     mostrar_label(image_button_1)
-    mostrar_label(image_button_2)
-    dic_texto = {"Opción 1":"info","Opción 2":"info","Opción 3":"info","Opción 4":"info","Opción 5":"info"}
+    if codigo_DANE:
+        mostrar_label(image_button_2)
 
     event_loop = QEventLoop()
     def cambiar_botones_reporte(llave):
@@ -1453,7 +1479,8 @@ def opciones_adicionales(app, window, central_widget, dimensiones, opciones={}, 
         if texto == "aceptar" or texto == "volver":
             event_loop.quit()
             esconder_label(titulo_espacios)
-            esconder_label(v_line_edit)
+            if codigo_DANE:
+                esconder_label(v_line_edit)
             esconder_label(label_check)
             esconder_label(image_button)
             esconder_label(boton_1)
@@ -1469,14 +1496,14 @@ def opciones_adicionales(app, window, central_widget, dimensiones, opciones={}, 
                     estado,info = menu_seleccion(app, window, central_widget, dimensiones, estado=estado, info=info)
                 else:
                     estado, info = menu_inicial(app, window, central_widget, dimensiones)
-                    #estado, info = seleccionar_carpetas(app, window, central_widget, dimensiones, estado, info)
             elif texto == "aceptar":
                 info["Opciones_adicionales"] = dic_opciones_botones
     image_button.clicked.connect(lambda:on_button_clicked("volver"))
     boton_1.clicked.connect(lambda:on_button_clicked("aceptar"))
     image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto))
     image_button_2.clicked.connect(lambda: ventana_secundaria(central_widget,"Códigos DANE disponibles",dic_texto_2, lista=False))
-    v_line_edit.returnPressed.connect(lambda: guardar_nombre(label_codigo_DANE))
+    if codigo_DANE:
+        v_line_edit.returnPressed.connect(lambda: guardar_nombre(label_codigo_DANE))
     for llave, valor in dic_opciones_botones.items():
         if llave != "codigo_DANE":
             valor[1].clicked.connect(lambda _, l=llave: cambiar_botones_reporte(l))
@@ -1489,14 +1516,14 @@ def ventana_secundaria(central_widget, titulo, dic_texto, lista=True):
     ventana.setGeometry(central_widget.geometry().left(), central_widget.geometry().top(), int(central_widget.width()*0.9), int(central_widget.height()*0.9))
     ventana.setStyleSheet(f"""QWidget{{background-color: #030918; border: 5px solid #030918}}""")
     layout = QVBoxLayout()
-    font_size = 20
+    font_size = 24
     font_id = QFontDatabase().addApplicationFont(ruta_fuente)
     font_family = QFontDatabase().applicationFontFamilies(font_id)[0]
     font_id_1 = QFontDatabase().addApplicationFont(ruta_fuente_negrilla)
     font_family_1 = QFontDatabase().applicationFontFamilies(font_id_1)[0]
     for llave, valor in dic_texto.items():
         label = QLabel(llave, ventana)
-        label.setStyleSheet(f"color: white;font-size: {int(font_size*1.8)}px;font-family: '{font_family_1}'")
+        label.setStyleSheet(f"color: white;font-size: {int(font_size*1.5)}px;font-family: '{font_family_1}'")
         layout.addWidget(label)
         if isinstance(valor, str):
             label_1 = QLabel(valor, ventana)
@@ -1506,7 +1533,7 @@ def ventana_secundaria(central_widget, titulo, dic_texto, lista=True):
             if lista:
                 for elemento in valor:
                     label_2 = QLabel(elemento[0], ventana)
-                    label_2.setStyleSheet(f"color: white;font-size: {int(font_size*1.4)}px;font-family: '{font_family_1}'")
+                    label_2.setStyleSheet(f"color: white;font-size: {int(font_size*1.65)}px;font-family: '{font_family_1}'")
                     layout.addWidget(label_2)
                     label_3 = QLabel(elemento[1], ventana)
                     label_3.setStyleSheet(f"color: white;font-size: {font_size}px;font-family: '{font_family}'")

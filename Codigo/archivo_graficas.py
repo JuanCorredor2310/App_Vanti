@@ -25,7 +25,7 @@ ruta_imagenes = mod_rp.v_imagenes()
 import modulo as mod_1
 import archivo_creacion_json as mod_2
 
-global grupo_vanti, lista_filiales, dic_filiales, dic_filiales_largo, limite_facturas, porcentaje_ISRT, dic_nom_eventos,dic_sectores_consumo,dic_sectores_consumo_ordenados,dic_sectores_consumo_imagenes,dic_estratos,dic_industrias,lista_filiales_corto,fuente_texto,ruta_fuente,ruta_fuente_negrilla,custom_font,dic_colores,dic_industrias_grupos,dic_mercados
+global grupo_vanti, lista_filiales, dic_filiales, dic_filiales_largo, limite_facturas, porcentaje_ISRT, dic_nom_eventos,dic_sectores_consumo,dic_sectores_consumo_ordenados,dic_sectores_consumo_imagenes,dic_estratos,dic_industrias,lista_filiales_corto,fuente_texto,ruta_fuente,ruta_fuente_negrilla,custom_font,dic_colores,dic_industrias_grupos,dic_mercados,meta_subsidios
 dic_sectores_consumo = mod_1.leer_archivos_json(ruta_constantes+"sectores_consumo_categoria.json")["datos"]
 dic_sectores_consumo_ordenados = {"Regulados": ["Residencial","Comercial","Industrial"],
                                 "No regulados": ["Industrial","GNCV","Comercial","Comercializadoras /\nTransportadores","Petroqu\u00edmica","Oficiales","Termoel\u00e9ctrico","Refiner\u00eda"]}
@@ -72,9 +72,20 @@ dic_industrias_grupos = mod_1.leer_archivos_json(ruta_constantes+"sector_consumo
 ruta_fuente = ruta_fuentes+"Muli.ttf"
 ruta_fuente_negrilla = ruta_fuentes+"Muli-Bold.ttf"
 custom_font = FontProperties(fname=ruta_fuente)
+meta_subsidios = 1.4
 
 def conversion_decimales(texto):
     return str(texto).replace(".",",")
+
+def conversion_miles(num):
+    try:
+        valor = int(num)
+        if valor >= 1000:
+            return f"{(valor/1e3):.3f}"
+        else:
+            return str(valor)
+    except BaseException:
+        return num
 
 def union_listas_df_trimestre(df):
     lista = []
@@ -158,22 +169,22 @@ def grafica_barras_trimestre_reclamos(archivo):
         c = 0
         for filial in lista_filiales:
             valores = dic_grafica[filial]
-            fig, ax = plt.subplots(figsize=(30, 17))
+            fig, ax = plt.subplots(figsize=(44, 24))
             x = np.arange(len(lista_periodos))
             ax.set_xticks(x)
             ax.set_xticklabels(lista_periodos)
             for i in range(len(lista_periodos)):
                 ax.bar(x[i], valores[i], color=colors[i])
             for i in range(len(lista_periodos)):
-                ax.text(x[i], valores[i] + 0.15, f"{valores[i]}%", ha='center', va='bottom', fontsize=42, color=colors[0])
-            ax.tick_params(axis='x', colors=dic_colores["azul_v"],labelsize=32)
+                ax.text(x[i], valores[i] + 0.15, f"{valores[i]}%", ha='center', va='bottom', fontsize=64, color=colors[0])
+            ax.tick_params(axis='x', colors=dic_colores["azul_v"],labelsize=44)
             ax.tick_params(axis='y', colors=dic_colores["azul_v"],size=0)
             for spine in ax.spines.values():
                 spine.set_visible(False)
-            ax.text(x=-0.9, y=limite_facturas+0.1, s=f'{limite_facturas} %', color=dic_colores["azul_v"], fontsize=36)
-            ax.axhline(xmin=-0.4, xmax=2, y=limite_facturas, linestyle='--', color=dic_colores["azul_v"], label=f'Límite regulatorio ({limite_facturas}%)',linewidth=6)
-            ax.legend(bbox_to_anchor=(0.5, -0.08), loc='upper center',
-                        borderaxespad=0.0, fontsize=32, labelcolor=dic_colores["azul_v"])
+            ax.text(x=-0.9, y=limite_facturas+0.1, s=f'{limite_facturas} %', color=dic_colores["azul_v"], fontsize=64)
+            ax.axhline(xmin=-0.4, xmax=2, y=limite_facturas, linestyle='--', color=dic_colores["azul_v"], label=f'Límite regulatorio',linewidth=8)
+            ax.legend(bbox_to_anchor=(0.5, -0.095), loc='upper center',
+                        borderaxespad=0.0, fontsize=36, labelcolor=dic_colores["azul_v"])
             ax.set_yticks([])
             ax.set_yticklabels([])
             ax.set_xlim(-0.9,3.6)
@@ -186,11 +197,11 @@ def grafica_barras_trimestre_reclamos(archivo):
             if c == 0:
                 c+=1
                 imagen = Image.open(n_imagen)
-                recorte = (1100, 1570, imagen.width-1000, imagen.height)
+                recorte = (1800, 2260, imagen.width-1750, imagen.height)
                 imagen_recortada = imagen.crop(recorte)
                 imagen_recortada.save(archivo_copia.replace('.csv','_limite.png'))
             imagen = Image.open(n_imagen)
-            recorte = (330, 50, imagen.width-220, imagen.height-90)
+            recorte = (330, 80, imagen.width-220, imagen.height-100)
             imagen_recortada = imagen.crop(recorte)
             imagen_recortada.save(n_imagen)
             informar_imagen(n_imagen)
@@ -243,20 +254,16 @@ def velocimetro_cumplimientos_regulatorios(archivo, fecha):
                                                 markerfacecolor=colors[i], markersize=10)
                                         for i in range(len(colors))]
             ax.legend(reversed(legend_handles), reversed(labels), loc='lower center', bbox_to_anchor=(0.5, 0.31), fontsize=14, ncol=1)
-            #plt.title(f'Oportunidad en la certifiación de\n reportes regulatorios para\n{dic_cumplimientos_reporte[filial]} (Acumulado año)', y=0.8, color=colors[-1], fontsize=18)
             ax.set_ylim(-0.01, 3.2)
             ax.grid(False)
             lista_archivo = archivo.split("\\")
             lista_archivo.insert(-1, "Imagenes")
             archivo_copia = mod_1.lista_a_texto(lista_archivo,"\\")
             n_imagen = archivo_copia.replace(".csv", f"_{dic_filiales_largo[dic_cumplimientos_reporte[filial]]}.png")
-            plt.savefig(n_imagen, transparent=True)
+            plt.savefig(n_imagen, transparent=True, dpi=300)
             plt.close()
             imagen = Image.open(n_imagen)
-            if filial == grupo_vanti:
-                recorte = (240, 125, imagen.width-240, imagen.height - 285)
-            else:
-                recorte = (120, 125, imagen.width-110, imagen.height - 285)
+            recorte = (850, 700, imagen.width-780, imagen.height-840)
             imagen_recortada = imagen.crop(recorte)
             imagen_recortada.save(n_imagen)
             informar_imagen(n_imagen)
@@ -284,10 +291,10 @@ def grafica_matriz_requerimientos(archivo):
         plt.gca().spines['left'].set_visible(False)
         archivo_copia = mod_1.lista_a_texto(lista_archivo,"\\")
         n_imagen = archivo_copia.replace(".csv", ".png")
-        plt.savefig(n_imagen, transparent=True)
+        plt.savefig(n_imagen, transparent=True, dpi=300)
         plt.close()
         imagen = Image.open(n_imagen)
-        recorte = (0, 30, imagen.width, imagen.height)
+        recorte = (80, 250, imagen.width-80, imagen.height-25)
         imagen_recortada = imagen.crop(recorte)
         imagen_recortada.save(n_imagen)
         informar_imagen(n_imagen)
@@ -451,36 +458,38 @@ def grafica_pie_tipo_usuario(archivo, fecha):
             labels = list(df_filtro["Tipo de usuario"])
             sizes = list(df_filtro[llave])
             plt.figure(figsize=(10,7))
-            plt.pie(sizes, autopct=lambda p : '{:.2f} M'.format(p * sum(sizes) / 100000000), 
-                    colors=lista_colores[pos], textprops={'fontsize': 24,'color':'white'}, 
+            plt.pie(sizes, autopct=lambda p : '{:.2f} M'.format(p * sum(sizes) / 100000000),
+                    colors=lista_colores[pos], textprops={'fontsize': 33,'color':'white'},
                     wedgeprops={'linewidth': 4, 'edgecolor': 'none'})
             plt.legend(bbox_to_anchor=(0.5, 0.01), loc='upper center',
-                                    ncol=3, borderaxespad=0.0, fontsize=20, labels=labels)
-            #plt.title(f'{valor}{filial} ({fecha[0]}/{fecha[1]})', color=lista_colores[pos][0], fontsize=25)
+                                    ncol=3, borderaxespad=0.0, fontsize=24, labels=labels)
             plt.gca().spines['top'].set_visible(False)
             plt.gca().spines['right'].set_visible(False)
             plt.gca().spines['bottom'].set_visible(False)
             plt.gca().spines['left'].set_visible(False)
             n_imagen = archivo_copia.replace(".csv", f"_{dic_filiales_largo[filial]}_pie_consumo_m3.png")
-            plt.savefig(n_imagen, transparent=True)
+            plt.savefig(n_imagen, transparent=True, dpi=300)
             plt.close()
             imagen = Image.open(n_imagen)
-            recorte = (100, 40, imagen.width-100, imagen.height-20)
+            recorte = (230, 220, imagen.width-230, imagen.height-40)
             imagen_recortada = imagen.crop(recorte)
             imagen_recortada.save(n_imagen)
             informar_imagen(n_imagen)
 
-def grafico_barras_consumo(archivo):
+def grafico_barras_consumo(archivo, dic_metricas):
     n_archivo = archivo
     if os.path.exists(n_archivo):
         lista_archivo = n_archivo.split("\\")
         lista_archivo.insert(-1, "Imagenes")
         df = pd.read_csv(n_archivo, sep=",", encoding="utf-8-sig")
+        df["Mes reportado"] = df["Mes reportado"].str[:3]
         df = union_listas_df_fecha(df, sep=True)
         lista_llaves = ["Regulados", "No regulados"]
         fig, ax = plt.subplots(figsize=(20, 12))
         matriz = []
         bar_width = 0.75
+        lista_c = list(df[(df['Filial'] == grupo_vanti) & (df["Tipo de usuario"] == "Total")]["Consumo m3"])
+        dic_metricas["consumo_mes"] = conversion_miles(f"{int(lista_c[-1])/1e6:.1f}")
         for llave in lista_llaves:
             df_filtro = df[(df['Filial'] == grupo_vanti) & (df["Tipo de usuario"] == llave)].reset_index(drop=True)
             df_filtro['Consumo m3 millones'] = (round(df_filtro['Consumo m3'] / 1000000,2)).astype(str) + ' M'
@@ -497,12 +506,12 @@ def grafico_barras_consumo(archivo):
             for j in range(len(matriz[0])):
                 valor = round(matriz[i][j]/1e6,1)
                 if i == 0:
-                    ax.text(x[j], matriz[i][j]*0.2, f"{valor}", ha='center', fontsize=22, color="white", rotation=90, fontweight='bold')
+                    ax.text(x[j], matriz[i][j]*0.2, conversion_decimales(f"{valor}"), ha='center', fontsize=22, color="white", rotation=90, fontweight='bold')
                 else:
-                    ax.text(x[j], matriz[i-1][j]+(matriz[i][j]*0.3), f"{valor}", ha='center', fontsize=22, color="white", rotation=90, fontweight='bold')
+                    ax.text(x[j], matriz[i-1][j]+(matriz[i][j]*0.3), conversion_decimales(f"{valor}"), ha='center', fontsize=22, color="white", rotation=90, fontweight='bold')
                 valor = matriz[i][j]+matriz[i-1][j]
-                ax.text(x[j], (valor)*1.03, f"{round(valor/1e6,1)} M", ha='center', fontsize=17, color=dic_colores["azul_v"])
-        ax.tick_params(axis='x', colors=dic_colores["azul_v"],labelsize=17)
+                ax.text(x[j], (valor)*1.03, conversion_decimales(f"{round(valor/1e6,1)}"), ha='center', fontsize=25, color=dic_colores["azul_v"], fontweight='bold')
+        ax.tick_params(axis='x', colors=dic_colores["azul_v"],labelsize=24)
         ax.tick_params(axis='y', colors=dic_colores["azul_v"],size=0)
         for spine in ax.spines.values():
             spine.set_visible(False)
@@ -522,10 +531,11 @@ def grafico_barras_consumo(archivo):
         plt.savefig(n_imagen, transparent=True)
         plt.close()
         imagen = Image.open(n_imagen)
-        recorte = (0, 55, imagen.width, imagen.height)
+        recorte = (0, 55, imagen.width, imagen.height-40)
         imagen_recortada = imagen.crop(recorte)
         imagen_recortada.save(n_imagen)
         informar_imagen(n_imagen)
+    return dic_metricas
 
 def grafico_usuarios(archivo):
     n_archivo = archivo
@@ -556,15 +566,13 @@ def grafico_usuarios(archivo):
         v_max_ax1 = max(lista_usuarios_nuevos)*1.1
         fig, ax = plt.subplots(figsize=(24, 12))
         x = range(len(lista_periodos))
-        bar_width = 0.75
-        lista_colores = [dic_colores["azul_v"], "white"]
         line3, = ax.plot(lista_periodos, lista_usuarios, marker='o', label='Cantidad de usuarios (M)', color=dic_colores["amarillo_v"], alpha=0.6, linewidth=8)
         ax1 = ax.twinx()
         line2, = ax1.plot(lista_periodos, lista_usuarios_nuevos, marker='o', label='Nuevos usuarios', color="white", alpha=0.3, linewidth=8)
         for i in range(len(lista_periodos)):
-            ax.annotate(f'{lista_usuarios_millones[i]}', xy=(i, v_min1), xytext=(0, 10),
+            ax.annotate(conversion_decimales(f'{lista_usuarios_millones[i]}'), xy=(i, v_min1), xytext=(0, 10),
                         textcoords='offset points', ha='center', va='bottom', color=dic_colores["amarillo_v"], fontsize=30)
-            ax1.annotate(f'{lista_usuarios_nuevos[i]}', xy=(i, lista_usuarios_nuevos[i]), xytext=(0, 10),
+            ax1.annotate(conversion_miles(lista_usuarios_nuevos[i]), xy=(i, lista_usuarios_nuevos[i]), xytext=(0, 10),
                         textcoords='offset points', ha='center', va='bottom', color="white", fontsize=30)
         ax.tick_params(axis='x', colors="white",labelsize=15)
         ax.tick_params(axis='y', colors="white",size=0)
@@ -588,7 +596,7 @@ def grafico_usuarios(archivo):
         plt.savefig(nombre, transparent=True)
         plt.close()
         imagen = Image.open(nombre)
-        recorte = (0, 140, imagen.width, imagen.height)
+        recorte = (170, 140, imagen.width-150, imagen.height)
         imagen_recortada = imagen.crop(recorte)
         imagen_recortada.save(nombre)
         informar_imagen(nombre)
@@ -667,11 +675,11 @@ def grafica_pie_usuarios(archivo, fecha, dic_metricas):
                                     wedgeprops={'linewidth': 4, 'edgecolor': 'none', 'width': 0.6},
                                     explode=[0.05] * len(labels),
                                     colors=lista_colores)
-                texto_1 = str(round((dic_total["Regulados"]/total)*100,2))+" %"
+                texto_1 = conversion_decimales(str(round((dic_total["Regulados"]/total)*100,1))+" %")
                 plt.text(0, 0, texto_1, ha='center', va='center', fontsize=50, color=v_lista_colores[0])
                 for i, (wedge, pct) in enumerate(zip(wedges, lista_porcentajes)):
                     ang = ((wedge.theta1 + wedge.theta2)/2)
-                    text = f'{pct:.1f}%'
+                    text = conversion_decimales(f'{pct:.1f}%')
                     ubicar_porcentajes(text, ang, 1.3, ax, v_lista_colores[i])
             else:
                 texto = f"Usuarios no residenciales del {grupo_vanti}"
@@ -684,11 +692,11 @@ def grafica_pie_usuarios(archivo, fecha, dic_metricas):
                                     wedgeprops={'linewidth': 4, 'edgecolor': 'none', 'width': 0.6},
                                     explode=[0.05] * len(labels),
                                     colors=lista_colores)
-                texto_1 = str(round((dic_total["No regulados"]/total)*100,2))+" %"
+                texto_1 = conversion_decimales(str(round((dic_total["No regulados"]/total)*100,1))+" %")
                 plt.text(0, 0, texto_1, ha='center', va='center', fontsize=50, color=v_lista_colores[0])
                 for i, (wedge, pct) in enumerate(zip(wedges, lista_porcentajes)):
                     ang = ((wedge.theta1 + wedge.theta2)/2)
-                    text = f'{pct:.1f}%'
+                    text = conversion_decimales(f'{pct:.1f}%')
                     ubicar_porcentajes(text, ang, 1.3, ax, v_lista_colores[i])
             plt.gca().set_aspect('equal')
             plt.gca().spines['top'].set_visible(False)
@@ -701,16 +709,16 @@ def grafica_pie_usuarios(archivo, fecha, dic_metricas):
             plt.savefig(n_imagen, transparent=True)
             plt.close()
             imagen = Image.open(n_imagen)
-            recorte = (70, 110, imagen.width-30, imagen.height-180)
+            recorte = (200, 120, imagen.width-170, imagen.height-200)
             imagen_recortada = imagen.crop(recorte)
             if llave == "Regulados":
                 ruta_imagen = ruta_constantes+"residencial.png"
-                lista_esp = [[965,350],#2
-                            [695,195],#1
-                            [430,350],#6
-                            [430,630],#5
-                            [695,780],#4
-                            [965,630]]#3
+                lista_esp = [[965-130,350],#2
+                            [695-130,195],#1
+                            [430-130,350],#6
+                            [430-130,630],#5
+                            [695-130,780],#4
+                            [965-130,630]]#3
                 if os.path.exists(ruta_imagen):
                     for i in range(len(labels)):
                         esp = lista_esp[i]
@@ -721,11 +729,11 @@ def grafica_pie_usuarios(archivo, fecha, dic_metricas):
                         imagen_recortada = ubicar_texto(imagen_recortada, esp, texto, color="white")
             else:
                 llaves = list(dic["No regulados"].keys())
-                lista_esp = [[920,290],
-                            [575,195],
-                            [375,435],
-                            [595,740],
-                            [905,610]]
+                lista_esp = [[920-130,290],
+                            [575-130,195],
+                            [375-130,435],
+                            [595-130,740],
+                            [905-130,610]]
                 for i in range(len(llaves)):
                     llave = llaves[i]
                     ruta_imagen = ruta_constantes+dic_sectores_consumo_imagenes_pie[llave]
@@ -741,15 +749,17 @@ def grafica_pie_usuarios(archivo, fecha, dic_metricas):
         usuarios_totales = 0
         valor = dic_metricas["usarios_residenciales"]
         usuarios_totales += valor
-        dic_metricas["usarios_residenciales"] = f"{round(valor/1e6,1)} M"
+        dic_metricas["usarios_residenciales"] = conversion_decimales(f"{round(valor/1e6,1)} M")
         valor = dic_metricas["usarios_no_residenciales"]
         usuarios_totales += valor
         dic_metricas["usarios_no_residenciales"] = f"{round(valor/1e3,3)}"
-        dic_metricas["usuarios"] = round(usuarios_totales)
+        dic_metricas["usuarios"] = conversion_decimales(f"{round(usuarios_totales/1e6,1)} M")
+        dic_metricas["usuarios_int"] = round(usuarios_totales)
         return dic_metricas
     else:
         dic_metricas["usarios_residenciales"] = None
         dic_metricas["usarios_no_residenciales"] = None
+        dic_metricas["usuarios"] = None
         return dic_metricas
 
 def ubicacion_imagen(nueva_imagen, espacio):
@@ -835,7 +845,7 @@ def ubicar_porcentajes(text, ang, radius, ax, color,size=34):
         size=size,
         color=color)
 
-def grafica_tabla_sector_consumo(archivo, fecha):
+def grafica_tabla_sector_consumo(archivo, fecha, dic_metricas):
     n_archivo = archivo
     if os.path.exists(n_archivo):
         lista_archivo = n_archivo.split("\\")
@@ -861,11 +871,16 @@ def grafica_tabla_sector_consumo(archivo, fecha):
         dic_df = {"Sector de consumo":[],
                 "Tipo de usuario":[],
                 "Consumo (Millones m3)":[]}
+        dic_metricas["Demanda"] = {}
         for tipo_usuario, dic in dic_sectores_compilado.items():
             for llave, valor in dic.items():
                 dic_df["Sector de consumo"].append(llave)
                 dic_df["Tipo de usuario"].append(tipo_usuario)
-                dic_df["Consumo (Millones m3)"].append(f"{round(valor/1000000,1)}")
+                dic_df["Consumo (Millones m3)"].append(f"{round(valor/1e6,1)}")
+                if tipo_usuario not in dic_metricas["Demanda"]:
+                    dic_metricas["Demanda"][tipo_usuario] = {}
+                if llave not in dic_metricas["Demanda"][tipo_usuario]:
+                    dic_metricas["Demanda"][tipo_usuario][llave] = conversion_decimales(round(valor/1e6,1))
         df1 = pd.DataFrame(dic_df)
         fig, ax = plt.subplots(figsize=(15, 5.5))  # Ajusta el tamaño de la imagen si es necesario
         ax.axis('tight')
@@ -896,6 +911,7 @@ def grafica_tabla_sector_consumo(archivo, fecha):
         plt.savefig(n_imagen,bbox_inches='tight', dpi=300)
         plt.close()
         informar_imagen(n_imagen)
+    return dic_metricas
 
 def add_image(ax, img, x, y, zoom=0.1):
     img = plt.imread(img)
@@ -909,42 +925,69 @@ def add_image(ax, img, x, y, zoom=0.1):
                         frameon=False, box_alignment=(0.5, 0.5))
     ax.add_artist(ab)
 
-def grafica_barras_compensacion(archivo):
+def grafica_compensacion(archivo):
     n_archivo = archivo
     if os.path.exists(n_archivo):
         lista_archivo = n_archivo.split("\\")
         lista_archivo.insert(-1, "Imagenes")
         archivo_copia = mod_1.lista_a_texto(lista_archivo,"\\")
+        nombre = archivo_copia.replace('.csv','.png')
         df = pd.read_csv(n_archivo, sep=",", encoding="utf-8-sig")
+        df["Mes_reportado"] = df['Mes_reportado'].str[:3]
         df = union_listas_df_fecha(df)
         df_filtro = df[df['Filial'] == grupo_vanti].reset_index(drop=True)
         df_filtro = union_listas_df_fecha(df_filtro)
-        df_filtro['Valor_compensado_millones'] = (round(df_filtro['Valor_compensado'] / 1000000,2)).astype(str) + ' M'
+        df_filtro['Valor_compensado_millones'] = (round(df_filtro['Valor_compensado'] / 1000000,2)).astype(str)
         lista_periodos = list(df_filtro["Fecha"].unique())
-        lista_valores = list(df_filtro["Valor_compensado"].unique())
-        lista_valores_millones = list(df_filtro["Valor_compensado_millones"].unique())
-        cmap = LinearSegmentedColormap.from_list("", [dic_colores["blanco"],dic_colores["blanco"]])
-        grad = np.atleast_2d(np.linspace(0, 1, 256)).T
-        grad = cmap(grad)
-        fig, ax = plt.subplots(figsize=(16, 10))
-        x = np.arange(len(lista_periodos))
+        lista_valores = list(df_filtro["Valor_compensado"])
+        lista_usuarios = list(df_filtro["Usuarios_compensados"])
+        v_min = min(lista_valores)*0.988
+        v_cambio = (v_min)*0.0005
+        v_min1 = v_min-(v_cambio*3)
+        v_max = max(lista_valores)*1.2
+        v_min_ax1 = min(lista_usuarios)*0.7
+        v_max_ax1 = max(lista_usuarios)*1.2
+        fig, ax = plt.subplots(figsize=(24, 12))
+        x = range(len(lista_periodos))
         bar_width = 0.75
-        colors = [cmap(i/11.0) for i in range(12)]  # Use the custom color map
-        for i in range(12):
-            ax.bar(lista_periodos[i], lista_valores[i], width=bar_width, color=colors[i])
-            ax.text(lista_periodos[i], lista_valores[i] + 2, f"{lista_valores_millones[i]}", ha='center', va='bottom', fontsize=18, color=colors[i])
-        #ax.set_title(f'Valor compensado por el {grupo_vanti} ($ COP)', color=colors[0],fontsize=25, y=1.05)
-        ax.tick_params(axis='x', colors=colors[0],labelsize=15)
-        ax.tick_params(axis='y', colors=colors[0],size=0)
+        for i in range(len(lista_periodos)):
+            line3, = ax.bar(lista_periodos[i], lista_valores[i], width=bar_width, color=dic_colores["amarillo_v"])
+        ax1 = ax.twinx()
+        line2, = ax1.plot(lista_periodos, lista_usuarios, marker='o', label='Usuarios compensados', color="white", alpha=0.3, linewidth=8, markersize=12)
+        for i in range(len(lista_periodos)):
+            ax1.annotate(f'{conversion_miles(lista_usuarios[i])}', xy=(i, lista_usuarios[i]+100), xytext=(0, 10),
+                        textcoords='offset points', ha='center', va='bottom', color="white", fontsize=30)
+        ax.tick_params(axis='x', colors="white",labelsize=15)
+        ax.tick_params(axis='y', colors="white",size=0)
         for spine in ax.spines.values():
             spine.set_visible(False)
-        plt.subplots_adjust(left=-0.03, right=1.02, top=0.95, bottom=0.08)
-        ax.set_yticks([])
-        ax.set_yticklabels([])
-        n_imagen = archivo_copia.replace('.csv','.png')
-        plt.savefig(n_imagen, transparent=True)
+        for spine in ax1.spines.values():
+            spine.set_visible(False)
+        ax.yaxis.set_major_locator(ticker.MaxNLocator(nbins=8))
+        ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: conversion_decimales(f'{x/1e6:.1f}')))
+        for tick in ax.yaxis.get_major_ticks():
+            tick.label1.set_color(dic_colores["azul_v"])
+            tick.label1.set_fontsize(28)
+            tick.set_pad(8)
+        ax.grid(axis='y', color='gray', linestyle='--', linewidth=4, alpha=0.85)
+        ax1.set_yticks([])
+        ax1.set_yticklabels([])
+        ax.set_xticks(x)
+        ax.tick_params(axis='x')
+        ax.set_xticklabels(lista_periodos, fontsize=24)
+        ax.set_ylabel('Valor compensado (M)', color=dic_colores["amarillo_v"], fontsize=42)
+        ax.tick_params(axis='y', labelcolor=dic_colores["amarillo_v"])
+        ax1.set_ylabel('Usuarios compensados', color="white",fontsize=42)
+        ax1.tick_params(axis='y', labelcolor=dic_colores["azul_v"])
+        ax.set_ylim(v_min1, v_max)
+        ax1.set_ylim(v_min_ax1, v_max_ax1)
+        plt.savefig(nombre, transparent=True)
         plt.close()
-        informar_imagen(n_imagen)
+        imagen = Image.open(nombre)
+        recorte = (110, 170, imagen.width-150, imagen.height-40)
+        imagen_recortada = imagen.crop(recorte)
+        imagen_recortada.save(nombre)
+        informar_imagen(nombre)
 
 def grafica_DS(archivo, dic_metricas):
     n_archivo = archivo
@@ -962,18 +1005,23 @@ def grafica_DS(archivo, dic_metricas):
         dic_metricas["DS"] = {}
         if "usuarios" in dic_metricas:
             valor = lista_valores[-1]
-            porcentaje = str(round((valor/dic_metricas["usuarios"])*100,1))+" %"
-            dic_metricas["DS"]["Porcentaje"] = porcentaje
-            dic_metricas["DS"]["Total"] = valor
+            porcentaje = str(round((valor/dic_metricas["usuarios_int"])*100,1))+" %"
+            dic_metricas["DS"]["Porcentaje"] = conversion_decimales(porcentaje)
+            if valor > 1000:
+                valor = valor/3
+            dic_metricas["DS"]["Total"] = str(valor)
         lista_periodos = list(df["Fecha"].unique())
         fecha = lista_periodos[-1]
         df_metricas = df_metricas[(df_metricas["Fecha"]==fecha) & (df_metricas["Categoria"]!="Total")].reset_index(drop=True)
         for categoria in lista_categorias:
             df_metricas_categoria = df_metricas[df_metricas["Categoria"]==categoria].reset_index(drop=True)
             if len(df_metricas_categoria):
-                dic_metricas["DS"][categoria] = str(round(df_metricas_categoria["Total_categoria"][0]))
+                valor_1 = round(df_metricas_categoria["Total_categoria"][0])
+                if valor > 1000:
+                    valor_1 = valor_1/1e3
+                dic_metricas["DS"][categoria] = str(valor_1)
             else:
-                dic_metricas["DS"][categoria] = 0
+                dic_metricas["DS"][categoria] = "0"
         lista_colores = [dic_colores["azul_agua_v"], dic_colores["naranja_v"], dic_colores["morado_v"], dic_colores["verde_v"], dic_colores["azul_agua_c_v"], dic_colores["naranja_c_v"], dic_colores["morado_c_v"], dic_colores["verde_c_v"]]
         fig, ax = plt.subplots(figsize=(40,26))
         x = range(len(lista_periodos))
@@ -1000,60 +1048,7 @@ def grafica_DS(archivo, dic_metricas):
         imagen_recortada = imagen.crop(recorte)
         imagen_recortada.save(nombre)
         informar_imagen(nombre)
-
-        """lista_filiales = list(df["Filial"].unique())
-        lista_periodos = list(df["Fecha"].unique())
-        lista_colores = [dic_colores["azul_agua_v"], dic_colores["naranja_v"], dic_colores["morado_v"], dic_colores["verde_v"], dic_colores["azul_agua_c_v"], dic_colores["naranja_c_v"], dic_colores["morado_c_v"], dic_colores["verde_c_v"]]
-        for filial in lista_filiales:
-            df_filial = df[df["Filial"] == filial].reset_index(drop=True)
-            lista_mercado = list(df_filial["Mercado_relevante"].unique())
-            lista_mercado_nombre = []
-            fig, ax = plt.subplots(figsize=(40,26))
-            x = range(len(lista_periodos))
-            vmax = 0
-            for j in range(len(lista_mercado)):
-                id_mercado = lista_mercado[j]
-                lista_porcentaje = []
-                if str(id_mercado) in dic_mercados:
-                    nombre_mercado = dic_mercados[str(id_mercado)]["Nombre_mercado"]
-                    lista_mercado_nombre.append(nombre_mercado)
-                    df_mercado = df_filial[df_filial["Mercado_relevante"] == id_mercado].reset_index(drop=True)
-                    for fecha in lista_periodos:
-                        df_fecha = df_mercado[df_mercado["Fecha"] == fecha].reset_index(drop=True)
-                        if len(df_fecha):
-                            lista_porcentaje.append(df_fecha["Porcentaje_atendidos"][0])
-                        else:
-                            lista_porcentaje.append(0)
-                    if max(lista_porcentaje) > vmax:
-                        vmax = max(lista_porcentaje)
-                    line, = ax.plot(lista_periodos, lista_porcentaje, marker='o', label=nombre_mercado, color=lista_colores[j], markersize=60, alpha=0.6, linewidth=5)
-            for spine in ax.spines.values():
-                spine.set_visible(False)
-            ax.set_xticks(x)
-            ax.tick_params(axis='x')
-            ax.set_xticklabels(lista_periodos, fontsize=44, color=dic_colores["azul_v"])
-            legend_handles = [plt.Line2D([0], [0], marker='o', color='w', label=str(lista_mercado_nombre[i]),
-                                                markerfacecolor=lista_colores[i], markersize=40)
-                                        for i in range(len(lista_mercado_nombre))]
-            ax.legend(handles=legend_handles, bbox_to_anchor=(0.5, -0.08), loc='upper center',
-                                ncol=len(lista_mercado_nombre), borderaxespad=0.0, fontsize=42)
-            ax.yaxis.set_major_locator(ticker.FixedLocator(list(np.arange(0, vmax + 0.5, 0.5))))  # Especifica los valores en una lista
-            ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: f'{x} %'))
-            for tick in ax.yaxis.get_major_ticks():
-                tick.label1.set_color(dic_colores["azul_v"])
-                tick.label1.set_fontsize(48)
-                tick.set_pad(8)
-            ax.set_ylim(-0.1, vmax+0.2)
-            ax.grid(axis='y', color='gray', linestyle='--', linewidth=3)
-            dic_filiales_cambio = {valor: clave for clave, valor in dic_filiales.items()}
-            nombre = archivo_copia.replace('.csv',f'_{dic_filiales_cambio[filial]}.png')
-            plt.savefig(nombre, transparent=True)
-            plt.close()
-            imagen = Image.open(nombre)
-            recorte = (0, 140, imagen.width, imagen.height)
-            imagen_recortada = imagen.crop(recorte)
-            imagen_recortada.save(nombre)
-            informar_imagen(nombre)"""
+    return dic_metricas
 
 def cambio_lista_IRST(lista, v_min):
     lista_1 = []
@@ -1070,42 +1065,22 @@ def cambio_lista_cumplimientos(matriz,lista_periodos):
             lista_cumplimientos.append(True)
         else:
             lista_cumplimientos.append(False)
-    lista_pos = []
     i = 0
-    cantidad = len(lista_periodos)-1
+    lista_pos = []
     info_nueva_lista = []
-    while i < len(lista_periodos):
+    for i in range(len(lista_cumplimientos)):
         if not lista_cumplimientos[i]:
             lista_pos.append([lista_periodos[i]])
             info_nueva_lista.append((matriz[i,0],matriz[i,1],matriz[i,2]))
-            i += 1
         else:
-            if i+2 <= cantidad:
-                if lista_cumplimientos[i+1] and lista_cumplimientos[i+2]:
-                    lista_pos.append((lista_periodos[i],lista_periodos[i+2]))
+            if i > 0:
+                if not lista_cumplimientos[i-1]:
+                    lista_pos.append([])
                     info_nueva_lista.append((matriz[i,0],matriz[i,1],matriz[i,2]))
-                    i+=3
-                elif lista_cumplimientos[i+1]:
-                    lista_pos.append((lista_periodos[i],lista_periodos[i+1]))
-                    info_nueva_lista.append((matriz[i,0],matriz[i,1],matriz[i,2]))
-                    i+=2
-                else:
-                    lista_pos.append([lista_periodos[i]])
-                    info_nueva_lista.append((matriz[i,0],matriz[i,1],matriz[i,2]))
-                    i += 1
-            elif i+1 <= cantidad:
-                if lista_cumplimientos[i+1]:
-                    lista_pos.append((lista_periodos[i],lista_periodos[i+1]))
-                    info_nueva_lista.append((matriz[i,0],matriz[i,1],matriz[i,2]))
-                    i+=2
-                else:
-                    lista_pos.append((lista_periodos[i]))
-                    info_nueva_lista.append((matriz[i,0],matriz[i,1],matriz[i,2]))
-                    i += 1
+                lista_pos[-1].append(lista_periodos[i])
             else:
                 lista_pos.append([lista_periodos[i]])
                 info_nueva_lista.append((matriz[i,0],matriz[i,1],matriz[i,2]))
-                i += 1
     nueva_matriz = []
     v_min = float("inf")
     for j in range(3):
@@ -1121,7 +1096,7 @@ def cambio_lista_cumplimientos(matriz,lista_periodos):
         if len(periodo) == 1:
             nueva_lista_periodos.append(periodo[0].replace("\n"," / "))
         else:
-            texto = periodo[0].replace("\n"," / ")+" -\n"+periodo[1].replace("\n"," / ")
+            texto = periodo[0].replace("\n"," / ")+" -\n"+periodo[-1].replace("\n"," / ")
             nueva_lista_periodos.append(texto)
     return nueva_lista_periodos, nueva_matriz, v_min
 
@@ -1132,12 +1107,13 @@ def grafica_barras_indicador_tecnico(archivo):
         lista_archivo.insert(-1, "Imagenes")
         archivo_copia = mod_1.lista_a_texto(lista_archivo,"\\")
         df = pd.read_csv(n_archivo, sep=",", encoding="utf-8-sig")
+        df["Mes_reportado"] = df['Mes_reportado'].str[:3]
         df = union_listas_df_fecha(df)
         lista_filiales = list(df['Filial'].unique())
         cmap = LinearSegmentedColormap.from_list("Orange", ["#fd8c25","#fec692"])
         grad = np.atleast_2d(np.linspace(0, 1, 256)).T
         grad = cmap(grad)
-        lista_colores = [dic_colores["verde_v"],dic_colores["morado_v"],dic_colores["azul_agua_v"]]
+        lista_colores = [dic_colores["naranja_v"],dic_colores["morado_v"],dic_colores["azul_agua_v"]]
         for filial in lista_filiales:
             dic_grafica = {}
             dic_grafica_100 = {}
@@ -1156,31 +1132,35 @@ def grafica_barras_indicador_tecnico(archivo):
             cantidad = len(list(dic_grafica.keys()))
             lista_indicadores = list(dic_grafica.keys())
             nueva_lista_periodos, nuevas_barras, v_min = cambio_lista_cumplimientos(data_100, lista_periodos)
-            fig, ax = plt.subplots(figsize=(25, 14))
+            fig, ax = plt.subplots(figsize=(25, 17))
             bar_width = 0.3
-            cmap = LinearSegmentedColormap.from_list("Orange", ["#fd8c25","#fec692"])
             x = np.arange(len(nueva_lista_periodos))
             for i in range(cantidad):
                 bars = ax.bar(x + i * bar_width, nuevas_barras[i], bar_width, label=lista_indicadores[i], color=lista_colores[i])
-                for bar, value in zip(bars.patches, nuevas_barras[i]):
-                    if value == porcentaje_ISRT:
-                        value = int(value)
-                        ax.text(bar.get_x() + bar.get_width()/2, 100.2, f"{value}%", color=dic_colores["azul_v"], ha="center", va="bottom", fontsize=28, rotation=90)
-                    else:
-                        ax.text(bar.get_x() + bar.get_width()/2, 100.2, f"{value:.2f}%", color=dic_colores["azul_v"], ha="center", va="bottom", fontsize=28, rotation=90)
             ax.set_xticks(x + bar_width)
-            ax.set_xticklabels(nueva_lista_periodos, color=dic_colores["azul_v"], fontsize=16)
+            size = 35
+            if len(nueva_lista_periodos) > 4:
+                size = 25
+            ax.set_xticklabels(nueva_lista_periodos, color=dic_colores["azul_v"], fontsize=size)
             lista = ["IPLI", "IO", "IRST-EG"]
             legend_handles = [plt.Line2D([0], [0], marker='o', color='w', label=str(lista[i]),
                                             markerfacecolor=lista_colores[i], markersize=18)
                                     for i in range(len(lista))]
-            ax.legend(handles=legend_handles, bbox_to_anchor=(0.5, -0.075), loc='upper center',
+            ax.legend(reversed(legend_handles), reversed(lista), bbox_to_anchor=(0.5, -0.095), loc='upper center',
                             ncol=len(lista), borderaxespad=0.0, fontsize=24)
-            ax.set_ylim(v_min-2, 101)
+            v_min = int(v_min-2.5)
+            ax.set_ylim(v_min, 100.3)
             for spine in ax.spines.values():
                 spine.set_visible(False)
-            ax.set_yticks([])
-            ax.set_yticklabels([])
+            locator = ticker.FixedLocator(list(range(v_min, 101)))
+            ax.yaxis.set_major_locator(locator)
+            formatter = ticker.FuncFormatter(lambda x, pos: conversion_decimales(f"{x:.1f}"))
+            ax.yaxis.set_major_formatter(formatter)
+            for tick in ax.yaxis.get_major_ticks():
+                tick.label1.set_color(dic_colores["azul_v"])
+                tick.label1.set_fontsize(28)
+                tick.set_pad(8)
+            ax.grid(axis='y', color='gray', linestyle='--', linewidth=4, alpha=0.85)
             n_imagen = archivo_copia.replace(".csv", f"_{dic_filiales_largo[filial]}.png")
             plt.savefig(n_imagen, transparent=True)
             plt.close()
@@ -1188,11 +1168,11 @@ def grafica_barras_indicador_tecnico(archivo):
             if c == 0:
                 c+=1
                 imagen = Image.open(n_imagen)
-                recorte = (950, 1330, imagen.width-870, imagen.height-20)
+                recorte = (950, 1620, imagen.width-870, imagen.height)
                 imagen_recortada = imagen.crop(recorte)
                 imagen_recortada.save(archivo_copia.replace('.csv','_limite.png'))
             imagen = Image.open(n_imagen)
-            recorte = (380, 150, imagen.width-300, imagen.height-75)
+            recorte = (150, 150, imagen.width-200, imagen.height-75)
             imagen_recortada = imagen.crop(recorte)
             imagen_recortada.save(n_imagen)
             informar_imagen(n_imagen)
@@ -1258,15 +1238,16 @@ def grafica_barras_subsidios(archivo, dic_metricas):
         lista_archivo.insert(-1, "Imagenes")
         archivo_copia = mod_1.lista_a_texto(lista_archivo,"\\")
         df = pd.read_csv(n_archivo, sep=",", encoding="utf-8-sig")
+        df["Mes reportado"] = df['Mes reportado'].str[:3]
         df = union_listas_df_fecha(df, sep=True)
         anio_1 = 2023
-        mes_1 = "Diciembre"
+        mes_1 = "Diciembre"[:3]
         llave_1 = "Transportadores de gas natural"
         filial_1 = "VANTI S.A. ESP."
         v1 = df[(df["Anio reportado"]==anio_1)&((df["Mes reportado"]==mes_1))&(df["Filial"]==filial_1)&(df["Sector de consumo"]==llave_1)]["Contribuciones"].sum()
         if v1 > 0:
             df.loc[(df['Filial'] == grupo_vanti)&(df["Tipo de usuario"]=="Total")&(df["Anio reportado"]==anio_1)&((df["Mes reportado"]==mes_1)), "Contribuciones"] -= v1
-            texto_v1 = f"El valor de las contribuciones para los {llave_1} en \n{filial_1} ({mes_1}/{anio_1}) fue de {round(v1/1e9,1)} m M"
+            texto_v1 = f"El valor de las contribuciones para los {llave_1} en \n{filial_1} ({mes_1}/{anio_1}) fue de {conversion_decimales(round(v1/1e9,1))} m M"
         else:
             texto_v1 = None
         dic_metricas["Subsidios"] = texto_v1
@@ -1328,7 +1309,7 @@ def grafica_barras_subsidios(archivo, dic_metricas):
                                             markerfacecolor=colors[i], markersize=18)
                                     for i in range(len(lista_labels))]
         ax.legend(handles=legend_handles, bbox_to_anchor=(0.5, -0.09), loc='upper center',
-                            ncol=4, borderaxespad=0.0, fontsize=22)
+                            ncol=4, borderaxespad=0.0, fontsize=25)
         for spine in ax.spines.values():
             spine.set_visible(False)
         ax.yaxis.set_major_locator(ticker.AutoLocator())
@@ -1341,7 +1322,7 @@ def grafica_barras_subsidios(archivo, dic_metricas):
         plt.savefig(n_imagen, transparent=True)
         plt.close()
         imagen = Image.open(n_imagen)
-        recorte = (100, 50, imagen.width-130, imagen.height)
+        recorte = (280, 180, imagen.width-320, imagen.height)
         imagen_recortada = imagen.crop(recorte)
         imagen_recortada.save(n_imagen)
         informar_imagen(n_imagen)
@@ -1390,6 +1371,7 @@ def grafica_barras_indicador_tecnico_minutos(archivo):
         lista_archivo.insert(-1, "Imagenes")
         archivo_copia = mod_1.lista_a_texto(lista_archivo,"\\")
         df = pd.read_csv(n_archivo, sep=",", encoding="utf-8-sig")
+        df["Mes_reportado"] = df['Mes_reportado'].str[:3]
         df = union_listas_df_fecha(df)
         df['Porcentaje_cantidad_eventos'] = df['Porcentaje_cantidad_eventos'].str.replace(" %", "").astype(float)
         lista_filiales = list(df['Filial'].unique())
@@ -1437,8 +1419,8 @@ def grafica_barras_indicador_tecnico_minutos(archivo):
                             v_y.append(y[i])
                             ax.text(x[i], y[i]*0.985, f"{valor[i]}", ha='center', va='bottom', fontsize=30, color="white", fontweight='bold')
                     ax.scatter(v_x, v_y, color='red', s=4500, label=llave)
-            ax.text(x=-2, y=v_max*1.05, s=f'{limite}', color=dic_colores["azul_v"], fontsize=28)
-            ax.axhline(y=v_max*1.05, linestyle='--', color=dic_colores["azul_v"], linewidth=3)
+            ax.text(x=-2, y=v_max*1.05, s=f'{limite}', color=dic_colores["azul_v"], fontsize=35)
+            ax.axhline(y=v_max*1.05, linestyle='--', color=dic_colores["azul_v"], linewidth=5)
             for spine in ax.spines.values():
                 spine.set_visible(False)
             legend_handles = [plt.Line2D([0], [0], marker='o', color='w', label=str(labels[i]),
@@ -1448,14 +1430,14 @@ def grafica_barras_indicador_tecnico_minutos(archivo):
             ax.set_yticklabels([])
             ax.set_xticks(x)
             ax.tick_params(axis='x', color=dic_colores["azul_v"])
-            ax.set_xticklabels(lista_periodos, fontsize=24, color=dic_colores["azul_v"])
+            ax.set_xticklabels(lista_periodos, fontsize=34, color=dic_colores["azul_v"])
             n_imagen = archivo_copia.replace(".csv", f"_{dic_filiales_largo[filial]}.png")
             plt.savefig(n_imagen, transparent=True)
             plt.close()
             if c == 0:
                 c+=1
                 imagen = Image.open(n_imagen)
-                recorte = (600, 1420, imagen.width-550, imagen.height)
+                recorte = (650, 1500, imagen.width-600, imagen.height)
                 imagen_recortada = imagen.crop(recorte)
                 imagen_recortada.save(archivo_copia.replace(".csv", f"_limite.png"))
             imagen = Image.open(n_imagen)
@@ -1489,7 +1471,7 @@ def grafica_barras_indicador_tecnico_horas(archivo, fecha):
                         dic_grafica[tipo][clasificacion].append(df_filtro["Cantidad_eventos"].sum())
             for evento, dic in dic_grafica.items():
                 lista_colores = ["#02c028","#ff8000","#cc0000"]
-                fig, ax = plt.subplots(figsize=(24,12))
+                fig, ax = plt.subplots(figsize=(25,15))
                 bar_width = 0.7
                 v_max = 0
                 for i,(llave, valor) in enumerate(dic.items()):
@@ -1519,10 +1501,10 @@ def grafica_barras_indicador_tecnico_horas(archivo, fecha):
                                 v_y.append(y)
                         ax.scatter(v_x, v_y, color='red', s=2000)
                 ax.set_xticks(x)
-                ax.set_xlabel("Franja horaria", color=dic_colores["azul_v"],fontsize=27)
-                ax.set_ylabel("Cantidad de eventos", color=dic_colores["azul_v"],fontsize=27)
-                ax.set_xticklabels(range(24), color=dic_colores["azul_v"], fontsize=23)
-                ax.legend(bbox_to_anchor=(0.5, -0.095), loc='upper center',
+                ax.set_xlabel("Franja horaria", color=dic_colores["azul_v"],fontsize=34)
+                ax.set_ylabel("Cantidad de eventos", color=dic_colores["azul_v"],fontsize=34)
+                ax.set_xticklabels(range(24), color=dic_colores["azul_v"], fontsize=30)
+                ax.legend(bbox_to_anchor=(0.5, -0.115), loc='upper center',
                                 ncol=3, borderaxespad=0.0, fontsize=15)
                 for spine in ax.spines.values():
                     spine.set_visible(False)
@@ -1541,11 +1523,11 @@ def grafica_barras_indicador_tecnico_horas(archivo, fecha):
                 if c == 0:
                     c+=1
                     imagen = Image.open(n_imagen)
-                    recorte = (570, 1150, imagen.width-540, imagen.height-2)
+                    recorte = (570, 1170, imagen.width-540, imagen.height)
                     imagen_recortada = imagen.crop(recorte)
                     imagen_recortada.save(archivo_copia.replace(".csv", f"_limite_{nombre_evento}.png"))
                 imagen = Image.open(n_imagen)
-                recorte = (160, 50, imagen.width-275, imagen.height-45)
+                recorte = (160, 50, imagen.width-275, imagen.height-30)
                 imagen_recortada = imagen.crop(recorte)
                 imagen_recortada.save(n_imagen)
                 informar_imagen(n_imagen)
@@ -1672,14 +1654,14 @@ def metricas_sector_consumo(archivo, fecha_anterior, fecha_actual, dic_metricas)
         if len(df_filtro):
             texto_1 = round(df_filtro["Cantidad de usuarios"][0])
             texto_1 =  f"{round(texto_1/1e6,1)} M"
-            dic_metricas["usuarios_regulados"] = texto_1
+            dic_metricas["usuarios_regulados"] = conversion_decimales(texto_1)
         else:
             dic_metricas["usuarios_regulados"] = None
         df_filtro = df_fecha[(df_fecha["Tipo de usuario"]=="No regulados")].reset_index(drop=True)
         if len(df_filtro):
             texto_1 = round(df_filtro["Cantidad de usuarios"][0])
             texto_1 =  f"{int(texto_1)}"
-            dic_metricas["usuarios_no_regulados"] = texto_1
+            dic_metricas["usuarios_no_regulados"] = conversion_decimales(texto_1)
         else:
             dic_metricas["usuarios_no_regulados"] = None
         df1 = df[(df["Anio reportado"]==int(fecha_anterior[0]))&(df["Mes reportado"]==fecha_anterior[1])&(df["Tipo de usuario"]=="Total")&(df["Filial"]==grupo_vanti)].reset_index(drop=True)
@@ -1688,7 +1670,7 @@ def metricas_sector_consumo(archivo, fecha_anterior, fecha_actual, dic_metricas)
             v2 = round(df2["Cantidad de usuarios"][0])
             valor = round(abs(((v1-v2)/v2)*100),1)
             texto_1 =  f"{valor} %"
-            dic_metricas["porcentaje_crecimiento"] = texto_1
+            dic_metricas["porcentaje_crecimiento"] = conversion_decimales(texto_1)
         else:
             dic_metricas["porcentaje_crecimiento"] = None
     return dic_metricas
@@ -1701,7 +1683,7 @@ def metricas_suspensiones(archivo, fecha, dic_metricas):
             dic_metricas["cantidad_eventos"] = str(len(df_filtro))
             suma = round(df_filtro["Numero_suscriptores_afectados"].sum())
             if suma > 1000:
-                texto_1 = f"{suma/1e3}"
+                texto_1 = conversion_miles(suma)
             else:
                 texto_1 = str(suma)
             dic_metricas["usuarios_eventos"] = texto_1
@@ -1717,11 +1699,12 @@ def metricas_indicadores(archivo, fecha, dic_metricas):
         if len(df_filtro):
             suma = round(df_filtro["Cantidad_eventos"].sum())
             if suma > 1000:
-                texto_1 = f"{suma/1e3}"
+                texto_1 = conversion_decimales(suma/1e3)
             else:
                 texto_1 = str(suma)
             dic_metricas["cantidad_emergencias"] = texto_1
-            texto_1 = str(round(df_filtro["Tiempo_promedio_llegada (min)"].mean(),1))+" min"
+            texto = str(round(df_filtro["Tiempo_promedio_llegada (min)"].mean(),1))+" min"
+            texto_1 = conversion_decimales(texto)
             dic_metricas["tiempo_emergencias"] = texto_1
         else:
             dic_metricas["cantidad_emergencias"] = None
@@ -1733,12 +1716,13 @@ def metricas_compensacines(archivo, fecha, dic_metricas):
         df = pd.read_csv(archivo, sep=",", encoding="utf-8-sig")
         df_filtro = df[(df["Anio_reportado"]==int(fecha[0]))&(df["Mes_reportado"]==fecha[1])&(df["Filial"]==grupo_vanti)].reset_index(drop=True)
         if len(df_filtro):
-            texto_1 = float(df_filtro["Usuarios_compensados"][0])
-            texto_1 =  f"{texto_1/1e3}"
+            texto_1 = int(df_filtro["Usuarios_compensados"][0])
+            if texto_1 > 1000:
+                texto_1 = conversion_decimales(f"{texto_1/1e3:.3f}")
             dic_metricas["usuarios_compensados"] = texto_1
             texto_1 = round(df_filtro["Valor_compensado"][0])
-            texto_1 = f"{round(texto_1/1e6,1)} M"
-            dic_metricas["valor_compensado"] = texto_1
+            texto_1 = conversion_decimales(f"{round(texto_1/1e6,1)} M")
+            dic_metricas["valor_compensado"] = conversion_decimales(texto_1)
         else:
             dic_metricas["valor_compensado"] = None
             dic_metricas["usuarios_compensados"] = None
@@ -1753,7 +1737,6 @@ def grafica_deuda_subsidios(archivo, archivo_1, dic_metricas):
         df = pd.read_csv(archivo, sep=",", encoding="utf-8-sig")
         df_1 = pd.read_csv(archivo_1, sep=",", encoding="utf-8-sig")
         porcentaje = round(df_1.iloc[-1]["KPI"],2)
-        meta_subsidios = 1.4
         error = (abs(meta_subsidios-porcentaje)/meta_subsidios)*100
         if porcentaje >= meta_subsidios:
             color = dic_colores["rojo_c"]
@@ -1761,34 +1744,35 @@ def grafica_deuda_subsidios(archivo, archivo_1, dic_metricas):
             color = dic_colores["naranja_p"]
         else:
             color = dic_colores["verde_c"]
-        dic_metricas["kpi_subsidios"] = [porcentaje, color]
+        dic_metricas["kpi_subsidios"] = [conversion_decimales(porcentaje), color]
+        df["Mes"] = df["Mes"].str[:3]
         df = union_listas_df_fecha(df, anio="Anio", mes="Mes")
         anios = list(df["Fecha"])
         x = range(1, len(df)+1)
         valor = round(list(df["Deuda"])[-1])
-        texto = f"{valor/1e9:.1f} m M"
+        texto = conversion_decimales(f"{valor/1e9:.1f} m M")
         dic_metricas["deuda_subsidios"] = texto
-        lista_colores = [ dic_colores["amarillo_v"],dic_colores["azul_v"]]
-        fig, ax = plt.subplots(figsize=(30,15))
+        lista_colores = [dic_colores["amarillo_v"],dic_colores["azul_v"]]
+        fig, ax = plt.subplots(figsize=(30,18))
         ax.fill_between(x, df["Deuda"], color=lista_colores[0], label='Deuda MME')
         ax.fill_between(x, df["Pagado"], color=lista_colores[1], alpha=0.8, label='Girado MME')
         ax.yaxis.set_major_locator(ticker.MaxNLocator(nbins=5))
-        ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: f'{x/1e9:.1f} m M'))
+        ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: conversion_decimales(f'{x/1e9:.1f} m M')))
         for tick in ax.yaxis.get_major_ticks():
             tick.label1.set_color(dic_colores["azul_v"])
-            tick.label1.set_fontsize(28)
+            tick.label1.set_fontsize(34)
             tick.set_pad(8)
         ax.set_xticks(x)
-        ax.set_xticklabels(anios, color=dic_colores["azul_v"], fontsize=24)
+        ax.set_xticklabels(anios, color=dic_colores["azul_v"], fontsize=32)
         for spine in ax.spines.values():
             spine.set_visible(False)
-        ax.legend(bbox_to_anchor=(0.5, -0.08), loc='upper center',
-                    ncol=2, borderaxespad=0.0, fontsize=18)
+        ax.legend(bbox_to_anchor=(0.5, -0.095), loc='upper center',
+                    ncol=2, borderaxespad=0.0, fontsize=32)
         ax.grid(axis='y', color='gray', linestyle='--', linewidth=4, alpha=0.75)
         plt.savefig(archivo_copia, transparent=True)
         plt.close()
         imagen = Image.open(archivo_copia)
-        recorte = (50, 60, imagen.width-80, imagen.height-20)
+        recorte = (110, 120, imagen.width-220, imagen.height)
         imagen_recortada = imagen.crop(recorte)
         imagen_recortada.save(archivo_copia)
         informar_imagen(archivo_copia)

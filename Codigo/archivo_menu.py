@@ -3,6 +3,7 @@ import sys
 import time
 import subprocess
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QHBoxLayout, QSpacerItem, QSizePolicy, QDialog, QPushButton, QScrollArea, QLineEdit
 from PyQt5.QtGui import QPalette, QColor, QFont, QFontDatabase, QPixmap, QIcon
 from PyQt5.QtCore import Qt, QEventLoop, QSize
@@ -27,7 +28,7 @@ import archivo_interfaz as mod_9
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Constantes globales
 # * -------------------------------------------------------------------------------------------------------
-global version, lista_meses, lista_empresas,lista_anios,dic_reportes,lista_reportes_generales,reportes_generados,lista_reportes_totales,t_i,t_f,lista_reportes_generados,cantidad_datos_estilo_excel,fecha_actual,dic_meses,dic_filiales,trimestre_mes,anio_actual,fecha_actual_texto,lista_archivo_desviaciones,ruta_fuente,ruta_fuente_negrilla
+global version, lista_meses, lista_empresas,lista_anios,dic_reportes,lista_reportes_generales,reportes_generados,lista_reportes_totales,t_i,t_f,lista_reportes_generados,cantidad_datos_estilo_excel,fecha_actual,dic_meses,dic_filiales,trimestre_mes,anio_actual,fecha_actual_texto,lista_archivo_desviaciones,ruta_fuente,ruta_fuente_negrilla,fecha_corte_tupla,fecha_anio_anterior_tupla
 version = "1.0"
 lista_anios = list(mod_2.leer_archivos_json(ruta_constantes+"anios.json")["datos"].values())
 dic_meses = mod_2.leer_archivos_json(ruta_constantes+"tabla_18.json")["datos"]
@@ -40,7 +41,7 @@ lista_reportes_generales = mod_2.leer_archivos_json(ruta_constantes+"carpetas_1.
 reportes_generados = mod_2.leer_archivos_json(ruta_constantes+"carpetas_1.json")["carpeta_4"]
 trimestre_mes = mod_2.leer_archivos_json(ruta_constantes+"trimestre_mes.json")["datos"]
 lista_reportes_generados = ["_resumen","_form_estandar", #formatos generales
-                            "_reporte_consumo","_CLD","_PRD","_porcentaje_comparacion_SAP","_total_comparacion_SAP","SH","DANE","_reporte_DANE","_compilado_desviaciones","_compilado_DS_metricas","SAP",
+                            "_reporte_consumo","_CLD","_PRD","_porcentaje_comparacion_SAP","_total_comparacion_SAP","SH","DANE","_reporte_DANE","_compilado_desviaciones","_compilado_DS_metricas","SAP","_ajuste_catastro",
                             "_comparacion_iguales","_comparacion_diferentes","_subsidio","_info_comercial","_reporte_compensacion","_compilado_compensacion", #formatos comerciales
                             "_reporte_tarifario", #formatos tarifarios
                             "_indicador_tecnico","_reporte_suspension","_indicador_tecnico_IRST","_indicador_tecnico_IRST_minutos","_indicador_tecnico_IRST_horas", #formatos tecnicos
@@ -51,6 +52,10 @@ cantidad_datos_estilo_excel = 80000
 fecha_actual = datetime.now()
 anio_actual = fecha_actual.year
 fecha_actual_texto = f"{fecha_actual.day} de {lista_meses[int(fecha_actual.month)-1]} del {anio_actual}"
+dia_corte, mes_corte, anio_corte = ((datetime.now() - relativedelta(months=2) + relativedelta(months=1)).replace(day=1) - relativedelta(days=1)).day, ((datetime.now() - relativedelta(months=2) + relativedelta(months=1)).replace(day=1) - relativedelta(days=1)).month, ((datetime.now() - relativedelta(months=2) + relativedelta(months=1)).replace(day=1) - relativedelta(days=1)).year
+fecha_corte_tupla = (dia_corte,mes_corte,anio_corte)
+dia_corte, mes_corte, anio_corte = (fecha_actual.replace(month=1, day=1) - relativedelta(days=1)).day, (fecha_actual.replace(month=1, day=1) - relativedelta(days=1)).month, (fecha_actual.replace(month=1, day=1) - relativedelta(days=1)).year
+fecha_anio_anterior_tupla = (dia_corte,mes_corte,anio_corte)
 lista_archivo_desviaciones = ["DS56","DS57","DS58"]
 ruta_fuente = ruta_fuentes + "Muli.ttf"
 ruta_fuente_negrilla = ruta_fuentes + "Muli-Bold.ttf"
@@ -1088,7 +1093,6 @@ def menu_comercial_sectores_consumo(option,valor):
     #? Generación de información comercial por sectores de consumo mensual
     if option == "1":
         seleccionar_reporte = funcion_seleccionar_reportes("reporte_comercial_mensual")
-        #print(seleccionar_reporte)
         if len(seleccionar_reporte["filial"]) == 4:
             op_add = anadir_opciones(regenerar=True, codigo_DANE=True, sumatoria=True, valor_facturado=True, facturas=True)
         else:
@@ -1104,14 +1108,12 @@ def menu_comercial_sectores_consumo(option,valor):
             proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, regenerar, continuar=True, mostrar_dic=False, informar=False)
         proceso,dic_archivos = generar_archivos_extra(seleccionar_reporte, False, continuar=False, mostrar_dic=True)
         if proceso:
-            #print(dic_archivos)
             mod_1.reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=codigo_DANE, total=sumatoria, valor_facturado=valor_facturado, facturas=facturas)
         t_f = time.time()
         mod_1.mostrar_tiempo(t_f, t_i)
     #? Generación de información comercial por sectores de consumo anual
     elif option == "2":
         seleccionar_reporte = funcion_seleccionar_reportes("reporte_comercial_anual")
-        #print(seleccionar_reporte)
         reporte = "_reporte_consumo.csv"
         if len(seleccionar_reporte["filial"]) == 4:
             op_add = anadir_opciones(regenerar=True, codigo_DANE=True, sumatoria=True, valor_facturado=True, reportes_mensuales=True,texto_regenerar_mensuales=f"{reporte}",reporte_consumo_anual=True, facturas=True)
@@ -1210,6 +1212,7 @@ def menu_comercial_compensaciones(option,valor):
     #? Generación de reportes de compensaciones anual
     elif option == "2":
         seleccionar_reporte = funcion_seleccionar_reportes("reportes_compensacion_anual")
+        print(seleccionar_reporte)
         reporte = "_compilado_compensacion.csv"
         op_add = anadir_opciones(True, reportes_mensuales=True,texto_regenerar_mensuales=reporte, inventario=True)
         t_i = time.time()
@@ -1781,6 +1784,7 @@ def menu_creacion_dashboard():
         v_fecha_inicial = mod_1.fecha_anterior(fi_1, fi_2)
         print(f"\nInicio de creación del Dashboard para el periodo: ({fi_1}/{fi_2} - {ff_1}/{ff_2})\n\n")
         lista_archivos_anuales = generar_archivos_anuales_dashboard(seleccionar_reporte_dashboard)
+        #print(seleccionar_reporte_dashboard)
         if len(lista_archivos_anuales):
             dic_metricas = {}
             for i in range(len(lista_archivos_anuales)):
@@ -1788,19 +1792,19 @@ def menu_creacion_dashboard():
                 if archivo:
                     if i == 0:
                         mod_6.grafica_pie_tipo_usuario(archivo, v_fecha_anterior)
-                        mod_6.grafico_barras_consumo(archivo)
+                        dic_metricas = mod_6.grafico_barras_consumo(archivo, dic_metricas)
                         mod_6.grafico_usuarios(archivo)
                         dic_metricas = mod_6.grafica_pie_usuarios(archivo, v_fecha_anterior, dic_metricas)
-                        mod_6.grafica_tabla_sector_consumo(archivo, v_fecha_anterior)
+                        dic_metricas = mod_6.grafica_tabla_sector_consumo(archivo, v_fecha_anterior, dic_metricas)
                         dic_metricas = mod_6.metricas_sector_consumo(archivo, v_fecha_inicial, v_fecha_anterior, dic_metricas)
                     elif i == 1:
                         mod_6.grafica_pie_subsidios(archivo, v_fecha_anterior)
                         dic_metricas = mod_6.grafica_barras_subsidios(archivo, dic_metricas)
                     elif i == 2:
-                        mod_6.grafica_barras_compensacion(archivo)
+                        mod_6.grafica_compensacion(archivo)
                         dic_metricas = mod_6.metricas_compensacines(archivo, v_fecha_anterior, dic_metricas)
                     elif i == 3:
-                        mod_6.grafica_DS(archivo, dic_metricas)
+                        dic_metricas = mod_6.grafica_DS(archivo, dic_metricas)
                     elif i == 4:
                         dic_metricas = mod_6.fun_tarifas(archivo, v_fecha_anterior, dic_metricas)
                     elif i == 5:
@@ -1829,6 +1833,8 @@ def menu_creacion_dashboard():
             dic_tarifas = mod_1.tarifas_distribuidoras_GN()
             if dic_tarifas:
                 dic_metricas["Tarifas_nacionales"] = dic_tarifas
+
+            print("\n","*"*100,"\n")
             for i, j in dic_metricas.items():
                 if i == "Tarifas_nacionales":
                     print(i)
@@ -1847,12 +1853,16 @@ def menu_creacion_dashboard():
                     print(i)
                     print(j)
                     print("\n")
+            print("\n","*"*100,"\n")
             archivo = mod_1.generar_porcentaje_matriz_requerimientos(dashboard=True, texto_fecha=texto_fecha)
             if archivo:
                 mod_6.grafica_matriz_requerimientos(archivo)
-            #mod_7.crear_slides(mod_1.lista_a_texto(archivo.split("\\")[:-2],"\\"),v_fecha_anterior,texto_fecha_completo, fecha_actual_texto, texto_fecha, lista_metricas_portada)
+            fecha_corte = f"{fecha_corte_tupla[0]} de {lista_meses[int(fecha_corte_tupla[1])-1]} del {fecha_corte_tupla[2]}"
+            fecha_corte_anterior = f"{fecha_anio_anterior_tupla[0]} de {lista_meses[int(fecha_anio_anterior_tupla[1])-1]} del {fecha_anio_anterior_tupla[2]}"
+            mes_corte = f"{lista_meses[int(fecha_corte_tupla[1])-1]}-{fecha_corte_tupla[2]}"
+            mod_7.crear_slides(mod_1.lista_a_texto(archivo.split("\\")[:-2],"\\"),v_fecha_anterior,texto_fecha_completo, fecha_corte, texto_fecha, dic_metricas,mes_corte,fecha_corte_anterior)
             t_f = time.time()
-            mod_1.mostrar_tiempo(t_f, t_i)
+            print(mod_1.mostrar_tiempo(t_f, t_i))
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Menú general
@@ -1916,7 +1926,7 @@ def menu_inicial(lista, nombre):
                     "Pagos contribuciones MME",
                     "Tarifas distribuidoras de GN en Colombia",
                     "Regresar al menú inicial"]
-        option,valor = opcion_menu_valida(lista_menu, "Cumplimientos Regulatorios", False)
+        option,valor = opcion_menu_valida(lista_menu, "KPIs", False)
         menu_cumplimientos_reportes(option,valor)
     elif option == "7":
         menu_creacion_dashboard()
@@ -2380,6 +2390,20 @@ def eleccion_fecha(seleccionar_reportes, lista_evaluar, opcion_extra, nombre, se
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Seleccionar reporte aplicativo
 # * -------------------------------------------------------------------------------------------------------
+def fechas_anuales(dic):
+    c = 0
+    lista_fechas = []
+    for _, valor in dic.items():
+        if valor[1]:
+            if c == 0:
+                lista_fechas.append([valor[0][0],valor[0][1]])
+                c += 1
+            else:
+                lista_fechas.append([valor[0][0],valor[0][1]])
+                c = 0
+    lista_fecha_anual = [(lista_fechas[0][0],lista_fechas[0][1]),(lista_fechas[-1][0],lista_fechas[-1][1])]
+    return lista_fecha_anual
+
 def formato_seleccionar_reporte(dic_info, estado):
     dic_info_reporte = {}
     lista_seleccionar_reporte = []
@@ -2414,6 +2438,86 @@ def formato_seleccionar_reporte(dic_info, estado):
                         opciones[llave] = valor
                     elif valor[0]:
                         opciones[llave] = valor[0]
+        case "reporte_comercial_sector_consumo_subsidio_mensual":
+            ubi = ["Reportes Nuevo SUI"]
+            tipo = ["Comercial"]
+            clasificacion = ["GRC1","GRC2","GRTT2"]
+            filial = []
+            if "Filial" in dic_info:
+                if dic_info["Filial"]["Todas"][2]:
+                    filial = ["VANTI", "GNCB", "GNCR", "GOR"]
+                else:
+                    for llave, valor in dic_info["Filial"].items():
+                        if valor[2]:
+                            filial.append(llave)
+            if "Fecha" in dic_info:
+                for _, valor in dic_info["Fecha"].items():
+                    reporte = reset_reporte()
+                    if valor[1]:
+                        reporte["anios"] = [valor[0][0]]
+                        reporte["meses"] = [valor[0][1]]
+                        reporte["filial"] = filial
+                        reporte["tipo"] = tipo
+                        reporte["clasificacion"] = clasificacion
+                        reporte["ubicacion"] = ubi
+                        lista_seleccionar_reporte.append(reporte)
+            if "Opciones_adicionales" in dic_info:
+                for llave, valor in dic_info["Opciones_adicionales"].items():
+                    if llave == "codigo_DANE":
+                        opciones[llave] = valor
+                    elif valor[0]:
+                        opciones[llave] = valor[0]
+        case "reporte_compensaciones_mensual":
+            ubi = ["Reportes Nuevo SUI"]
+            tipo = ["Comercial"]
+            clasificacion = ["GRC3","GRTT2"]
+            filial = []
+            if "Filial" in dic_info:
+                if dic_info["Filial"]["Todas"][2]:
+                    filial = ["VANTI", "GNCB", "GNCR", "GOR"]
+                else:
+                    for llave, valor in dic_info["Filial"].items():
+                        if valor[2]:
+                            filial.append(llave)
+            if "Fecha" in dic_info:
+                for _, valor in dic_info["Fecha"].items():
+                    reporte = reset_reporte()
+                    if valor[1]:
+                        reporte["anios"] = [valor[0][0]]
+                        reporte["meses"] = [valor[0][1]]
+                        reporte["filial"] = filial
+                        reporte["tipo"] = tipo
+                        reporte["clasificacion"] = clasificacion
+                        reporte["ubicacion"] = ubi
+                        lista_seleccionar_reporte.append(reporte)
+            if "Opciones_adicionales" in dic_info:
+                for llave, valor in dic_info["Opciones_adicionales"].items():
+                    if valor[0]:
+                        opciones[llave] = valor[0]
+        case "reporte_compensaciones_anual":
+            ubi = ["Reportes Nuevo SUI"]
+            tipo = ["Comercial"]
+            clasificacion = ["GRC3","GRTT2"]
+            filial = []
+            if "Filial" in dic_info:
+                if dic_info["Filial"]["Todas"][2]:
+                    filial = ["VANTI", "GNCB", "GNCR", "GOR"]
+                else:
+                    for llave, valor in dic_info["Filial"].items():
+                        if valor[2]:
+                            filial.append(llave)
+            if "Fecha" in dic_info:
+                reporte = reset_reporte()
+                reporte["filial"] = filial
+                reporte["tipo"] = tipo
+                reporte["clasificacion"] = clasificacion
+                reporte["ubicacion"] = ubi
+                reporte["fecha_personalizada"] = fechas_anuales(dic_info["Fecha"])
+                lista_seleccionar_reporte.append(reporte)
+            if "Opciones_adicionales" in dic_info:
+                for llave, valor in dic_info["Opciones_adicionales"].items():
+                    if valor[0]:
+                        opciones[llave] = valor[0]
         case _:
             pass
     dic_info_reporte["Reportes"] = lista_seleccionar_reporte
@@ -2429,7 +2533,7 @@ def iniciar_menu():
                         "Actividades con Reportes Comerciales",
                         "Actividades con Reportes Tarifarios",
                         "Actividades con Reportes Técnicos",
-                        "Activides con Cumplimiento de Reportes",
+                        "KPIs",
                         "Generar archivos Dashboard",
                         "Salir"]
     centinela = True
@@ -2450,13 +2554,16 @@ def mostrar_inicio_app():
     #Creación de mapa de suspensiones
 
 # TODO Documento:
-    #Incluir tiempo estimado promedio por mes para la documentación de explicación
-    #Pruebas de tiempo con otros dispositivos
+    #Incluir tiempo estimado promedio por mes para la documentación de explicación (Pruebas de tiempo con otros dispositivos)
 
 # TODO Opcionales:
     # Creación doc unión GRC1/GRTT2 y/o GRC2
-    # Revisión O3
-    # Generar un archivo CSV en la comparación del GRC1/CLD/PRD si la cantidad de NIU no encontrados es mayor al 1% de la muestra total
+
+def on_close(event, app):
+    app.closeAllWindows()
+    event.accept()
+    subprocess.run(['taskkill', '/F', '/IM', 'pwsh.exe', '/T'], check=True)
+    os.system("exit")
 
 def crear_app():
     app, window, central_widget, dimensiones = mod_9.crear_pantalla_incial()
@@ -2464,12 +2571,6 @@ def crear_app():
     window.closeEvent = lambda event: on_close(event, app)
     mod_9.pantalla_inicio(app, window, central_widget, dimensiones)
     return info_app
-
-def on_close(event, app):
-    app.closeAllWindows()
-    event.accept()
-    subprocess.run(['taskkill', '/F', '/IM', 'pwsh.exe', '/T'], check=True)
-    os.system("exit")
 
 def iniciar_app(info_app):
     app, window, central_widget, dimensiones = info_app
@@ -2500,10 +2601,32 @@ def activar_funciones(estado, info):
             titulo = "Reporte comercial sector consumo"
             info = formato_seleccionar_reporte(info, estado)
             estado = mod_1.run_app(titulo, estado, info)
+        case "reporte_comercial_sector_consumo_subsidio_mensual":
+            titulo = "Reporte comercial sector consumo subsidiado"
+            info = formato_seleccionar_reporte(info, estado)
+            estado = mod_1.run_app(titulo, estado, info)
+        case "reporte_compensaciones_mensual":
+            titulo = "Reporte compensaciones"
+            info = formato_seleccionar_reporte(info, estado)
+            estado = mod_1.run_app(titulo, estado, info)
+        case "reporte_compensaciones_anual":
+            titulo = "Reporte compensaciones anual"
+            info = formato_seleccionar_reporte(info, estado)
+            estado = mod_1.run_app(titulo, estado, info)
         case _:
             print(estado, "\n")
             print(info, "\n"*2)
 
+
 if __name__ == "__main__":
-    #iniciar_app(crear_app())
+    """variable = True
+    while variable:
+        eleccion = str(input("Elección: "))
+        if eleccion in ["1","2"]:
+            variable = False
+    if eleccion == "1":
+        iniciar_app(crear_app())
+    elif eleccion == "2":
+        iniciar_menu()"""
     iniciar_menu()
+    #iniciar_app(crear_app())

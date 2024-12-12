@@ -33,6 +33,7 @@ import archivo_csv_a_excel as mod_5
 import archivo_df_a_doc as mod_8
 import archivo_crear_carpetas as mod_3
 import archivo_creacion_json as mod_2
+import archivo_busqueda_reportes as mod_4
 ruta_guardar_archivos = mod_rp.v_guardar_archivos().replace('\\', '\\\\')
 
 # * -------------------------------------------------------------------------------------------------------
@@ -51,7 +52,7 @@ def leer_archivos_json(archivo):
 # *                                             Constantes globales
 # * -------------------------------------------------------------------------------------------------------
 
-global lista_meses, lista_empresas, lista_anios, dic_reportes, lista_reportes_generales, reportes_generados, lista_reportes_totales,chunksize,llaves_dic_reporte, dic_carpetas, dic_filiales,antidad_datos_excel, dic_nit, cantidad_datos_estilo_excel,grupo_vanti,mercado_relevante,mercado_relevante_resumen,mercado_relevante_id,tabla_3,tabla_11,fecha_actual,lista_trimestres, dic_meses_abre,lista_clasi_reportes,categoria_matriz_requerimientos,lista_archivo_desviaciones,tabla_2_DS,tabla_3_DS,tabla_4_DS,tabla_5_DS,tabla_6_DS,tabla_8_DS,indicador_SUI,tabla_30,tabla_8_DS_categoria,tabla_71,tabla_16, tabla_3_data,lista_carpetas_extra,anio_actual
+global lista_meses, lista_empresas, lista_anios, dic_reportes, lista_reportes_generales, reportes_generados, lista_reportes_totales,chunksize,llaves_dic_reporte, dic_carpetas, dic_filiales,antidad_datos_excel, dic_nit, cantidad_datos_estilo_excel,grupo_vanti,mercado_relevante,mercado_relevante_resumen,mercado_relevante_id,tabla_3,tabla_11,fecha_actual,lista_trimestres, dic_meses_abre,lista_clasi_reportes,categoria_matriz_requerimientos,lista_archivo_desviaciones,tabla_2_DS,tabla_3_DS,tabla_4_DS,tabla_5_DS,tabla_6_DS,tabla_8_DS,indicador_SUI,tabla_30,tabla_8_DS_categoria,tabla_71,tabla_16, tabla_3_data,lista_carpetas_extra,anio_actual,dic_ciudades,lista_reportes_generados
 grupo_vanti = "Grupo Vanti"
 dic_carpetas = leer_archivos_json(ruta_constantes+"carpetas.json")
 lista_carpetas_extra = leer_archivos_json(ruta_constantes+"carpetas_extra.json")
@@ -90,6 +91,7 @@ tabla_8_DS_categoria = leer_archivos_json(ruta_constantes+"/tabla_8_DS_categoria
 tabla_30 = leer_archivos_json(ruta_constantes+"/tabla_30.json")["datos"]
 indicador_SUI = leer_archivos_json(ruta_constantes+"/indicador_SUI.json")["datos"]
 empresa_indicador_SUI = leer_archivos_json(ruta_constantes+"/empresa_indicador_SUI.json")["datos"]
+dic_ciudades = leer_archivos_json(ruta_constantes+"ciudades_tarifas.json")["datos"]
 def crear_lista_reportes_totales():
     dic = leer_archivos_json(ruta_constantes+"reportes_disponibles.json")["datos"]
     lista = []
@@ -99,7 +101,14 @@ def crear_lista_reportes_totales():
 lista_reportes_totales = crear_lista_reportes_totales()
 fecha_actual = datetime.now()
 anio_actual = fecha_actual.year
-
+lista_reportes_generados = ["_resumen","_form_estandar", #formatos generales
+                            "_reporte_consumo","_CLD","_PRD","_porcentaje_comparacion_SAP","_total_comparacion_SAP","SH","DANE","_reporte_DANE","_compilado_desviaciones","_compilado_DS_metricas","SAP",
+                            "_comparacion_iguales","_comparacion_diferentes","_subsidio","_info_comercial","_reporte_compensacion","_compilado_compensacion", #formatos comerciales
+                            "_reporte_tarifario", #formatos tarifarios
+                            "_indicador_tecnico","_reporte_suspension","_indicador_tecnico_IRST","_indicador_tecnico_IRST_minutos","_indicador_tecnico_IRST_horas", #formatos tecnicos
+                            "_inventario_suscriptores","_usuarios_unicos","_reporte_facturacion",#calidad de la información
+                            "porcentaje_cumplimientos_regulatorios",
+                            "_error","_nuevo","_completo","_procesado"] #formatos regulatorios
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Uso de librería Geopy
@@ -449,13 +458,16 @@ def filtrar_carpetas_mes_anio(lista_carpetas, filtro):
                 lista.append(carpeta)
     return lista
 
-def crear_carpeta_anual(fecha, lista_archivo):
+def crear_carpeta_anual(fecha, lista_archivo, thread=None):
     lista_archivo = lista_archivo[:-2]
     lista_archivo.append(fecha)
     nombre = lista_a_texto(lista_archivo, "\\")
     crear_carpeta(nombre)
     if not os.path.exists(nombre):
-        print(f"\nSe creó la carpeta {acortar_nombre(nombre)}\n")
+        if thread:
+            thread.message_sent.emit(f"Se creó la carpeta {acortar_nombre(nombre)}\n", "white")
+        else:
+            print(f"\nSe creó la carpeta {acortar_nombre(nombre)}\n")
     lista_clasi = []
     lista_copia = lista_clasi_reportes.copy()
     lista_copia.append("Dashboard")
@@ -555,10 +567,13 @@ def acortar_nombre(nombre, cantidad=6):
         texto = texto.replace("\\\\","\\")
     return texto
 
-def informar_archivo_creado(nombre,valor):
+def informar_archivo_creado(nombre,valor,thread=None):
     texto = acortar_nombre(nombre)
     if valor:
-        print(f"\nArchivo {texto} creado\n")
+        if thread:
+            thread.message_sent.emit(f"\nArchivo {texto} creado\n", "white")
+        else:
+            print(f"\nArchivo {texto} creado\n")
 
 def estandarizacion_archivos(lista_archivos, informar):
     dic_reporte = None
@@ -864,18 +879,18 @@ def comprimir_archivos(lista_archivos, informar=True):
                     print(f"\nSe recomienda almacenar la carpeta {llave} en un ubicación externa. \nLos archivos de la carpeta comprimida pesan {v_tamanio_archivos}\n")
                 eliminar_archivos(tupla[0])
 
-def almacenar_df_csv_y_excel(df, nombre, informar=True, almacenar_excel=True, reporte_DANE=False, BOM=True):
+def almacenar_df_csv_y_excel(df, nombre, informar=True, almacenar_excel=True, reporte_DANE=False, BOM=True, thread=None):
     if BOM:
         df.to_csv(nombre, index=False, encoding="utf-8-sig")
     else:
         df.to_csv(nombre, index=False, encoding="utf-8")
     if informar:
-        informar_archivo_creado(nombre, True)
+        informar_archivo_creado(nombre, True, thread=thread)
     if almacenar_excel:
         df = leer_dataframe_utf_8(nombre)
         almacenar = mod_5.almacenar_csv_en_excel(df, nombre.replace(".csv",".xlsx"),"Datos", reporte_DANE=reporte_DANE)
         if informar and almacenar:
-            informar_archivo_creado(nombre.replace(".csv",".xlsx"), True)
+            informar_archivo_creado(nombre.replace(".csv",".xlsx"), True, thread=thread)
 
 def generar_formato_almacenamiento_reportes(lista_df, nombre, informar=True,almacenar_excel=True):
     df_total = pd.concat(lista_df, ignore_index=True)
@@ -902,7 +917,7 @@ def codigo_DANE_texto(codigo_DANE):
     else:
         return str(codigo_DANE[0])[:5]
 
-def apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos, codigo_DANE, reporte, filial, valor_facturado=True, total=False, subsidio=False, facturas=False, reporte_DANE=False):
+def apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos, codigo_DANE, reporte, filial, valor_facturado=False, total=False, subsidio=False, facturas=False, reporte_DANE=False):
     for archivo in lista_archivos:
         if reporte in archivo:
             lista_df = lectura_dataframe_chunk(archivo)
@@ -917,7 +932,9 @@ def apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos, codigo_D
                     for i in range(len(lista_df)):
                         df = lista_df[i].copy()
                         for ele_codigo_DANE in codigo_DANE:
-                            df = df.replace([np.inf, -np.inf], np.nan).dropna(subset=['Codigo_DANE'])
+                            with warnings.catch_warnings():
+                                warnings.simplefilter("ignore", category=FutureWarning)
+                                df = df.replace([np.inf, -np.inf], np.nan).dropna(subset=['Codigo_DANE'])
                             df["Codigo_DANE"] = df["Codigo_DANE"].astype(int)
                             df_codigo_DANE = df[df["Codigo_DANE"] == ele_codigo_DANE].reset_index(drop=True)
                             if len(df_codigo_DANE):
@@ -936,7 +953,6 @@ def apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos, codigo_D
                                                     df_sector['ID_Factura'].astype(str) + '_' +
                                                     df_sector['Concepto_general_factura'].astype(str) + '_' +
                                                     df_sector['Sector_consumo'].astype(str))
-                                                #df_sector['Composicion_usuario'] = df_sector['ID_Factura'].astype(str)+'_'+df_sector['Concepto_general_factura'].astype(str)+'_'+df_sector['Sector_consumo'].astype(str)
                                                 df_sector.loc[:, 'ID_Factura'] = df_sector['ID_Factura'].str.upper()
                                                 df_facturas = df_sector[df_sector['ID_Factura'].str.startswith('F')]
                                                 cantidad_facturas = len(df_facturas)
@@ -1036,7 +1052,6 @@ def apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos, codigo_D
                                 df_sector = df[df["Sector_consumo"] == s1].copy()
                                 if s1 not in dic_dataframe:
                                     dic_dataframe[s1] = [0,0,0,0,0,0,0].copy()#cantidad_usuarios,consumo,valor_total_facturado,valor_consumo_facturado,cantidad_facturas,subsidios,contribuciones
-                                #df_sector['Composicion_usuario'] = df_sector['ID_Factura'].astype(str)+'_'+df_sector['Concepto_general_factura'].astype(str)+'_'+df_sector['Sector_consumo'].astype(str)
                                 df_sector.loc[:, 'Composicion_usuario'] = (
                                     df_sector['ID_Factura'].astype(str) + '_' +
                                     df_sector['Concepto_general_factura'].astype(str) + '_' +
@@ -1194,10 +1209,12 @@ def busqueda_sector_GRTT2(lista_archivos, dic_NIU, codigo_DANE, reporte, filial,
                     for i in range(len(lista_df)):
                         df = lista_df[i].copy()
                         for ele_codigo_DANE in codigo_DANE:
-                            df = df.replace([np.inf, -np.inf], np.nan).dropna(subset=['Codigo_DANE'])
-                            df["Codigo_DANE"] = df["Codigo_DANE"].fillna(0).astype(int)
-                            df["Estrato"] = df["Estrato"].fillna(0).astype(int)
-                            df["Estado"] = df["Estado"].fillna(0).astype(int)
+                            with warnings.catch_warnings():
+                                warnings.simplefilter("ignore", category=FutureWarning)
+                                df = df.replace([np.inf, -np.inf], np.nan).dropna(subset=['Codigo_DANE'])
+                            df["Estado"] = pd.to_numeric(df["Estado"], errors='coerce').fillna(0).astype(int)
+                            df["Estrato"] = pd.to_numeric(df["Estrato"], errors='coerce').fillna(0).astype(int)
+                            df["Codigo_DANE"] = pd.to_numeric(df["Codigo_DANE"], errors='coerce').fillna(0).astype(int)
                             df_codigo_DANE = df[df["Codigo_DANE"] == ele_codigo_DANE].reset_index(drop=True)
                             if len(df_codigo_DANE) > 0:
                                 if ele_codigo_DANE not in dic_codigo_DANE:
@@ -1319,8 +1336,8 @@ def busqueda_sector_GRTT2(lista_archivos, dic_NIU, codigo_DANE, reporte, filial,
                     dic_dataframe = {}
                     for i in range(len(lista_df)):
                         df = lista_df[i].copy()
-                        df["Estrato"] = df["Estrato"].fillna(0).astype(int)
-                        df["Estado"] = df["Estado"].fillna(0).astype(int)
+                        df["Estado"] = pd.to_numeric(df["Estado"], errors='coerce').fillna(0).astype(int)
+                        df["Estrato"] = pd.to_numeric(df["Estrato"], errors='coerce').fillna(0).astype(int)
                         lista_sectores = list(df["Estrato"].unique())
                         for sector in lista_sectores:
                             if subsidio:
@@ -1489,7 +1506,7 @@ def apoyo_reporte_comercial_sector_consumo_regulados(lista_archivos, codigo_DANE
                 return None, None
     return None, None
 
-def apoyo_reporte_comercial_sector_consumo(df1, n1, df2, n2, informar=True,reporte_DANE=False):
+def apoyo_reporte_comercial_sector_consumo(df1, n1, df2, n2, informar=True,reporte_DANE=False, thread=None):
     if n1 and n2:
         lista_n1 = n1.split("\\")
         nombre_1 = lista_n1[-1].split("_")[1:]
@@ -1500,9 +1517,9 @@ def apoyo_reporte_comercial_sector_consumo(df1, n1, df2, n2, informar=True,repor
         lista_n2[-1] = lista_a_texto(nombre_2, "_", False)
         n2 = lista_a_texto(lista_n2, "\\", False)
         df3 = pd.concat([df1, df2])
-        almacenar_df_csv_y_excel(df3, n1, informar, reporte_DANE=reporte_DANE)
+        almacenar_df_csv_y_excel(df3, n1, informar, reporte_DANE=reporte_DANE, thread=thread)
         if not reporte_DANE:
-            almacenar_df_csv_y_excel(df3, n2, informar)
+            almacenar_df_csv_y_excel(df3, n2, informar, thread=thread)
         return df3, n1
     elif n1:
         lista_n1 = n1.split("\\")
@@ -1510,7 +1527,7 @@ def apoyo_reporte_comercial_sector_consumo(df1, n1, df2, n2, informar=True,repor
         lista_n1[-1] = lista_a_texto(nombre_1, "_", False)
         n1 = lista_a_texto(lista_n1, "\\", False)
         df3 = df1.copy()
-        almacenar_df_csv_y_excel(df3, n1, informar, reporte_DANE=reporte_DANE)
+        almacenar_df_csv_y_excel(df3, n1, informar, reporte_DANE=reporte_DANE, thread=thread)
         return df3, n1
     elif n2:
         lista_n2 = n2.split("\\")
@@ -1518,11 +1535,11 @@ def apoyo_reporte_comercial_sector_consumo(df1, n1, df2, n2, informar=True,repor
         lista_n2[-1] = lista_a_texto(nombre_2, "_", False)
         n2 = lista_a_texto(lista_n2, "\\", False)
         df3 = df2.copy()
-        almacenar_df_csv_y_excel(df3, n2, informar, reporte_DANE=reporte_DANE)
+        almacenar_df_csv_y_excel(df3, n2, informar, reporte_DANE=reporte_DANE, thread=thread)
         return df3, n2
     return None, None
 
-def reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=None, valor_facturado=True, subsidio=False, almacenar_excel=True, total=False, facturas=False, reporte_DANE=False):
+def reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=None, valor_facturado=True, subsidio=False, almacenar_excel=True, total=False, facturas=False, reporte_DANE=False, thread=None):
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for fecha, lista_archivos in dic_archivos.items():
         lista_df_filiales = []
@@ -1539,7 +1556,7 @@ def reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar
             if len(lista_archivos_filial):
                 df1, n1 = apoyo_reporte_comercial_sector_consumo_regulados(lista_archivos_filial, codigo_DANE, "GRC1", valor_facturado, filial, subsidio, total, facturas, reporte_DANE)
                 df2, n2 = apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos_filial, codigo_DANE, "GRC2", filial, valor_facturado, total, subsidio, facturas, reporte_DANE)
-                df,nombre = apoyo_reporte_comercial_sector_consumo(df1, n1, df2, n2, informar, reporte_DANE)
+                df,nombre = apoyo_reporte_comercial_sector_consumo(df1, n1, df2, n2, informar, reporte_DANE, thread=thread)
                 if nombre:
                     if reporte_DANE:
                         df["ESTABLECIMIENTO"] = " "
@@ -1562,7 +1579,7 @@ def reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar
                 if proceso:
                     df_total = df_total_suma.copy()
                     nuevo_nombre = nuevo_nombre.replace(".csv","_sumatoria.csv")
-            almacenar_df_csv_y_excel(df_total, nuevo_nombre, informar, almacenar_excel, reporte_DANE=reporte_DANE)
+            almacenar_df_csv_y_excel(df_total, nuevo_nombre, informar, almacenar_excel, reporte_DANE=reporte_DANE, thread=thread)
 
 def reporte_SH(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=[]):
     lista_filiales_archivo = seleccionar_reporte["filial"]
@@ -1612,7 +1629,9 @@ def apoyo_reporte_SH(lista_archivos_filial, codigo_DANE):
             dic_GRTT2 = {}
             for i in range(len(lista_df)):
                 df = lista_df[i].copy()
-                df = df.replace([np.inf, -np.inf], np.nan).dropna(subset=['Codigo_DANE'])
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", category=FutureWarning)
+                    df = df.replace([np.inf, -np.inf], np.nan).dropna(subset=['Codigo_DANE'])
                 df["Codigo_DANE"] = df["Codigo_DANE"].astype(int)
                 df_codigo_DANE = df[df["Codigo_DANE"] == ele_codigo_DANE].reset_index(drop=True)
                 for j in range(len(df_codigo_DANE)):
@@ -2531,6 +2550,7 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
         dic_NIU_previo = {}
         lista_aceptado = []
         if lista_df_SAP and lista_df_previo:
+            lista_df_catastro = []
             for df in lista_df_SAP:
                 df = df.reset_index(drop=True)
                 columnas = list(df.columns)
@@ -2555,22 +2575,31 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                 df["Cedula_Catastral"] = df["Cedula_Catastral"].astype(str).replace("0", "").replace("nan", "")
                 df["Estrato"] = pd.to_numeric(df["Estrato"], errors='coerce').fillna(0).astype(int)
                 df["Estrato"] = df["Estrato"].astype(str)
+                df["Altitud"] = pd.to_numeric(df["Altitud"], errors="coerce").fillna(0).astype(int)
                 df["Latitud"] = pd.to_numeric(df["Latitud"], errors="coerce").fillna(-100).astype(float)
                 df["Latitud"] = df["Latitud"].apply(lambda x: -100 if x > 12.462778 or x < -4.225 else x)
                 df["Longitud"] = pd.to_numeric(df["Longitud"], errors="coerce").fillna(-100).astype(float)
                 df["Longitud"] = df["Longitud"].apply(lambda x: -100 if x > -66.848333 or x < -79.006389 else x)
                 df["Latitud"] = df["Latitud"].apply(lambda x: "" if x == -100 else x)
                 df["Longitud"] = df["Longitud"].apply(lambda x: "" if x == -100 else x)
-                mask_latitud = df["Latitud"] == ""
-                mask_longitud = df["Longitud"] == ""
-                df.loc[mask_latitud, "Longitud"] = ""
-                df.loc[mask_longitud, "Latitud"] = ""
+                with warnings.catch_warnings():
+                    warnings.simplefilter(action='ignore', category=FutureWarning)
+                    mask_latitud = df["Latitud"] == ""
+                    mask_longitud = df["Longitud"] == ""
+                    df.loc[mask_latitud, "Longitud"] = ""
+                    df.loc[mask_longitud, "Latitud"] = ""
+                    df.loc[mask_latitud, "Altitud"] = 0
+                    df.loc[mask_longitud, "Altitud"] = 0
                 df["Estado"] = pd.to_numeric(df["Estado"], errors='coerce').fillna(0).astype(int)
                 df["Estado"] = df["Estado"].astype(str)
-                df.loc[(df['Codigo_DANE'] == '11001000') & (df['Cedula_Catastral'].str.len() < 21), 'Cedula_Catastral'] = df.loc[(df['Codigo_DANE'] == '11001000') & (df['Cedula_Catastral'].str.len() < 21), 'Cedula_Catastral'].str.zfill(21)
+                df.loc[(df['Codigo_DANE'] == '11001000') & (df['Cedula_Catastral'].str.len() == 12), 'Cedula_Catastral'] = df.loc[(df['Codigo_DANE'] == '11001000') & (df['Cedula_Catastral'].str.len() == 12), 'Cedula_Catastral'].str.zfill(21)
+                df.loc[(df['Codigo_DANE'] == '11001000') & (df['Cedula_Catastral'].str.len() != 21), 'Cedula_Catastral'] = "0"
                 df['Informacion_predial_actualizada'] = df['Cedula_Catastral'].apply(
                     lambda x: 2 if len(x) == 30 else
                             1 if len(x) == 21 else 4)
+                """df_catastro = df[df["Informacion_predial_actualizada"]==4]
+                lista_df_catastro.append(df_catastro)"""
+                df['Cedula_Catastral'] = np.where(df['Informacion_predial_actualizada'] == 4, 0, df['Cedula_Catastral'])
                 df["Fecha_ajuste"] = inicio_mes_str
                 if "STS_Regularizacion" in columnas:
                     df["STS_Regularizacion"] = df["STS_Regularizacion"].str.capitalize()
@@ -2629,8 +2658,8 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                                 dic_error[col] = []
                             dic_error[col].append(df_error)
                     elif col == "Altitud":
-                        df_filter = df[(df[col] > 0) & (df[col] < 6000)].reset_index(drop=True)
-                        df_error = df[(df[col] <= 0) | (df[col] >= 6000)].reset_index(drop=True)
+                        df_filter = df[(df[col] >= 0) & (df[col] < 6000)].reset_index(drop=True)
+                        df_error = df[(df[col] < 0) | (df[col] >= 6000)].reset_index(drop=True)
                         if len(df_error):
                             if col not in dic_error:
                                 dic_error[col] = []
@@ -2652,6 +2681,11 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                             dic_error[col].append(df_error)
                     df = df_filter.copy()
                 lista_aceptado.append(df)
+            """lista_archivo = archivo_SAP.split("\\")
+            df_SAP_catastro = pd.concat(lista_df_catastro, ignore_index=True)
+            lista_archivo[-1] = lista_archivo[-1].replace("_resumen","_ajuste_catastro")
+            nombre_catastro = lista_a_texto(lista_archivo, "\\")
+            almacenar_df_csv_y_excel(df_SAP_catastro, nombre_catastro, almacenar_excel=False)"""
             df_SAP_preliminar = pd.concat(lista_aceptado, ignore_index=True)
             df_SAP_preliminar = df_SAP_preliminar[columnas_GRTT2]
             df_SAP_preliminar["Tipo_usuario"] = pd.to_numeric(df_SAP_preliminar["Tipo_usuario"], errors='coerce').fillna(0).astype(int)
@@ -2778,7 +2812,7 @@ def reporte_usuarios_filial(dic_archivos, seleccionar_reporte, informar, almacen
                 if informar and almacenar:
                     informar_archivo_creado(nuevo_nombre.replace(".csv",".xlsx"), True)
 
-def apoyo_generar_reporte_compensacion_mensual(lista_archivos,informar,filial,inventario):
+def apoyo_generar_reporte_compensacion_mensual(lista_archivos,informar,filial,inventario,thread=None):
     proceso1 = False
     df1 = pd.DataFrame()
     nombre = None
@@ -2809,7 +2843,7 @@ def apoyo_generar_reporte_compensacion_mensual(lista_archivos,informar,filial,in
                 df1["Filial"] = dic_filiales[filial]
                 df1["Mes_reportado"] = mes_reportado
                 df1["Anio_reportado"] = anio_reportado
-                almacenar_df_csv_y_excel(df1, nombre.replace("_resumen","_compilado_compensacion"))
+                almacenar_df_csv_y_excel(df1, nombre.replace("_resumen","_compilado_compensacion"), thread=thread)
                 proceso1=True
             else:
                 return None,None
@@ -2848,10 +2882,10 @@ def apoyo_generar_reporte_compensacion_mensual(lista_archivos,informar,filial,in
                                 dic_dataframe[col].append(df_compensacion[col][i])
                     df_compensacion_info = pd.DataFrame(dic_dataframe)
                     df_compensacion_info = df_compensacion_info.rename(columns={'Estrato': 'Sector_consumo'})
-                    almacenar_df_csv_y_excel(df_compensacion_info, nombre.replace("_resumen","_reporte_compensacion"))
+                    almacenar_df_csv_y_excel(df_compensacion_info, nombre.replace("_resumen","_reporte_compensacion"),thread=thread)
     return df1, nombre
 
-def generar_reporte_compensacion_mensual(dic_archivos, seleccionar_reporte, informar=True, inventario=False):
+def generar_reporte_compensacion_mensual(dic_archivos, seleccionar_reporte, informar=True, inventario=False, thread=None):
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for fecha, lista_archivos in dic_archivos.items():
         lista_df_filiales = []
@@ -2861,7 +2895,7 @@ def generar_reporte_compensacion_mensual(dic_archivos, seleccionar_reporte, info
                 if filial in archivo:
                     lista_archivos_filial.append(archivo)
             if len(lista_archivos_filial):
-                df1,nombre = apoyo_generar_reporte_compensacion_mensual(lista_archivos_filial,informar,filial,inventario)
+                df1,nombre = apoyo_generar_reporte_compensacion_mensual(lista_archivos_filial,informar,filial,inventario,thread=thread)
                 if nombre:
                     lista_df_filiales.append(df1)
         if len(lista_df_filiales) and len(lista_filiales_archivo) == 4:
@@ -2884,7 +2918,7 @@ def generar_reporte_compensacion_mensual(dic_archivos, seleccionar_reporte, info
             lista_nombre.pop(-2)
             nuevo_nombre = lista_a_texto(lista_nombre,"\\")
             nuevo_nombre = nuevo_nombre.replace("_resumen","_compilado_compensacion")
-            almacenar_df_csv_y_excel(df_total_compilado,nuevo_nombre, informar)
+            almacenar_df_csv_y_excel(df_total_compilado,nuevo_nombre, informar,thread=thread)
 
 def apoyo_generar_reporte_desviaciones_mensual_DS56(lista_archivos,filial,fecha,filas_minimas,reporte,informar=True):
     lista_reporte = []
@@ -3076,7 +3110,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS56(lista_archivos,filial,fecha,
                         mask &= (df[col].astype(str).str.len() > 0)
                     elif col == 'CODIGO_DANE_NIU':
                         df[col] = df[col].astype(str)
-                        df[col] = df[col].apply(completar_codigo_DANE)
+                        df[col] = df[col].apply(completar_codigo_DANE_000)
                         lista = list(df[col].unique())
                         dic_indicador_SUI_filial = mercado_relevante_DANE[str(indicador_SUI_filial)]
                         lista_df_error = []
@@ -3152,8 +3186,12 @@ def apoyo_generar_reporte_desviaciones_mensual_DS56(lista_archivos,filial,fecha,
     else:
         return None, None
 
-def completar_codigo_DANE(valor):
+def completar_codigo_DANE_000(valor):
+    valor = valor.zfill(8)
     valor = valor[:-3] + '000'
+    return valor
+
+def completar_codigo_DANE(valor):
     return valor.zfill(8)
 
 def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,filas_minimas,reporte,dic_reporte,dic_reporte_empresa,informar=True):
@@ -3294,7 +3332,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                         mask &= df[col].astype(str).isin(dic_indicador_SUI_filial)
                     elif col == 'CODIGO_DANE_NIU':
                         df[col] = df[col].astype(str)
-                        df[col] = df[col].apply(completar_codigo_DANE)
+                        df[col] = df[col].apply(completar_codigo_DANE_000)
                         lista = list(df[col].unique())
                         dic_indicador_SUI_filial = mercado_relevante_DANE[str(indicador_SUI_filial)]
                         lista_df_error = []
@@ -3712,7 +3750,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos,filial,fecha,
                         mask &= df[col].astype(str).isin(dic_indicador_SUI_filial)
                     elif col == 'CODIGO_DANE_NIU':
                         df[col] = df[col].astype(str)
-                        df[col] = df[col].apply(completar_codigo_DANE)
+                        df[col] = df[col].apply(completar_codigo_DANE_000)
                         lista = list(df[col].unique())
                         dic_indicador_SUI_filial = mercado_relevante_DANE[str(indicador_SUI_filial)]
                         lista_df_error = []
@@ -4684,7 +4722,6 @@ def contribuciones_MME(dashboard=False, texto_fecha=None):
 
 def tarifas_distribuidoras_GN():
     max_bola = 65
-
     nombre = "tarifas_nacionales"
     hoja = nombre
     archivo = ruta_constantes+"\\"+f"{nombre}.xlsx"
@@ -4719,7 +4756,12 @@ def tarifas_distribuidoras_GN():
                         if len(df_empresa_max) and len(df_empresa_min):
                             if empresa not in dic_tarifas:
                                 dic_tarifas[empresa] = {}
-                                dic_tarifas[empresa]["Tarifa"] = round(df_empresa_max["Cuv"][0])
+                                valor = round(df_empresa_max["Cuv"][0])
+                                if valor > 1000:
+                                    valor = f"{valor/1e3:0.3f}"
+                                valor = str(valor)
+                                dic_tarifas[empresa]["Tarifa"] = valor
+                                dic_tarifas[empresa]["Ciudad"] = dic_ciudades[empresa]
                                 if df_empresa_min["Cuv"][0] < df_empresa_max["Cuv"][0]:
                                     cambio = "red"
                                 elif df_empresa_min["Cuv"][0] > df_empresa_max["Cuv"][0]:
@@ -5117,7 +5159,7 @@ def generar_porcentaje_cumplimientos_regulatorios(dashboard=False, texto_fecha=N
         df, proceso = mod_5.lectura_hoja_xlsx(archivo, nombre)
         if proceso:
             anio_actual = fecha_actual.year
-            df['Fecha_establecida'] = pd.to_datetime(df['Fecha establecida'], errors='coerce')
+            df['Fecha_establecida'] = pd.to_datetime("1899-12-30") + pd.to_timedelta(df['Fecha establecida'], unit="D")
             df = df.loc[df['Fecha_establecida'].dt.year == int(anio_actual)]
             lista_estado = list(df["Estado Certificado"].unique())
             lista_filiales = list(df["Empresa"].unique())
@@ -5163,7 +5205,9 @@ def generar_porcentaje_cumplimientos_regulatorios(dashboard=False, texto_fecha=N
 # *                                             Reportes Anuales
 # * -------------------------------------------------------------------------------------------------------
 
-def union_archivos_mensuales_anual(dic_archivos, seleccionar_reporte, informar=True, almacenar_excel=True):
+def union_archivos_mensuales_anual(dic_archivos, seleccionar_reporte, informar=True, almacenar_excel=True, thread=None):
+    if not len(seleccionar_reporte["filial"]) == 4:
+        return None
     fecha_nombre = (seleccionar_reporte["fecha_personalizada"][0][0]+"_"+seleccionar_reporte["fecha_personalizada"][0][1].upper()
                     +"_"+seleccionar_reporte["fecha_personalizada"][1][0]+"_"+seleccionar_reporte["fecha_personalizada"][1][1].upper())
     lista_anual = []
@@ -5183,11 +5227,11 @@ def union_archivos_mensuales_anual(dic_archivos, seleccionar_reporte, informar=T
         ext_nombre.pop(0)
         ext_nombre[0] = fecha_nombre
         lista_nombre[-1] = lista_a_texto(ext_nombre, "_")
-        crear_carpeta_anual(fecha_nombre, lista_nombre)
+        crear_carpeta_anual(fecha_nombre, lista_nombre, thread=thread)
         lista_nombre.insert(-2, fecha_nombre)
         nombre = lista_a_texto(lista_nombre, "\\")
         df_anual = pd.concat(lista_anual)
-        almacenar_df_csv_y_excel(df_anual, nombre, informar, almacenar_excel)
+        almacenar_df_csv_y_excel(df_anual, nombre, informar, almacenar_excel, thread=thread)
         return nombre
     else:
         return None
@@ -5282,12 +5326,60 @@ def unir_listas_anio_tri(lista_anios, lista_tri):
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Búsqueda archivos
 # * -------------------------------------------------------------------------------------------------------
-def busqueda_archivos_tipo(ubi_archivo,tipo=None, lista_fallidos=[]):
+def busqueda_archivos_tipo(ubi_archivo, tipo=None, lista_fallidos=[]):
     if tipo:
         archivos_tipo = glob.glob(os.path.join(ubi_archivo, "*"+tipo))
     else:
         archivos_tipo = glob.glob(os.path.join(ubi_archivo, "*"))
     return archivos_tipo
+
+def busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte, evitar_extra=[], thread=None, informar=True):
+    tipo_evitar = tipo.replace(".csv","").replace(".CSV","").replace(".TXT","").replace(".txt","")
+    lista_evitar_extra_copia = evitar_extra.copy()
+    if len(tipo_evitar):
+        lista_evitar_extra_copia.append(tipo_evitar)
+    lista_evitar = especificar_lista_reportes_generados(lista_evitar_extra_copia)
+    lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
+    if len(lista_archivos) == 0:
+        if informar:
+            if thread:
+                thread.message_sent.emit(f"No se encontraron archivos con la extensión {tipo}", "red")
+            else:
+                print("\nNo se encontraron archivos con la extensión {tipo}\n")
+        return False,lista_archivos
+    else:
+        return True,lista_archivos
+
+def busqueda_archivos_tipo_reporte_anual(tipo, seleccionar_reporte, evitar_extra=[], informar=True, todos=False, thread=None):
+    if todos:
+        lista_evitar = []
+    else:
+        tipo_evitar = tipo.replace(".csv","").replace(".CSV","").replace(".TXT","").replace(".txt","")
+        lista_evitar_extra_copia = evitar_extra.copy()
+        if len(tipo_evitar):
+            lista_evitar_extra_copia.append(tipo_evitar)
+        lista_evitar = especificar_lista_reportes_generados(lista_evitar_extra_copia)
+    lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte_anual(seleccionar_reporte, tipo, lista_evitar)
+    if len(lista_archivos) == 0:
+        if informar:
+            if thread:
+                thread.message_sent.emit(f"No se encontraron archivos con la extensión {tipo}", "red")
+            else:
+                print(f"\nNo se encontraron archivos con la extensión {tipo}\n")
+        return False,lista_archivos
+    else:
+        return True,lista_archivos
+
+def especificar_lista_reportes_generados(lista_1):
+    lista = lista_reportes_generados.copy()
+    if len(lista_1):
+        for i in lista_1:
+            try:
+                lista.remove(i)
+            except ValueError:
+                pass
+    return lista
+
 
 def mostrar_texto(texto, tipo="texto"):
     linea = 200
@@ -5337,76 +5429,6 @@ def obtener_categoria(info):
             if llave in dic_categorias_c:
                 return dic_categorias_c[llave]
     return None
-
-class Envio_mensajes(QThread):
-    message_sent = pyqtSignal(str, str)
-    finished = pyqtSignal()
-    def __init__(self, estado, info):
-        super().__init__()
-        self.ruta_guardar_archivos = ruta_guardar_archivos
-        self.estado = estado
-        self.info = info
-    def run(self):
-        try:
-            self.message_sent.emit("Inicio de procesamiento de archivos\n", "green")
-            t_i = time.time()
-            match self.estado:
-                case "almacenar_archivos":
-                    almacenar_archivos_2(self.ruta_guardar_archivos, self)
-                case "crear_carpetas":
-                    mod_3.configuracion_inicial()
-                    self.message_sent.emit("\nConfiguración inicial completa\n", "green")
-                    self.message_sent.emit("\nSe recomienda recargar el aplicativo para almacenar los cambios\n", "yellow")
-                case "agregar_anio":
-                    anio = str(anio_actual)
-                    mod_2.cambiar_diccionario(str(anio))
-                    mod_3.configuracion_inicial()
-                    self.message_sent.emit(f"\nAño {anio_actual} ingresado correctamente\n", "green")
-                    self.message_sent.emit("\nConfiguración inicial completa\n", "green")
-                    self.message_sent.emit("\nSe recomienda recargar el aplicativo para almacenar los cambios\n", "yellow")
-                case "editar_reporte":
-                    if self.info:
-                        reporte = obtener_reporte(self.info)
-                        if reporte:
-                            op, info = editar_json_reporte(reporte+"_json")
-                            if op == "no_complete":
-                                self.message_sent.emit("\nEl archivo .xlsx no posee las hojas necesarias\n", "red")
-                                self.message_sent.emit(f"\nLas hojas aceptadas son: {lista_a_texto(info, ', ')}\n", "red")
-                            elif op == "no_exist":
-                                self.message_sent.emit(f"\nNo existe el archivo {info}\n", "red")
-                            else:
-                                self.message_sent.emit(f"\n{info}\n", "green")
-                case "agregar_reporte":
-                    if self.info:
-                        reporte = self.info["Nuevo_reporte"]
-                        categoria = obtener_categoria(self.info)
-                        if categoria:
-                            op, info = agregar_json_reporte(categoria, reporte+"_json")
-                            if op == "no_complete":
-                                self.message_sent.emit("\nEl archivo .xlsx no posee las hojas necesarias\n", "red")
-                                self.message_sent.emit(f"\nLas hojas aceptadas son: {lista_a_texto(info, ', ')}\n", "red")
-                            elif op == "no_exist":
-                                self.message_sent.emit(f"\nNo existe el archivo {info}\n", "red")
-                            else:
-                                self.message_sent.emit(f"\n{info}\n", "green")
-                case "reporte_comercial_sector_consumo_mensual":
-                    if self.info:
-                        print(self.info)
-                        #TODO:
-                        #1. Buscar archivos
-                        #2. Regenerar archivos (informar)
-                        #3. Continuar?
-                        #4. Generar reporte sector de consumo (informar)
-                    time.sleep(0.1)
-                case _:
-                    almacenar_archivos_2(self.ruta_guardar_archivos, self)
-            self.message_sent.emit("\nFin de procesamiento de archivos\n", "green")
-            t_f = time.time()
-            tiempo = mostrar_tiempo(t_f, t_i)
-            self.message_sent.emit(f"{tiempo}\n", "white")
-            self.finished.emit()
-        except BaseException:
-            pass
 
 def almacenar_archivos_2(ruta_guardar_archivos, thread):
     archivos_aceptados_constantes(busqueda_archivos_tipo(ruta_guardar_archivos))
@@ -5479,10 +5501,329 @@ def almacenar_archivos_2(ruta_guardar_archivos, thread):
         except BaseException:
             pass
 
+def generar_archivos_extra(seleccionar_reporte, regenerar=False, thread=None, evitar_extra=[], ext="_resumen.csv", solo_crear_arc=False):
+    if regenerar:
+        tipo = ".csv"
+        proceso, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte,evitar_extra, thread=thread)
+        if proceso:
+            estandarizacion_archivos(lista_archivos,True)
+            tipo = "_form_estandar.csv"
+            proceso, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte,evitar_extra, thread=thread)
+            if proceso:
+                archivos_resumen(lista_archivos,True)
+                tipo = "_resumen.csv"
+                proceso, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte,evitar_extra, thread=thread)
+                comprimir_archivos(seleccionar_reporte, evitar_extra)
+    if not solo_crear_arc:
+        tipo = ext
+        proceso_resumen, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte, evitar_extra, thread=thread)
+        if proceso_resumen:
+            proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+            dic_archivos_reporte = mod_4.agrupar_dic_archivos(dic_archivos)
+            return True, dic_archivos_reporte
+        return False, False
+    else:
+        return None, None
+
+def generar_archivos_extra_anual(seleccionar_reporte, tipo=".csv", evitar_extra=[], continuar=False, informar=True, mostrar_dic=True, todos=False):
+    list_of_tuples = list(seleccionar_reporte.items())
+    if len(seleccionar_reporte["filial"]) == 4:
+        list_of_tuples.insert(3, ('carpeta', ["REPORTES_GENERADOS_APLICATIVO"]))
+        seleccionar_reporte_1 = dict(list_of_tuples)
+        del seleccionar_reporte_1["clasificacion"]
+        del seleccionar_reporte_1["filial"]
+    else:
+        seleccionar_reporte_1 = seleccionar_reporte.copy()
+    proceso, lista_archivos = busqueda_archivos_tipo_reporte_anual(tipo, seleccionar_reporte_1, evitar_extra, informar=informar, todos=todos)
+    if proceso:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos_anual(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            return True, dic_archivos
+        else:
+            return False, False
+    return False, False
+
+def mostrar_info_reporte(reporte, thread):
+    if reporte["fecha_personalizada"]:
+        pass
+    else:
+        anios = lista_a_texto(reporte["anios"], ", ")
+        meses = lista_a_texto(reporte["meses"], ", ")
+        filial = lista_a_texto(reporte["filial"], ", ")
+        tipo = lista_a_texto(reporte["tipo"], ", ")
+        clasificacion = lista_a_texto(reporte["clasificacion"], ", ")
+        texto = f"Año: {anios}, Mes: {meses}, Filial: {filial}, Tipo: {tipo}, Clasificación: {clasificacion}"
+        if thread:
+            thread.message_sent.emit(texto, "white")
+
+def generar_archivos_reporte(reporte, info, thread):
+    lista_generar = []
+    opciones = {}
+    match reporte:
+        case "reporte_comercial_sector_consumo_mensual":
+            nombre = "Reporte comercial mensual por sector de consumo"
+            opciones = info["Opciones"]
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread)
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "reporte_comercial_sector_consumo_subsidio_mensual":
+            nombre = "Reporte comercial mensual por sector de consumo con subsidiados o contribuciones"
+            opciones = info["Opciones"]
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread)
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "reporte_compensaciones_mensual":
+            nombre = "Reporte compensaciones mensual"
+            opciones = info["Opciones"]
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread)
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "reporte_compensaciones_anual":
+            nombre = "Reporte compensaciones anual"
+            opciones = info["Opciones"]
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread)
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "generar_reporte_compensaciones_anual":
+            nombre = "Reporte compensaciones anual unión"
+            thread.message_sent.emit(f" ", "white")
+            thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+        case _:
+            pass
+    return lista_generar, opciones
+
+def generar_reporte(reporte, info, thread):
+    info_reporte = None
+    match reporte:
+        case "generar_reporte_comercial_sector_consumo_mensual":
+            opciones = info["Opciones"]
+            sumatoria = False
+            if "sumatoria" in opciones:
+                sumatoria = opciones["sumatoria"]
+            valor_facturado = False
+            if "valor_facturado" in opciones:
+                valor_facturado = opciones["valor_facturado"]
+            facturas = False
+            if "facturas" in opciones:
+                facturas = opciones["facturas"]
+            codigo_DANE = None
+            if "codigo_DANE" in opciones:
+                codigo_DANE = opciones["codigo_DANE"]
+            for valor in info["Archivos"]:
+                dic = {valor[0]:valor[2]}
+                reporte_comercial_sector_consumo(dic, valor[1], informar=True, codigo_DANE=codigo_DANE, total=sumatoria, valor_facturado=valor_facturado, facturas=facturas, thread=thread)
+        case "generar_reporte_comercial_sector_consumo_subsidio_mensual":
+            opciones = info["Opciones"]
+            sumatoria = False
+            if "sumatoria" in opciones:
+                sumatoria = opciones["sumatoria"]
+            valor_facturado = False
+            if "valor_facturado" in opciones:
+                valor_facturado = opciones["valor_facturado"]
+            facturas = False
+            if "facturas" in opciones:
+                facturas = opciones["facturas"]
+            codigo_DANE = None
+            if "codigo_DANE" in opciones:
+                codigo_DANE = opciones["codigo_DANE"]
+            for valor in info["Archivos"]:
+                dic = {valor[0]:valor[2]}
+                reporte_comercial_sector_consumo(dic, valor[1], informar=True, codigo_DANE=codigo_DANE, total=sumatoria, valor_facturado=valor_facturado, facturas=facturas, thread=thread, subsidio=True)
+        case "generar_reporte_compensaciones_mensual":
+            opciones = info["Opciones"]
+            inventario = False
+            if "inventario" in opciones:
+                inventario = opciones["inventario"]
+            for valor in info["Archivos"]:
+                dic = {valor[0]:valor[2]}
+                generar_reporte_compensacion_mensual(dic, valor[1], informar=True, inventario=inventario, thread=thread)
+        case "generar_reporte_compensaciones_anual":
+            opciones = info["Opciones"]
+            inventario = False
+            if "inventario" in opciones:
+                inventario = opciones["inventario"]
+            for valor in info["Archivos"]:
+                dic = {valor[0]:valor[2]}
+                info_reporte = valor[1]
+                generar_reporte_compensacion_mensual(dic, valor[1], informar=True, inventario=inventario, thread=thread)
+        case "generar_reporte_compensaciones_anual_union":
+            reporte = "_compilado_compensacion.csv"
+            proceso,dic_archivos_anual = generar_archivos_extra_anual(info, reporte)
+            if proceso:
+                union_archivos_mensuales_anual(dic_archivos_anual, info, informar=True, thread=thread)
+        case _:
+            pass
+    return info_reporte
+
+class Envio_mensajes(QThread):
+    message_sent = pyqtSignal(str, str)
+    finished = pyqtSignal(bool, dict)
+    def __init__(self, estado, info):
+        super().__init__()
+        self.ruta_guardar_archivos = ruta_guardar_archivos
+        self.estado = estado
+        self.info = info
+    def run(self):
+        try:
+            dic_info = {}
+            valor = False
+            self.message_sent.emit("Inicio de procesamiento de archivos\n", "green")
+            t_i = time.time()
+            match self.estado:
+                case "almacenar_archivos":
+                    almacenar_archivos_2(self.ruta_guardar_archivos, self)
+                case "crear_carpetas":
+                    mod_3.configuracion_inicial()
+                    self.message_sent.emit("\nConfiguración inicial completa\n", "green")
+                    self.message_sent.emit("\nSe recomienda recargar el aplicativo para almacenar los cambios\n", "yellow")
+                case "agregar_anio":
+                    anio = str(anio_actual)
+                    mod_2.cambiar_diccionario(str(anio))
+                    mod_3.configuracion_inicial()
+                    self.message_sent.emit(f"\nAño {anio_actual} ingresado correctamente\n", "green")
+                    self.message_sent.emit("\nConfiguración inicial completa\n", "green")
+                    self.message_sent.emit("\nSe recomienda recargar el aplicativo para almacenar los cambios\n", "yellow")
+                case "editar_reporte":
+                    if self.info:
+                        reporte = obtener_reporte(self.info)
+                        if reporte:
+                            op, info = editar_json_reporte(reporte+"_json")
+                            if op == "no_complete":
+                                self.message_sent.emit("\nEl archivo .xlsx no posee las hojas necesarias\n", "red")
+                                self.message_sent.emit(f"\nLas hojas aceptadas son: {lista_a_texto(info, ', ')}\n", "red")
+                            elif op == "no_exist":
+                                self.message_sent.emit(f"\nNo existe el archivo {info}\n", "red")
+                            else:
+                                self.message_sent.emit(f"\n{info}\n", "green")
+                case "agregar_reporte":
+                    if self.info:
+                        reporte = self.info["Nuevo_reporte"]
+                        categoria = obtener_categoria(self.info)
+                        if categoria:
+                            op, info = agregar_json_reporte(categoria, reporte+"_json")
+                            if op == "no_complete":
+                                self.message_sent.emit("\nEl archivo .xlsx no posee las hojas necesarias\n", "red")
+                                self.message_sent.emit(f"\nLas hojas aceptadas son: {lista_a_texto(info, ', ')}\n", "red")
+                            elif op == "no_exist":
+                                self.message_sent.emit(f"\nNo existe el archivo {info}\n", "red")
+                            else:
+                                self.message_sent.emit(f"\n{info}\n", "green")
+                case "reporte_comercial_sector_consumo_mensual":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                        dic_info["Opciones"] = opciones
+                case "reporte_comercial_sector_consumo_subsidio_mensual":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                        dic_info["Opciones"] = opciones
+                case "reporte_compensaciones_mensual":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                        dic_info["Opciones"] = opciones
+                case "reporte_compensaciones_anual":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                        dic_info["Opciones"] = opciones
+                case "generar_reporte_comercial_sector_consumo_mensual":
+                    if self.info:
+                        generar_reporte(self.estado, self.info, self)
+                case "generar_reporte_comercial_sector_consumo_subsidio_mensual":
+                    if self.info:
+                        generar_reporte(self.estado, self.info, self)
+                case "generar_reporte_compensaciones_mensual":
+                    if self.info:
+                        generar_reporte(self.estado, self.info, self)
+                case "generar_reporte_compensaciones_anual":
+                    if self.info:
+                        info_reporte = generar_reporte(self.estado, self.info, self)
+                        dic_info["Reporte"] = info_reporte
+                        valor = True
+                case "generar_reporte_compensaciones_anual_union":
+                    if self.info:
+                        generar_reporte(self.estado, self.info["Reporte"], self)
+                case _:
+                    print("Estado no activo")
+            self.message_sent.emit("\nFin de procesamiento de archivos\n", "green")
+            t_f = time.time()
+            tiempo = mostrar_tiempo(t_f, t_i)
+            self.message_sent.emit(f"{tiempo}\n", "white")
+            if valor:
+                t = " "*17+"\t"*6
+                self.message_sent.emit(f"{t} ¿Desea continuar con el procesamiento?", "white")
+            self.finished.emit(valor, dic_info)
+        except BaseException as e:
+            self.message_sent.emit(f"\nError en el proceso: {e}\n", "red")
+            self.finished.emit(False, {})
+
 class Crear_ventana_texto(QDialog):
     def __init__(self,texto, estado, info, parent=None):
         super().__init__(parent)
         self.result = None
+        self.dic_info = {}
         self.initUI(texto, estado, info)
     def initUI(self, texto, estado, info):
         self.setGeometry(50, 50, 1700, 1030)
@@ -5511,26 +5852,40 @@ class Crear_ventana_texto(QDialog):
         label.setWordWrap(True)
         self.content_layout.addWidget(label)
         self.scroll_area.verticalScrollBar().setValue(self.scroll_area.verticalScrollBar().maximum())
-    def show_buttons(self):
+    def show_buttons(self, valor=False, info={}):
         button_widget = QWidget()
         button_layout = QHBoxLayout(button_widget)
-        #cancel_button = QPushButton("Cancel")
-        #cancel_button.setStyleSheet("""QPushButton {color: #030918;padding: 2px;
-        #        font-size: 15px;border: 0.5px solid white;border-radius: 5px;background-color: #ffffff;}""")
-        #cancel_button.clicked.connect(lambda: self.close_dialog(False))
-        #button_layout.addWidget(cancel_button)
+        if valor:
+            cancel_button = QPushButton("Cancelar")
+            cancel_button.setStyleSheet("""QPushButton {color: #030918;padding: 2px;
+                font-size: 22px;border: 0.5px solid white;border-radius: 5px;background-color: #ffffff;}""")
+            cancel_button.clicked.connect(lambda: self.close_dialog(False, {}))
+            button_layout.addWidget(cancel_button)
         continue_button = QPushButton("Continuar")
         continue_button.setStyleSheet("""QPushButton {color: #030918;padding: 2px;
                 font-size: 22px;border: 0.5px solid white;border-radius: 5px;background-color: #ffffff;}""")
-        continue_button.clicked.connect(lambda: self.close_dialog(True))
+        continue_button.clicked.connect(lambda: self.close_dialog(True, info))
         button_layout.addWidget(continue_button)
         self.content_layout.addWidget(button_widget)
         self.scroll_area.verticalScrollBar().setValue(self.scroll_area.verticalScrollBar().maximum())
-    def close_dialog(self, choice):
+    def close_dialog(self, choice, info):
         self.result = choice
+        self.dic_info = info
         self.accept()
 
 def run_app(texto, estado, info=None):
     dialog = Crear_ventana_texto(texto, estado, info)
     result = dialog.exec_()
+    eleccion = dialog.result
+    info_add = dialog.dic_info
+    if eleccion and len(info_add):
+        estado = "generar_"+estado
+        dialog = Crear_ventana_texto(texto, estado, info_add)
+        result = dialog.exec_()
+        if "anual" in estado:
+            estado = estado+"_union"
+            eleccion = dialog.result
+            info_add = dialog.dic_info
+            dialog = Crear_ventana_texto(texto, estado, info_add)
+            result = dialog.exec_()
     return dialog.result
