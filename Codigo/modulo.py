@@ -892,14 +892,14 @@ def almacenar_df_csv_y_excel(df, nombre, informar=True, almacenar_excel=True, re
         if informar and almacenar:
             informar_archivo_creado(nombre.replace(".csv",".xlsx"), True, thread=thread)
 
-def generar_formato_almacenamiento_reportes(lista_df, nombre, informar=True,almacenar_excel=True):
+def generar_formato_almacenamiento_reportes(lista_df, nombre, informar=True,almacenar_excel=True,thread=None):
     df_total = pd.concat(lista_df, ignore_index=True)
     lista_nombre = nombre.split("\\")
     lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[2:],"_",False)
     lista_nombre[-5] = "05. REPORTES_GENERADOS_APLICATIVO"
     lista_nombre.pop(-2)
     nuevo_nombre = lista_a_texto(lista_nombre,"\\",False)
-    almacenar_df_csv_y_excel(df_total, nuevo_nombre, informar, almacenar_excel)
+    almacenar_df_csv_y_excel(df_total, nuevo_nombre, informar, almacenar_excel,thread=thread)
     return lista_df, nombre
 
 # * -------------------------------------------------------------------------------------------------------
@@ -4879,7 +4879,7 @@ def reporte_tarifas_mensual(dic_archivos, seleccionar_reporte, informar=True, al
 # *                                             Reportes Técnicos
 # * -------------------------------------------------------------------------------------------------------
 
-def apoyo_generar_reporte_indicadores_tecnicos_mensual(lista_archivos, informar, filial, almacenar_excel=True):
+def apoyo_generar_reporte_indicadores_tecnicos_mensual(lista_archivos, informar, filial, almacenar_excel=True, thread=None):
     for archivo in lista_archivos:
         df = leer_dataframe_utf_8(archivo)
         anio_archivo = df["Anio_reportado"][0]
@@ -4893,10 +4893,10 @@ def apoyo_generar_reporte_indicadores_tecnicos_mensual(lista_archivos, informar,
         df["Anio_reportado"] = anio_archivo
         df["Mes_reportado"] = mes_archivo
         nuevo_nombre = archivo.replace("_resumen.csv", "_indicador_tecnico.csv")
-        almacenar_df_csv_y_excel(df, nuevo_nombre, informar, almacenar_excel)
+        almacenar_df_csv_y_excel(df, nuevo_nombre, informar, almacenar_excel, thread=thread)
         return df, nuevo_nombre
 
-def generar_reporte_indicadores_tecnicos_mensual(dic_archivos, seleccionar_reporte, informar=True,almacenar_excel=True):
+def generar_reporte_indicadores_tecnicos_mensual(dic_archivos, seleccionar_reporte, informar=True,almacenar_excel=True, thread=None):
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for fecha, lista_archivos in dic_archivos.items():
         lista_df_filiales = []
@@ -4906,7 +4906,7 @@ def generar_reporte_indicadores_tecnicos_mensual(dic_archivos, seleccionar_repor
                 if filial in archivo:
                     lista_archivos_filial.append(archivo)
             if len(lista_archivos_filial):
-                df,nombre = apoyo_generar_reporte_indicadores_tecnicos_mensual(lista_archivos_filial,informar,filial)
+                df,nombre = apoyo_generar_reporte_indicadores_tecnicos_mensual(lista_archivos_filial, informar, filial, thread=thread)
                 if nombre:
                     lista_df_filiales.append(df)
         if len(lista_df_filiales) and len(lista_filiales_archivo) == 4:
@@ -4916,7 +4916,7 @@ def generar_reporte_indicadores_tecnicos_mensual(dic_archivos, seleccionar_repor
             lista_nombre[-5] = "05. REPORTES_GENERADOS_APLICATIVO"
             lista_nombre.pop(-2)
             nuevo_nombre = lista_a_texto(lista_nombre,"\\")
-            almacenar_df_csv_y_excel(df_total, nuevo_nombre, informar, almacenar_excel)
+            almacenar_df_csv_y_excel(df_total, nuevo_nombre, informar, almacenar_excel, thread=thread)
 
 def formato_fecha(fecha):
     fecha = str(fecha).replace("-","").replace(":","").replace("/","").zfill(8)
@@ -4965,7 +4965,7 @@ def porcentaje_tipo_evento(df):
     df["Porcentaje_cantidad_eventos"] = lista_valores
     return df
 
-def apoyo_generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos, filial, informar=True, almacenar_excel=True):
+def apoyo_generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos, filial, informar=True, almacenar_excel=True, thread=None):
     for archivo in lista_archivos:
         df = leer_dataframe_utf_8(archivo)
         anio_archivo = df["Anio_reportado"][0]
@@ -5012,14 +5012,14 @@ def apoyo_generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos, fili
         df2["NIT"] = dic_nit[dic_filiales[filial]]
         df2["Anio_reportado"] = anio_archivo
         df2["Mes_reportado"] = mes_archivo
-        almacenar_df_csv_y_excel(df2, nombre_1, informar, almacenar_excel)
+        almacenar_df_csv_y_excel(df2, nombre_1, informar, almacenar_excel, thread=thread)
         df1 = pd.DataFrame(dic_df_evento)
         df1 = porcentaje_tipo_evento(df1)
         df1["Filial"] = dic_filiales[filial]
         df1["NIT"] = dic_nit[dic_filiales[filial]]
         df1["Anio_reportado"] = anio_archivo
         df1["Mes_reportado"] = mes_archivo
-        almacenar_df_csv_y_excel(df1, nombre, informar, almacenar_excel)
+        almacenar_df_csv_y_excel(df1, nombre, informar, almacenar_excel, thread=thread)
         dic_horas_evento = {}
         for evento in lista_eventos:
             df_filtro = df[df["Observaciones"] == evento].reset_index(drop=True)
@@ -5056,10 +5056,10 @@ def apoyo_generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos, fili
         df3["NIT"] = dic_nit[dic_filiales[filial]]
         df3["Anio_reportado"] = anio_archivo
         df3["Mes_reportado"] = mes_archivo
-        almacenar_df_csv_y_excel(df3, nombre_2, informar, almacenar_excel)
+        almacenar_df_csv_y_excel(df3, nombre_2, informar, almacenar_excel, thread=thread)
         return df1, nombre, df2, nombre_1, df3, nombre_2
 
-def generar_reporte_indicadores_tecnicos_IRST_mensual(dic_archivos, seleccionar_reporte, informar=True,almacenar_excel=True):
+def generar_reporte_indicadores_tecnicos_IRST_mensual(dic_archivos, seleccionar_reporte, informar=True,almacenar_excel=True,thread=None):
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for fecha, lista_archivos in dic_archivos.items():
         lista_df_filiales_1 = []
@@ -5071,7 +5071,7 @@ def generar_reporte_indicadores_tecnicos_IRST_mensual(dic_archivos, seleccionar_
                 if filial in archivo:
                     lista_archivos_filial.append(archivo)
             if len(lista_archivos_filial):
-                df1,nombre_1,df2,nombre_2,df3,nombre_3 = apoyo_generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos_filial,filial, informar, almacenar_excel)
+                df1,nombre_1,df2,nombre_2,df3,nombre_3 = apoyo_generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos_filial,filial, informar, almacenar_excel,thread=thread)
                 if nombre_1:
                     lista_df_filiales_1.append(df1)
                 if nombre_2:
@@ -5079,13 +5079,13 @@ def generar_reporte_indicadores_tecnicos_IRST_mensual(dic_archivos, seleccionar_
                 if nombre_3:
                     lista_df_filiales_3.append(df3)
         if len(lista_df_filiales_1) and len(lista_filiales_archivo) == 4:
-            df_total, nuevo_nombre = generar_formato_almacenamiento_reportes(lista_df_filiales_1, nombre_1, informar,almacenar_excel)
+            df_total, nuevo_nombre = generar_formato_almacenamiento_reportes(lista_df_filiales_1, nombre_1, informar,almacenar_excel,thread=thread)
         if len(lista_df_filiales_2) and len(lista_filiales_archivo) == 4:
-            df_total_2, nuevo_nombre_2 = generar_formato_almacenamiento_reportes(lista_df_filiales_2, nombre_2, informar,almacenar_excel)
+            df_total_2, nuevo_nombre_2 = generar_formato_almacenamiento_reportes(lista_df_filiales_2, nombre_2, informar,almacenar_excel,thread=thread)
         if len(lista_df_filiales_3) and len(lista_filiales_archivo) == 4:
-            df_total_3, nuevo_nombre_3 = generar_formato_almacenamiento_reportes(lista_df_filiales_3, nombre_3, informar,almacenar_excel)
+            df_total_3, nuevo_nombre_3 = generar_formato_almacenamiento_reportes(lista_df_filiales_3, nombre_3, informar,almacenar_excel,thread=thread)
 
-def apoyo_generar_reporte_suspension_mensual(lista_archivos,informar,filial):
+def apoyo_generar_reporte_suspension_mensual(lista_archivos,informar,filial,thread=None):
     for archivo in lista_archivos:
         lista_df = lectura_dataframe_chunk(archivo)
         if lista_df:
@@ -5112,13 +5112,13 @@ def apoyo_generar_reporte_suspension_mensual(lista_archivos,informar,filial):
                 df1["Anio_reportado"] = anio
                 df1["Mes_reportado"] = mes
                 nombre = archivo.replace("_resumen.csv","_reporte_suspension.csv")
-                almacenar_df_csv_y_excel(df1, nombre)
+                almacenar_df_csv_y_excel(df1, nombre, thread=thread)
             return df1, nombre
         else:
             return None, None
     return None, None
 
-def generar_reporte_suspension_mensual(dic_archivos, seleccionar_reporte, informar=True, almacenar_excel=True):
+def generar_reporte_suspension_mensual(dic_archivos, seleccionar_reporte, informar=True, almacenar_excel=True, thread=None):
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for fecha, lista_archivos in dic_archivos.items():
         lista_df_filiales = []
@@ -5128,7 +5128,7 @@ def generar_reporte_suspension_mensual(dic_archivos, seleccionar_reporte, inform
                 if filial in archivo:
                     lista_archivos_filial.append(archivo)
             if len(lista_archivos_filial):
-                df,nombre = apoyo_generar_reporte_suspension_mensual(lista_archivos_filial,informar,filial)
+                df,nombre = apoyo_generar_reporte_suspension_mensual(lista_archivos_filial,informar,filial, thread=thread)
             if nombre:
                 lista_df_filiales.append(df)
         if len(lista_df_filiales) and len(lista_filiales_archivo) == 4:
@@ -5138,7 +5138,7 @@ def generar_reporte_suspension_mensual(dic_archivos, seleccionar_reporte, inform
             lista_nombre[-5] = "05. REPORTES_GENERADOS_APLICATIVO"
             lista_nombre.pop(-2)
             nuevo_nombre = lista_a_texto(lista_nombre,"\\",False)
-            almacenar_df_csv_y_excel(df_total, nuevo_nombre)
+            almacenar_df_csv_y_excel(df_total, nuevo_nombre, thread=thread)
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Menú de Cumplimiento de Reportes Regulatorios
@@ -5666,7 +5666,163 @@ def generar_archivos_reporte(reporte, info, thread):
                     thread.message_sent.emit(elemento[0], "white")
                     for elemento_1 in elemento[2]:
                         thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "reportes_tarifarios_anual":
+            nombre = "Reporte tarifario anual"
+            opciones = info["Opciones"]
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread)
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "generar_reportes_tarifarios_anual":
+            nombre = "Reporte tarifario anual unión"
+            thread.message_sent.emit(f" ", "white")
+            thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
         #Reportes técnicos
+        case "reporte_indicadores_mensual":
+            nombre = "Reporte indicadores técnicos mensual"
+            opciones = info["Opciones"]
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread)
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "reporte_indicadores_anual":
+            nombre = "Reporte indicadores técnicos anual"
+            opciones = info["Opciones"]
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread)
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "generar_reporte_indicadores_anual":
+            nombre = "Reporte indicadores técnicos anual unión"
+            thread.message_sent.emit(f" ", "white")
+            thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+        case "reporte_suspensiones_mensual":
+            nombre = "Reporte suspensiones mensual"
+            opciones = info["Opciones"]
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread)
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "reporte_suspensiones_anual":
+            nombre = "Reporte suspensiones anual"
+            opciones = info["Opciones"]
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread)
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "generar_reporte_suspensiones_anual":
+            nombre = "Reporte suspensiones anual unión"
+            thread.message_sent.emit(f" ", "white")
+            thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+        case "reporte_IRST_mensual":
+            nombre = "Reporte IRST-EG mensual"
+            opciones = info["Opciones"]
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread, evitar_extra=["_indicador_tecnico"])
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "reporte_IRST_anual":
+            nombre = "Reporte IRST-EG anual"
+            opciones = info["Opciones"]
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread)
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "generar_reporte_IRST_anual":
+            nombre = "Reporte IRST-EG anual unión"
+            thread.message_sent.emit(f" ", "white")
+            thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
         case _:
             pass
     return lista_generar, opciones
@@ -5736,7 +5892,67 @@ def generar_reporte(reporte, info, thread):
             for valor in info["Archivos"]:
                 dic = {valor[0]:valor[2]}
                 reporte_tarifas_mensual(dic, valor[1], informar=True, thread=thread)
+        case "generar_reportes_tarifarios_anual":
+            for valor in info["Archivos"]:
+                dic = {valor[0]:valor[2]}
+                info_reporte = valor[1]
+                reporte_tarifas_mensual(dic, valor[1], informar=True, thread=thread)
+        case "generar_reportes_tarifarios_anual_union":
+            reporte = "_reporte_tarifario.csv"
+            proceso,dic_archivos_anual = generar_archivos_extra_anual(info, reporte)
+            if proceso:
+                union_archivos_mensuales_anual(dic_archivos_anual, info, informar=True, thread=thread)
         #Reportes técnicos
+        case "generar_reporte_indicadores_mensual":
+            for valor in info["Archivos"]:
+                dic = {valor[0]:valor[2]}
+                generar_reporte_indicadores_tecnicos_mensual(dic, valor[1], informar=True, thread=thread)
+        case "generar_reporte_indicadores_anual":
+            for valor in info["Archivos"]:
+                dic = {valor[0]:valor[2]}
+                info_reporte = valor[1]
+                generar_reporte_indicadores_tecnicos_mensual(dic, valor[1], informar=True, thread=thread)
+        case "generar_reporte_indicadores_anual_union":
+            reporte = "_indicador_tecnico.csv"
+            proceso,dic_archivos_anual = generar_archivos_extra_anual(info, reporte)
+            if proceso:
+                union_archivos_mensuales_anual(dic_archivos_anual, info, informar=True, thread=thread)
+        case "generar_reporte_suspensiones_mensual":
+            for valor in info["Archivos"]:
+                dic = {valor[0]:valor[2]}
+                generar_reporte_suspension_mensual(dic, valor[1], informar=True, thread=thread)
+        case "generar_reporte_suspensiones_anual":
+            for valor in info["Archivos"]:
+                dic = {valor[0]:valor[2]}
+                info_reporte = valor[1]
+                generar_reporte_suspension_mensual(dic, valor[1], informar=True, thread=thread)
+        case "generar_reporte_suspensiones_anual_union":
+            reporte = "_reporte_suspension.csv"
+            proceso,dic_archivos_anual = generar_archivos_extra_anual(info, reporte)
+            if proceso:
+                union_archivos_mensuales_anual(dic_archivos_anual, info, informar=True, thread=thread)
+        case "generar_reporte_IRST_mensual":
+            for valor in info["Archivos"]:
+                dic = {valor[0]:valor[2]}
+                generar_reporte_indicadores_tecnicos_IRST_mensual(dic, valor[1], informar=True, thread=thread)
+        case "generar_reporte_IRST_anual":
+            for valor in info["Archivos"]:
+                dic = {valor[0]:valor[2]}
+                info_reporte = valor[1]
+                generar_reporte_indicadores_tecnicos_IRST_mensual(dic, valor[1], informar=True, thread=thread)
+        case "generar_reporte_IRST_anual_union":
+            reporte = "_indicador_tecnico_IRST.csv"
+            proceso,dic_archivos_anual = generar_archivos_extra_anual(info, reporte, evitar_extra=["_indicador_tecnico_IRST", "_indicador_tecnico"])
+            if proceso:
+                union_archivos_mensuales_anual(dic_archivos_anual, info, informar=True, thread=thread)
+            reporte = "_indicador_tecnico_IRST_minutos.csv"
+            proceso,dic_archivos_anual = generar_archivos_extra_anual(info, reporte, evitar_extra=["_indicador_tecnico_IRST_minutos","_indicador_tecnico","_indicador_tecnico_IRST"])
+            if proceso:
+                union_archivos_mensuales_anual(dic_archivos_anual, info, informar=True, thread=thread)
+            reporte = "_indicador_tecnico_IRST_horas.csv"
+            proceso,dic_archivos_anual = generar_archivos_extra_anual(info, reporte, evitar_extra=["_indicador_tecnico_IRST_minutos","_indicador_tecnico","_indicador_tecnico_IRST"])
+            if proceso:
+                union_archivos_mensuales_anual(dic_archivos_anual, info, informar=True, thread=thread)
         case _:
             pass
     return info_reporte
@@ -5846,7 +6062,90 @@ class Envio_mensajes(QThread):
                 case "generar_reportes_tarifarios_mensual":
                     if self.info:
                         generar_reporte(self.estado, self.info, self)
+                case "reportes_tarifarios_anual":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                        dic_info["Opciones"] = opciones
+                case "generar_reportes_tarifarios_anual":
+                    if self.info:
+                        info_reporte = generar_reporte(self.estado, self.info, self)
+                        dic_info["Reporte"] = info_reporte
+                        valor = True
+                case "generar_reportes_tarifarios_anual_union":
+                    if self.info:
+                        generar_reporte(self.estado, self.info["Reporte"], self)
                 #Reportes técnicos
+                case "reporte_indicadores_mensual":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                        dic_info["Opciones"] = opciones
+                case "generar_reporte_indicadores_mensual":
+                    if self.info:
+                        generar_reporte(self.estado, self.info, self)
+                case "reporte_indicadores_anual":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                        dic_info["Opciones"] = opciones
+                case "generar_reporte_indicadores_anual":
+                    if self.info:
+                        info_reporte = generar_reporte(self.estado, self.info, self)
+                        dic_info["Reporte"] = info_reporte
+                        valor = True
+                case "generar_reporte_indicadores_anual_union":
+                    if self.info:
+                        generar_reporte(self.estado, self.info["Reporte"], self)
+                case "reporte_suspensiones_mensual":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                        dic_info["Opciones"] = opciones
+                case "generar_reporte_suspensiones_mensual":
+                    if self.info:
+                        generar_reporte(self.estado, self.info, self)
+                case "reporte_suspensiones_anual":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                        dic_info["Opciones"] = opciones
+                case "generar_reporte_suspensiones_anual":
+                    if self.info:
+                        info_reporte = generar_reporte(self.estado, self.info, self)
+                        dic_info["Reporte"] = info_reporte
+                        valor = True
+                case "generar_reporte_suspensiones_anual_union":
+                    if self.info:
+                        generar_reporte(self.estado, self.info["Reporte"], self)
+                case "reporte_IRST_mensual":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                        dic_info["Opciones"] = opciones
+                case "generar_reporte_IRST_mensual":
+                    if self.info:
+                        generar_reporte(self.estado, self.info, self)
+                case "reporte_IRST_anual":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                        dic_info["Opciones"] = opciones
+                case "generar_reporte_IRST_anual":
+                    if self.info:
+                        info_reporte = generar_reporte(self.estado, self.info, self)
+                        dic_info["Reporte"] = info_reporte
+                        valor = True
+                case "generar_reporte_IRST_anual_union":
+                    if self.info:
+                        generar_reporte(self.estado, self.info["Reporte"], self)
                 case _:
                     print("Estado no activo")
             self.message_sent.emit("\nFin de procesamiento de archivos\n", "green")

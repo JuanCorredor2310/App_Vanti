@@ -236,9 +236,8 @@ def menu_inicial(app, window, central_widget, dimensiones, estado=None, info=Non
         elif evento == "reportes_tarifarios":
             estado = evento
             estado,info = menu_seleccion(app, window, central_widget, dimensiones, "menu_inicial", estado)
-        #elif evento == "reportes_tecnicos":
-        #    estado = evento
-        #    estado,info = menu_seleccion(app, window, central_widget, dimensiones, "menu_inicial", estado, info)
+        elif evento == "reportes_tecnicos":
+            estado,info = menu_reportes_tecnicos(app, window, central_widget, dimensiones)
         else:
             pantalla_inicio(app, window, central_widget, dimensiones)
     image_button.clicked.connect(lambda:on_button_clicked("volver"))
@@ -603,6 +602,74 @@ def menu_reporte_comercial(app, window, central_widget, dimensiones, estado=None
     event_loop.exec_()
     return estado,info
 
+def menu_reportes_tecnicos(app, window, central_widget, dimensiones, estado=None, info={}):
+    screen_width = dimensiones[0]
+    titulo = "Reportes técnicos"
+    titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=75)
+    x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
+    titulo_espacios.move(x, 40)
+    mostrar_label(titulo_espacios)
+    image_button = QPushButton("", central_widget)
+    pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    icon = QIcon(pixmap)
+    image_button.setIcon(icon)
+    image_button.setIconSize(pixmap.size())
+    image_button.move(20,20)
+    mostrar_label(image_button)
+    image_button_1 = QPushButton("", central_widget)
+    pixmap_1 = QPixmap(ruta_imagenes+"lupa.png")
+    icon_1 = QIcon(pixmap_1)
+    image_button_1.setIcon(icon_1)
+    image_button_1.setIconSize(QSize(80, 80))  # Ajusta el tamaño del ícono
+    image_button_1.setFixedSize(150, 150)
+    x = round((screen_width-(image_button_1.sizeHint().width()))*0.95)
+    image_button_1.move(x,5)
+    mostrar_label(image_button_1)
+    dic_texto = {"Reporte indicadores técnicos":"Reportes comerciales por sector de consumo. La información puede incluir el consumo de GN por cada sector, total de usuarios, filtrar la información por código DANE,\ncantidad total de facturas emitidas, valor facturado por consumo y/o facturación total ",
+                "Reporte suspensiones":"Reporte comercial para compensaciones. El reporte puede contener los datos del inventario de suscriptores\ncon el fin de obtener información adicional de los usuarios compensados",
+                "Reporte de Indicador de Respuesta a Servicio Técnico (IRST-EG)":"..."}
+    boton_1 = crear_boton("Reporte indicadores técnicos (IPLI, IO, IRST-EG)", central_widget)
+    boton_2 = crear_boton("Reporte suspensiones", central_widget)
+    boton_3 = crear_boton("Reporte de Indicador de Respuesta a Servicio Técnico (IRST-EG)", central_widget)
+    botones = [boton_1, boton_2, boton_3]
+    max_width = max([boton.sizeHint().width() for boton in botones])
+    for boton in botones:
+        boton.setFixedWidth(max_width)
+    x = round((((screen_width)-max_width)*0.5))
+    boton_1.move(x,400)
+    boton_1.setParent(central_widget)
+    mostrar_label(boton_1)
+    boton_2.move(x,600)
+    boton_2.setParent(central_widget)
+    mostrar_label(boton_2)
+    boton_3.move(x,800)
+    boton_3.setParent(central_widget)
+    mostrar_label(boton_3)
+
+    event_loop = QEventLoop()
+    def on_button_clicked(texto):
+        nonlocal estado, info
+        estado = texto
+        event_loop.quit()
+        esconder_label(titulo_espacios)
+        esconder_label(image_button)
+        esconder_label(boton_1)
+        esconder_label(boton_2)
+        esconder_label(boton_3)
+        esconder_label(image_button_1)
+        if texto == "volver":
+            estado,info = menu_inicial(app, window, central_widget, dimensiones)
+        else:
+            estado = texto
+            estado,info = menu_seleccion(app, window, central_widget, dimensiones, "menu_reportes_tecnicos", estado, info)
+    image_button.clicked.connect(lambda:on_button_clicked("volver"))
+    boton_1.clicked.connect(lambda:on_button_clicked("reporte_indicadores"))
+    boton_2.clicked.connect(lambda:on_button_clicked("reporte_suspensiones"))
+    boton_3.clicked.connect(lambda:on_button_clicked("reporte_IRST"))
+    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto))
+    event_loop.exec_()
+    return estado,info
+
 def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=None, estado=None, info={}):
     screen_width = dimensiones[0]
 
@@ -857,7 +924,6 @@ def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=Non
                 esconder_label(value[3])
                 esconder_label(value[2])
             if texto == "volver":
-                print(f"Estado: {estado_anterior}, {estado}")
                 if estado_anterior == "menu_reporte_comercial":
                     estado,info = menu_reporte_comercial(app, window, central_widget, dimensiones)
                 elif estado_anterior == "menu_reportes_comerciales":
@@ -866,6 +932,8 @@ def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=Non
                     estado,info = menu_inicial(app, window, central_widget, dimensiones)
                 elif "reportes_tarifarios" in estado:
                     estado,info = menu_inicial(app, window, central_widget, dimensiones)
+                elif any(texto in estado for texto in ("reporte_IRST", "reporte_suspensiones", "reporte_indicadores")):
+                    estado,info = menu_reportes_tecnicos(app, window, central_widget, dimensiones)
                 else:
                     estado,info = menu_reportes_comerciales(app, window, central_widget, dimensiones)
             elif texto == "aceptar":
@@ -891,11 +959,19 @@ def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=Non
                 elif "reportes_tarifarios" in estado:
                     opciones = {"regenerar":True}
                     estado, info = opciones_adicionales(app, window, central_widget, dimensiones, estado_anterior="menu_seleccion", estado=estado, info=info, opciones=opciones)
+                elif "reporte_indicadores" in estado:
+                    opciones = {"regenerar":True}
+                    estado, info = opciones_adicionales(app, window, central_widget, dimensiones, estado_anterior="menu_seleccion", estado=estado, info=info, opciones=opciones)
+                elif "reporte_suspensiones" in estado:
+                    opciones = {"regenerar":True}
+                    estado, info = opciones_adicionales(app, window, central_widget, dimensiones, estado_anterior="menu_seleccion", estado=estado, info=info, opciones=opciones)
+                elif "reporte_IRST" in estado:
+                    opciones = {"regenerar":True}
+                    estado, info = opciones_adicionales(app, window, central_widget, dimensiones, estado_anterior="menu_seleccion", estado=estado, info=info, opciones=opciones)
                 else:
                     opciones = {"regenerar":True, "codigo_DANE":True, "sumatoria":True, "valor_facturado":True, "facturas":True}
                     estado, info = opciones_adicionales(app, window, central_widget, dimensiones, estado_anterior="menu_seleccion", estado=estado, info=info, opciones=opciones)
                 #estado,info = seleccionar_reporte(app, window, central_widget, dimensiones, estado, info)
-
     f1.clicked.connect(lambda: cambiar_botones("VANTI"))
     f2.clicked.connect(lambda: cambiar_botones("GNCB"))
     f3.clicked.connect(lambda: cambiar_botones("GNCR"))
