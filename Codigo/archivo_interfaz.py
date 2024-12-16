@@ -233,6 +233,12 @@ def menu_inicial(app, window, central_widget, dimensiones, estado=None, info=Non
             estado, info = menu_edicion_archivos(app, window, central_widget, dimensiones)
         elif evento == "reportes_comerciales":
             estado, info = menu_reportes_comerciales(app, window, central_widget, dimensiones)
+        elif evento == "reportes_tarifarios":
+            estado = evento
+            estado,info = menu_seleccion(app, window, central_widget, dimensiones, "menu_inicial", estado)
+        #elif evento == "reportes_tecnicos":
+        #    estado = evento
+        #    estado,info = menu_seleccion(app, window, central_widget, dimensiones, "menu_inicial", estado, info)
         else:
             pantalla_inicio(app, window, central_widget, dimensiones)
     image_button.clicked.connect(lambda:on_button_clicked("volver"))
@@ -851,10 +857,15 @@ def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=Non
                 esconder_label(value[3])
                 esconder_label(value[2])
             if texto == "volver":
+                print(f"Estado: {estado_anterior}, {estado}")
                 if estado_anterior == "menu_reporte_comercial":
                     estado,info = menu_reporte_comercial(app, window, central_widget, dimensiones)
                 elif estado_anterior == "menu_reportes_comerciales":
                     estado,info = menu_reportes_comerciales(app, window, central_widget, dimensiones)
+                elif estado_anterior == "menu_inicial":
+                    estado,info = menu_inicial(app, window, central_widget, dimensiones)
+                elif "reportes_tarifarios" in estado:
+                    estado,info = menu_inicial(app, window, central_widget, dimensiones)
                 else:
                     estado,info = menu_reportes_comerciales(app, window, central_widget, dimensiones)
             elif texto == "aceptar":
@@ -876,6 +887,9 @@ def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=Non
                     estado, info = opciones_adicionales(app, window, central_widget, dimensiones, estado_anterior="menu_seleccion", estado=estado, info=info, opciones=opciones)
                 elif "reporte_compensaciones" in estado:
                     opciones = {"regenerar":True, "inventario":True}
+                    estado, info = opciones_adicionales(app, window, central_widget, dimensiones, estado_anterior="menu_seleccion", estado=estado, info=info, opciones=opciones)
+                elif "reportes_tarifarios" in estado:
+                    opciones = {"regenerar":True}
                     estado, info = opciones_adicionales(app, window, central_widget, dimensiones, estado_anterior="menu_seleccion", estado=estado, info=info, opciones=opciones)
                 else:
                     opciones = {"regenerar":True, "codigo_DANE":True, "sumatoria":True, "valor_facturado":True, "facturas":True}
@@ -1347,7 +1361,10 @@ def opciones_adicionales(app, window, central_widget, dimensiones, opciones={}, 
                         "inventario":"Incluir la información correspondiente del inventario de suscriptores.",
                         "regenerar":"Regenerar archivos necesarios (form_estandar, resumen)",
                         "reportes_mensuales":"Información a generar para los reportes mensuales",
-                        "texto_regenerar":"_form_estandar, _resumen"}
+                        "texto_regenerar":"_form_estandar, _resumen",
+                        "usuarios_activos":"Info. usuarios activos", 
+                        "sumatoria":f"Sumatoria {grupo_vanti}",
+                        "facturas":"Cantidad de facturas emitidas"}
     if not len(opciones):
         return estado, info
     screen_width = dimensiones[0]

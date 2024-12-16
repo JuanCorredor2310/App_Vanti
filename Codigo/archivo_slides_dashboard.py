@@ -12,7 +12,7 @@ from PIL import Image,ImageDraw,ImageFont
 from skimage.transform import resize
 
 import ruta_principal as mod_rp
-global ruta_principal, ruta_codigo, ruta_constantes, ruta_nuevo_sui, ruta_archivos,ruta_fuentes,ruta_imagenes,fuente_texto,azul_vanti,dic_colores,meta_kpi_sub
+global ruta_principal, ruta_codigo, ruta_constantes, ruta_nuevo_sui, ruta_archivos,ruta_fuentes,ruta_imagenes,fuente_texto,azul_vanti,dic_colores,meta_kpi_sub,dic_ubi_tarifas,dic_distri,dic_colores_distri,dic_ubi_disti
 ruta_principal = mod_rp.v_ruta_principal()
 ruta_constantes = mod_rp.v_constantes()
 ruta_nuevo_sui = mod_rp.v_nuevo_sui()
@@ -25,11 +25,72 @@ import archivo_creacion_json as mod_2
 global ruta_fuente,grupo_vanti
 grupo_vanti = "Grupo Vanti"
 ruta_fuente = ruta_fuentes+"Muli.ttf"
-ruta_fuente_negrilla = ruta_fuentes+"Muli-Bold.ttf"
+ruta_fuente_negrilla = ruta_fuentes+"Mulish-Bold.ttf"
 fuente_texto = font_manager.FontProperties(fname=ruta_fuentes+"Muli.ttf")
 dic_colores = mod_1.leer_archivos_json(ruta_constantes+"colores.json")["datos"]
 azul_vanti = dic_colores["azul_v"]
 meta_kpi_sub = "1,4"
+valor_x = 10
+dic_ubi_tarifas = {"VANTI":{23:[[(1155-valor_x,660),(1390-valor_x,895)],(1375,695)],
+                            113:[[(1155-valor_x,180),(1390-valor_x,415)],(1375,240)],
+                            139:[[(0,180),(235,415)],(205,240)],
+                            149:[[(0,660),(235,895)],(205,695)]},
+                    "GNCB":{106:[[(555-8,800),(790-8,1035)],(770,840)],
+                            1825:[[(1120-valor_x,545),(1355,780)],(1350,580)],
+                            169:[[(0,545),(235,780)],(210,580)]},
+                    "GNCR":{80:[[(1295,625),(1530,860)],(1175,425)],
+                            21:[[(150,625),(385,860)],(45,425)]},
+                    "GOR":{11:[[(1145-valor_x,550),(1380-valor_x,785)],(1350,580)],
+                            9:[[(580-valor_x,800),(815-valor_x,1035)],(770,840)],
+                            16:[[(0,550),(235,785)],(215,570)]}}
+dic_colores_tarifas = {23:dic_colores["naranja_v"],
+                        113:dic_colores["azul_agua_v"],
+                        139:dic_colores["verde_v"],
+                        149:dic_colores["morado_v"],
+                        106:dic_colores["naranja_v"],
+                        1825:dic_colores["verde_v"],
+                        169:dic_colores["azul_agua_v"],
+                        80:dic_colores["verde_v"],
+                        21:dic_colores["azul_agua_v"],
+                        11:dic_colores["naranja_v"],
+                        9:dic_colores["azul_agua_v"],
+                        16:dic_colores["verde_v"]}
+dic_colores_distri = {"GNCB":dic_colores["naranja_v"],
+                "GNCR":dic_colores["morado_v"],
+                "LLANOGAS":dic_colores["azul_v"],
+                "VANTI":dic_colores["verde_v"],
+                "EPM":dic_colores["azul_agua_c_v"],
+                "GOR":dic_colores["azul_agua_v"],
+                "SURTIGAS":dic_colores["morado_c_v"],
+                "EFIGAS":dic_colores["naranja_c_v"],
+                "GASCARIBE":dic_colores["rosa_p1"],
+                "GDO":dic_colores["amarillo_v"],
+                "METROGAS":dic_colores["azul_p3"],
+                "ALCANOS":dic_colores["vinotinto"]}
+dic_distri = {"GNCB":"Gas Natural Cundiboyacense S.A. ESP.",
+                "GNCR":"Gas Nacer S.A. ESP.",
+                "LLANOGAS":"Llanogas S.A. ESP.",
+                "VANTI":"Vanti S.A. ESP.",
+                "EPM":"EPM",
+                "GOR":"Gas Natural del Oriente S.A. ESP.",
+                "SURTIGAS":"Surtigas S.A. ESP.",
+                "EFIGAS":"Efigas S.A. ESP.",
+                "GASCARIBE":"Gases del Caribe S.A. ESP.",
+                "GDO":"Gases de Occiente S.A. ESP.",
+                "METROGAS":"Metrogas de Colombia S.A. ESP.",
+                "ALCANOS":"Alcanos de Colombia S.A. ESP."}
+dic_ubi_disti = {"GNCB":(415,475),
+                "GNCR":(385,290),
+                "LLANOGAS":(420,585),
+                "VANTI":(360,535),
+                "EPM":(305,420),
+                "GOR":(405,380),
+                "SURTIGAS":(276,286),
+                "EFIGAS":(278,506),
+                "GASCARIBE":(334,210),
+                "GDO":(208,622),
+                "METROGAS":(392,432),
+                "ALCANOS":(295,655)}
 
 def conversion_decimales(texto):
     return str(texto).replace(".",",")
@@ -135,7 +196,7 @@ def slide_def_1(ubi,fecha,fecha_actual, dic_metricas,mes_corte,fecha_anio_anteri
             c_slide += 1
         return c_slide
     except BaseException:
-        pass
+        return c_slide
 
 def slide_usuarios(ubi,fecha,fecha_actual,ubi_carpeta,texto_fecha, dic_metricas, c_slide):
     try:
@@ -161,7 +222,7 @@ def slide_usuarios(ubi,fecha,fecha_actual,ubi_carpeta,texto_fecha, dic_metricas,
             c_slide += 1
         return c_slide
     except BaseException:
-        pass
+        return c_slide
 
 def slide_pie_usuarios(ubi,fecha,fecha_actual,ubi_carpeta,texto_fecha, dic_metricas, c_slide):
     try:
@@ -193,7 +254,7 @@ def slide_pie_usuarios(ubi,fecha,fecha_actual,ubi_carpeta,texto_fecha, dic_metri
             c_slide +=1
         return c_slide
     except BaseException:
-        pass
+        return c_slide
 
 def dibujar_texto_derecha(posicion_final, texto, fill, font, dibujo):
     bbox = dibujo.textbbox((0, 0), texto, font=font)
@@ -230,7 +291,7 @@ def slide_consumo(ubi,fecha_actual,ubi_carpeta,texto_fecha, dic_metricas, c_slid
             c_slide += 1
         return c_slide
     except BaseException:
-        pass
+        return c_slide
 
 def pegar_imagen(nueva_imagen, imagen, esp):
     if os.path.exists(nueva_imagen):
@@ -266,7 +327,7 @@ def slide_pie_consumo(ubi, fecha_actual, ubi_carpeta, texto_fecha, dic_metricas,
             c_slide += 1
         return c_slide
     except BaseException:
-        pass
+        return c_slide
 
 def slide_sub_con(ubi, fecha_actual, ubi_carpeta, texto_fecha, c_slide):
     try:
@@ -286,7 +347,7 @@ def slide_sub_con(ubi, fecha_actual, ubi_carpeta, texto_fecha, c_slide):
             c_slide += 1
         return c_slide
     except BaseException:
-        pass
+        return c_slide
 
 def ajustar_coordenadas(coor):
     lista = [(coor[0][0],coor[0][1]),(coor[1][0],coor[0][1]),(coor[1][0],coor[1][1]),(coor[0][0],coor[1][1])]
@@ -316,7 +377,7 @@ def slide_kpi_sub(ubi, fecha_actual, ubi_carpeta, dic_metricas, c_slide, anio):
             c_slide += 1
         return c_slide
     except BaseException:
-        pass
+        return c_slide
 
 def slide_recla_fact(ubi, fecha_actual, ubi_carpeta, c_slide):
     try:
@@ -342,7 +403,7 @@ def slide_recla_fact(ubi, fecha_actual, ubi_carpeta, c_slide):
             c_slide += 1
         return c_slide
     except BaseException:
-        pass
+        return c_slide
 
 def slide_compensaciones(ubi, fecha_actual, ubi_carpeta, c_slide, texto_fecha):
     try:
@@ -359,12 +420,231 @@ def slide_compensaciones(ubi, fecha_actual, ubi_carpeta, c_slide, texto_fecha):
             c_slide += 1
         return c_slide
     except BaseException:
-        pass
+        return c_slide
 
-def crear_slides(ubi, fecha, fecha_completa, fecha_corte, texto_fecha, dic_metricas,mes_corte, fecha_anio_anterior):
+def slide_AOM(ubi, anio, mes, fecha_actual, ubi_carpeta, c_slide):
+    try:
+        plantilla = ruta_imagenes+"p15.png"
+        if os.path.exists(plantilla):
+            imagen = Image.open(plantilla)
+            dibujo = ImageDraw.Draw(imagen)
+            dibujo.text((760,1025), f"Último corte: {fecha_actual} - {grupo_vanti}", fill=azul_vanti, font=ImageFont.truetype(ruta_fuente, 30))
+            dibujo.text((1690,870), f"Valores en precios\nconstantes {mes}/{anio}", fill=azul_vanti, font=ImageFont.truetype(ruta_fuente, 20))
+            ubi_imagen = ubi_carpeta+"\\03. Cumplimientos_Regulatorios\\Imagenes\\"
+            esp = ajustar_coordenadas([(70,105),(1650,955)])
+            nueva_imagen = ubi_imagen+"Gastos_AOM.png"
+            imagen = pegar_imagen(nueva_imagen, imagen, esp)
+            imagen.save(ubi+f"slide_{c_slide}.png")
+            c_slide += 1
+        return c_slide
+    except BaseException:
+        return c_slide
+
+def slide_desviaciones(ubi, fecha_actual, ubi_carpeta, c_slide, texto_fecha, dic_metricas):
+    try:
+        plantilla = ruta_imagenes+"p16.png"
+        if os.path.exists(plantilla):
+            imagen = Image.open(plantilla)
+            dibujo = ImageDraw.Draw(imagen)
+            dibujo.text((760,1025), f"Último corte: {fecha_actual} - {grupo_vanti}", fill=azul_vanti, font=ImageFont.truetype(ruta_fuente, 30))
+            dibujo.text((338,185), str(dic_metricas["usuarios"]), fill=dic_colores["morado_v"], font=ImageFont.truetype(ruta_fuente, 50))
+            dibujo.text((315,390), str(dic_metricas["DS"]["Total"])+" ("+str(dic_metricas["DS"]["Porcentaje"])+")", fill=dic_colores["morado_v"], font=ImageFont.truetype(ruta_fuente, 50))
+            dibujar_texto_derecha((726,530), str(dic_metricas["DS"]["Consumos reales"]), fill=dic_colores["morado_v"], font=ImageFont.truetype(ruta_fuente, 46), dibujo=dibujo)
+            dibujar_texto_derecha((726,620), str(dic_metricas["DS"]["Error en la lectura"]), fill=dic_colores["morado_v"], font=ImageFont.truetype(ruta_fuente, 46), dibujo=dibujo)
+            dibujar_texto_derecha((726,750), str(dic_metricas["DS"]["No se logró visita por impedimento"]), fill=dic_colores["morado_v"], font=ImageFont.truetype(ruta_fuente, 46), dibujo=dibujo)
+            dibujar_texto_derecha((726,850), str(dic_metricas["DS"]["No realizó visita"]), fill=dic_colores["morado_v"], font=ImageFont.truetype(ruta_fuente, 46), dibujo=dibujo)
+            ubi_imagen = ubi_carpeta+"\\00. Comercial\\Imagenes\\"
+            esp = ajustar_coordenadas([(755,205),(1900,910)])
+            nueva_imagen = ubi_imagen+texto_fecha+"_compilado_DS_metricas_categorias.png"
+            imagen = pegar_imagen(nueva_imagen, imagen, esp)
+            imagen.save(ubi+f"slide_{c_slide}.png")
+            c_slide += 1
+        return c_slide
+    except BaseException:
+        return c_slide
+
+def slide_def_2(ubi, fecha_actual, c_slide):
+    try:
+        plantilla = ruta_imagenes+"p17.png"
+        if os.path.exists(plantilla):
+            imagen = Image.open(plantilla)
+            dibujo = ImageDraw.Draw(imagen)
+            dibujo.text((760,1025), f"Último corte: {fecha_actual} - {grupo_vanti}", fill=azul_vanti, font=ImageFont.truetype(ruta_fuente, 30))
+            imagen.save(ubi+f"slide_{c_slide}.png")
+            c_slide += 1
+        return c_slide
+    except BaseException:
+        return c_slide
+
+def slide_def_3(ubi, fecha_actual, c_slide):
+    try:
+        plantilla = ruta_imagenes+"p23.png"
+        if os.path.exists(plantilla):
+            imagen = Image.open(plantilla)
+            dibujo = ImageDraw.Draw(imagen)
+            dibujo.text((760,1025), f"Último corte: {fecha_actual} - {grupo_vanti}", fill=azul_vanti, font=ImageFont.truetype(ruta_fuente, 30))
+            imagen.save(ubi+f"slide_{c_slide}.png")
+            c_slide += 1
+        return c_slide
+    except BaseException:
+        return c_slide
+
+def slide_tarifas(ubi, fecha_actual, ubi_carpeta, texto_fecha, dic_metricas,c_slide):
+    try:
+        dic_tarifas = dic_metricas["tarifas"]
+        lista_plantilla = ["p18","p19","p20","p21","p22"]
+        lista_filiales = ["VANTI","GNCB","GNCR","GOR"]
+        ubi_imagen = ubi_carpeta+"\\01. Tarifario\\Imagenes\\"
+        for i in range(len(lista_plantilla)):
+            plantilla = ruta_imagenes+lista_plantilla[i]+".png"
+            if os.path.exists(plantilla):
+                imagen = Image.open(plantilla)
+                dibujo = ImageDraw.Draw(imagen)
+                dibujo.text((760,1025), f"Último corte: {fecha_actual} - {grupo_vanti}", fill=azul_vanti, font=ImageFont.truetype(ruta_fuente, 30))
+                if i < len(lista_filiales):
+                    filial = lista_filiales[i]
+                    for llave, valor in dic_tarifas[filial].items():
+                        esp = ajustar_coordenadas(dic_ubi_tarifas[filial][int(llave)][0])
+                        nueva_imagen = ubi_imagen+texto_fecha+f"_rt_{llave}.png"
+                        imagen = pegar_imagen(nueva_imagen, imagen, esp)
+                        ubi_texto = dic_ubi_tarifas[filial][int(llave)][1]
+                        x = ubi_texto[0]
+                        y = ubi_texto[1]
+                        for j in range(len(valor[1])):
+                            texto = valor[1][j]
+                            if j < 2:
+                                dibujo.text((x,y), texto, fill=dic_colores_tarifas[int(llave)], font=ImageFont.truetype(ruta_fuente_negrilla, 30))
+                            else:
+                                dibujo.text((x,y), texto, fill=dic_colores_tarifas[int(llave)], font=ImageFont.truetype(ruta_fuente, 30))
+                            y += 50
+                else:
+                    x1 = 866
+                    y1 = 80
+                    c = 78
+                    x2 = 1735
+                    x3 = 1780
+                    c_1 = 50
+                    c_bola = 1
+                    for i,j in dic_metricas["Tarifas_nacionales"].items():
+                        dibujo.text((x1,y1), dic_distri[i], fill=azul_vanti, font=ImageFont.truetype(ruta_fuente_negrilla, 28))
+                        dibujar_texto_derecha((x2,y1), j["Ciudad"]+": "+j["Tarifa"], fill=dic_colores_distri[i], font=ImageFont.truetype(ruta_fuente, 26), dibujo=dibujo)
+                        pos = dic_ubi_disti[i]
+                        n_pos = (pos[0]-(j["Bola"]*0.5), pos[1]-(j["Bola"]*0.5))
+                        dibujo.ellipse((n_pos[0],n_pos[1],n_pos[0]+(j["Bola"]*c_bola),n_pos[1]+(j["Bola"]*c_bola)), fill=dic_colores_distri[i])
+                        if j["Cambio"] == "red":
+                            nueva_imagen = ruta_imagenes+"up.png"
+                        elif j["Cambio"] == "green":
+                            nueva_imagen = ruta_imagenes+"down.png"
+                        elif j["Cambio"] == "orange":
+                            nueva_imagen = ruta_imagenes+"equal.png"
+                        imagen = pegar_imagen(nueva_imagen, imagen, ajustar_coordenadas([(x3,y1),(x3+c_1,y1+c_1)]))
+                        y1 += c
+                imagen.save(ubi+f"slide_{c_slide}.png")
+                c_slide += 1
+        return c_slide
+    except BaseException:
+        return c_slide
+
+def slide_indicadores(ubi, fecha_actual, ubi_carpeta, c_slide, texto_fecha, dic_metricas, periodo):
+    dic_coordendas = {"VANTI":[[(250,108),(890,535)],(485,190),(420,460)],
+                        "GNCB":[[(1175,108),(1800,535)],(1390,190),(1285,460)],
+                        "GNCR":[[(250,625),(890,1025)],(485,655),(420,920)],
+                        "GOR":[[(1175,625),(1800,1025)],(1390,650),(1285,920)]}
+    try:
+        plantilla = ruta_imagenes+"p24.png"
+        if os.path.exists(plantilla):
+            imagen = Image.open(plantilla)
+            dibujo = ImageDraw.Draw(imagen)
+            dibujo.text((760,1025), f"Último corte: {fecha_actual} - {grupo_vanti}", fill=azul_vanti, font=ImageFont.truetype(ruta_fuente, 30))
+            ubi_imagen = ubi_carpeta+"\\02. Tecnico\\Imagenes\\"
+            lista_filiales = ["VANTI","GNCB","GNCR","GOR"]
+            for filial in lista_filiales:
+                if dic_metricas["indicadores"][filial] > 1:
+                    esp = ajustar_coordenadas(dic_coordendas[filial][0])
+                    nueva_imagen = ubi_imagen+texto_fecha+f"_indicador_tecnico_{filial}.png"
+                    imagen = pegar_imagen(nueva_imagen, imagen, esp)
+                else:
+                    x = dic_coordendas[filial][1][0]
+                    y = dic_coordendas[filial][1][1]
+                    dibujo.text((x,y), "100 %", fill=dic_colores["naranja_v"], font=ImageFont.truetype(ruta_fuente_negrilla, 60))
+                    y += 70
+                    dibujo.text((x,y), "100 %", fill=dic_colores["morado_v"], font=ImageFont.truetype(ruta_fuente_negrilla, 60))
+                    y += 70
+                    dibujo.text((x,y), "100 %", fill=dic_colores["azul_agua_v"], font=ImageFont.truetype(ruta_fuente_negrilla, 60))
+                    dibujo.text((dic_coordendas[filial][2][0],dic_coordendas[filial][2][1]), periodo, fill=dic_colores["azul_v"], font=ImageFont.truetype(ruta_fuente_negrilla, 38))
+            imagen.save(ubi+f"slide_{c_slide}.png")
+            c_slide += 1
+        return c_slide
+    except BaseException:
+        return c_slide
+
+def slide_IRST(ubi, ubi_carpeta, c_slide, texto_fecha, periodo,fecha_actual):
+    dic_coordendas = {"VANTI":[[(155,130),(925,535)]],
+                        "GNCB":[[(1070,130),(1870,535)]],
+                        "GNCR":[[(150,645),(930,1020)]],
+                        "GOR":[[(1070,645),(1870,1020)]]}
+    try:
+        lista_plantilla = ["p25","p26","p27"]
+        ubi_imagen = ubi_carpeta+"\\02. Tecnico\\Imagenes\\"
+        for i in range(len(lista_plantilla)):
+            plantilla = ruta_imagenes+lista_plantilla[i]+".png"
+            if os.path.exists(plantilla):
+                imagen = Image.open(plantilla)
+                dibujo = ImageDraw.Draw(imagen)
+                if i == 0:
+                    dibujo.text((760,1025), f"Último corte: {fecha_actual} - {grupo_vanti}", fill=azul_vanti, font=ImageFont.truetype(ruta_fuente, 30))
+                    for filial, valor in dic_coordendas.items():
+                        esp = ajustar_coordenadas(valor[0])
+                        nueva_imagen = ubi_imagen+texto_fecha+f"_IRST_min_{filial}.png"
+                        imagen = pegar_imagen(nueva_imagen, imagen, esp)
+                elif i == 1:
+                    dibujo.text((358,12), f"TAM - Duración eventos NC por franja horaria ({periodo})", fill=azul_vanti, font=ImageFont.truetype(ruta_fuente, 42))
+                    for filial, valor in dic_coordendas.items():
+                        elemento = [(valor[0][0][0]-120,valor[0][0][1]),(valor[0][1][0],valor[0][1][1])]
+                        esp = ajustar_coordenadas(elemento)
+                        nueva_imagen = ubi_imagen+texto_fecha+f"_IRST_h_{filial}_NC.png"
+                        imagen = pegar_imagen(nueva_imagen, imagen, esp)
+                elif i == 2:
+                    dibujo.text((300,12), f"TAM - Duración eventos Controlados por franja horaria ({periodo})", fill=azul_vanti, font=ImageFont.truetype(ruta_fuente, 42))
+                    for filial, valor in dic_coordendas.items():
+                        elemento = [(valor[0][0][0]-120,valor[0][0][1]),(valor[0][1][0],valor[0][1][1])]
+                        esp = ajustar_coordenadas(elemento)
+                        nueva_imagen = ubi_imagen+texto_fecha+f"_IRST_h_{filial}_C.png"
+                        imagen = pegar_imagen(nueva_imagen, imagen, esp)
+                imagen.save(ubi+f"slide_{c_slide}.png")
+                c_slide += 1
+        return c_slide
+    except BaseException:
+        return c_slide
+
+def slide_cumplimientos(ubi, fecha_actual, ubi_carpeta, c_slide):
+    dic_coordendas = {"VANTI":[[(80,130),(925,535)]],
+                        "GNCB":[[(1010,130),(1870,535)]],
+                        "GNCR":[[(80,645),(930,1020)]],
+                        "GOR":[[(1010,645),(1870,1020)]]}
+    try:
+        plantilla = ruta_imagenes+"p28.png"
+        if os.path.exists(plantilla):
+            imagen = Image.open(plantilla)
+            dibujo = ImageDraw.Draw(imagen)
+            dibujo.text((760,1025), f"Último corte: {fecha_actual} - {grupo_vanti}", fill=azul_vanti, font=ImageFont.truetype(ruta_fuente, 30))
+            ubi_imagen = ubi_carpeta+"\\03. Tecnico\\Imagenes\\"
+            for filial, valor in dic_coordendas.items():
+                esp = ajustar_coordenadas(dic_coordendas[filial][0])
+                ubi_imagen = ubi_carpeta+"\\03. Cumplimientos_Regulatorios\\Imagenes\\"
+                nueva_imagen = ubi_imagen+f"porcentaje_cumplimientos_regulatorios_{filial}.png"
+                imagen = pegar_imagen(nueva_imagen, imagen, esp)
+            imagen.save(ubi+f"slide_{c_slide}.png")
+            c_slide += 1
+        return c_slide
+    except BaseException:
+        return c_slide
+
+def crear_slides(ubi, fecha, fecha_completa, fecha_corte, texto_fecha, dic_metricas,mes_corte, fecha_anio_anterior,periodo):
     ubi_carpeta = ubi
     ubi += "\\04. Dashboard\\Imagenes\\"
     anio = fecha[0]
+    mes = fecha[1].capitalize()[:3]
     fecha = f"{fecha[1]}/{fecha[0]}"
     c_slide = 1
     c_slide = slide_portada(ubi, fecha, fecha_corte, ubi_carpeta, texto_fecha, dic_metricas, c_slide)
@@ -377,6 +657,15 @@ def crear_slides(ubi, fecha, fecha_completa, fecha_corte, texto_fecha, dic_metri
     c_slide = slide_kpi_sub(ubi, fecha_corte, ubi_carpeta, dic_metricas, c_slide, anio)
     c_slide = slide_recla_fact(ubi, fecha_corte, ubi_carpeta, c_slide)
     c_slide = slide_compensaciones(ubi, fecha_corte, ubi_carpeta, c_slide, texto_fecha)
+    c_slide = slide_AOM(ubi, int(anio)-1, "Dic", fecha_corte, ubi_carpeta, c_slide)
+    c_slide = slide_desviaciones(ubi, fecha_corte, ubi_carpeta, c_slide, texto_fecha, dic_metricas)
+    c_slide = slide_def_2(ubi, fecha_corte, c_slide)
+    c_slide = slide_tarifas(ubi, fecha_corte, ubi_carpeta, texto_fecha, dic_metricas, c_slide)
+    c_slide = slide_def_3(ubi, fecha_corte, c_slide)
+    c_slide = slide_indicadores(ubi, fecha_corte, ubi_carpeta, c_slide, texto_fecha, dic_metricas, periodo)
+    c_slide = slide_IRST(ubi, ubi_carpeta, c_slide, texto_fecha, periodo, fecha_corte)
+    c_slide = slide_cumplimientos(ubi, fecha_corte, ubi_carpeta, c_slide)
+    # mapa_suspensiones
     ubi = ubi.replace("Imagenes\\", "Imagenes")
     print(f"\n\nEl Dashboard para el periodo: {fecha_completa} se ha creado en la carpeta {mod_1.acortar_nombre(ubi)}\n")
     os.startfile(ubi)

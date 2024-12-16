@@ -1782,7 +1782,9 @@ def menu_creacion_dashboard():
         texto_fecha_completo = f"{fi_2}/{fi_1} - {ff_2}/{ff_1}"
         v_fecha_anterior = mod_1.fecha_anterior(ff_1, ff_2)
         v_fecha_inicial = mod_1.fecha_anterior(fi_1, fi_2)
-        print(f"\nInicio de creación del Dashboard para el periodo: ({fi_1}/{fi_2} - {ff_1}/{ff_2})\n\n")
+        periodo = f"{fi_1}/{fi_2} - {ff_1}/{ff_2}"
+        print(f"\nInicio de creación del Dashboard para el periodo: ({periodo})\n\n")
+        periodo = f"{fi_2[:3]}/{fi_1} - {ff_2[:3]}/{ff_1}"
         lista_archivos_anuales = generar_archivos_anuales_dashboard(seleccionar_reporte_dashboard)
         #print(seleccionar_reporte_dashboard)
         if len(lista_archivos_anuales):
@@ -1816,7 +1818,7 @@ def menu_creacion_dashboard():
                     elif i == 8:
                         mod_6.grafica_barras_indicador_tecnico_horas(archivo, fecha)
                     elif i == 9:
-                        mod_6.grafica_barras_indicador_tecnico(archivo)
+                        dic_metricas = mod_6.grafica_barras_indicador_tecnico(archivo, dic_metricas)
             fi,ff,listas_unidas = eleccion_rango_trimestral([(fi_1, fi_2),(ff_1, ff_2)])
             archivo = mod_1.reporte_info_reclamos(fi,ff,listas_unidas, dashboard=True, texto_fecha=texto_fecha)
             if archivo:
@@ -1833,34 +1835,13 @@ def menu_creacion_dashboard():
             dic_tarifas = mod_1.tarifas_distribuidoras_GN()
             if dic_tarifas:
                 dic_metricas["Tarifas_nacionales"] = dic_tarifas
-
-            print("\n","*"*100,"\n")
-            for i, j in dic_metricas.items():
-                if i == "Tarifas_nacionales":
-                    print(i)
-                    for a,b in j.items():
-                        print(a)
-                        print(b)
-                elif i == "tarifas":
-                    print(i)
-                    for a,b in j.items():
-                        print(a)
-                        for c,d in b.items():
-                            print(c)
-                            print(d)
-                            print("\n")
-                else:
-                    print(i)
-                    print(j)
-                    print("\n")
-            print("\n","*"*100,"\n")
             archivo = mod_1.generar_porcentaje_matriz_requerimientos(dashboard=True, texto_fecha=texto_fecha)
             if archivo:
                 mod_6.grafica_matriz_requerimientos(archivo)
             fecha_corte = f"{fecha_corte_tupla[0]} de {lista_meses[int(fecha_corte_tupla[1])-1]} del {fecha_corte_tupla[2]}"
             fecha_corte_anterior = f"{fecha_anio_anterior_tupla[0]} de {lista_meses[int(fecha_anio_anterior_tupla[1])-1]} del {fecha_anio_anterior_tupla[2]}"
             mes_corte = f"{lista_meses[int(fecha_corte_tupla[1])-1]}-{fecha_corte_tupla[2]}"
-            mod_7.crear_slides(mod_1.lista_a_texto(archivo.split("\\")[:-2],"\\"),v_fecha_anterior,texto_fecha_completo, fecha_corte, texto_fecha, dic_metricas,mes_corte,fecha_corte_anterior)
+            mod_7.crear_slides(mod_1.lista_a_texto(archivo.split("\\")[:-2],"\\"),v_fecha_anterior,texto_fecha_completo, fecha_corte, texto_fecha, dic_metricas,mes_corte,fecha_corte_anterior,periodo)
             t_f = time.time()
             print(mod_1.mostrar_tiempo(t_f, t_i))
 
@@ -2409,6 +2390,7 @@ def formato_seleccionar_reporte(dic_info, estado):
     lista_seleccionar_reporte = []
     opciones = {}
     match estado:
+        #Reportes comerciales
         case "reporte_comercial_sector_consumo_mensual":
             ubi = ["Reportes Nuevo SUI"]
             tipo = ["Comercial"]
@@ -2518,6 +2500,35 @@ def formato_seleccionar_reporte(dic_info, estado):
                 for llave, valor in dic_info["Opciones_adicionales"].items():
                     if valor[0]:
                         opciones[llave] = valor[0]
+        #Reportes tarifarios
+        case "reportes_tarifarios_mensual":
+            ubi = ["Reportes Nuevo SUI"]
+            tipo = ["Tarifario"]
+            clasificacion = ["GRT1"]
+            filial = []
+            if "Filial" in dic_info:
+                if dic_info["Filial"]["Todas"][2]:
+                    filial = ["VANTI", "GNCB", "GNCR", "GOR"]
+                else:
+                    for llave, valor in dic_info["Filial"].items():
+                        if valor[2]:
+                            filial.append(llave)
+            if "Fecha" in dic_info:
+                for _, valor in dic_info["Fecha"].items():
+                    reporte = reset_reporte()
+                    if valor[1]:
+                        reporte["anios"] = [valor[0][0]]
+                        reporte["meses"] = [valor[0][1]]
+                        reporte["filial"] = filial
+                        reporte["tipo"] = tipo
+                        reporte["clasificacion"] = clasificacion
+                        reporte["ubicacion"] = ubi
+                        lista_seleccionar_reporte.append(reporte)
+            if "Opciones_adicionales" in dic_info:
+                for llave, valor in dic_info["Opciones_adicionales"].items():
+                    if valor[0]:
+                        opciones[llave] = valor[0]
+        #Reportes técnicos
         case _:
             pass
     dic_info_reporte["Reportes"] = lista_seleccionar_reporte
@@ -2613,6 +2624,10 @@ def activar_funciones(estado, info):
             titulo = "Reporte compensaciones anual"
             info = formato_seleccionar_reporte(info, estado)
             estado = mod_1.run_app(titulo, estado, info)
+        case "reportes_tarifarios_mensual":
+            titulo = "Reportes tarifarios"
+            info = formato_seleccionar_reporte(info, estado)
+            estado = mod_1.run_app(titulo, estado, info)
         case _:
             print(estado, "\n")
             print(info, "\n"*2)
@@ -2628,5 +2643,5 @@ if __name__ == "__main__":
         iniciar_app(crear_app())
     elif eleccion == "2":
         iniciar_menu()"""
-    iniciar_menu()
-    #iniciar_app(crear_app())
+    #iniciar_menu()
+    iniciar_app(crear_app())

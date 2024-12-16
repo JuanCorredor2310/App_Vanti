@@ -4765,7 +4765,7 @@ def tarifas_distribuidoras_GN():
                                 if df_empresa_min["Cuv"][0] < df_empresa_max["Cuv"][0]:
                                     cambio = "red"
                                 elif df_empresa_min["Cuv"][0] > df_empresa_max["Cuv"][0]:
-                                    cambio = "verde"
+                                    cambio = "green"
                                 else:
                                     cambio = "orange"
                                 dic_tarifas[empresa]["Cambio"] = cambio
@@ -4834,7 +4834,7 @@ def lista_porcentaje_df_tarifas(df):
         df["Porcentaje P_perdidas"] = lista_por_perdidas
     return df
 
-def apoyo_reporte_tarifas_mensual(lista_archivos,informar,filial,almacenar_excel=True):
+def apoyo_reporte_tarifas_mensual(lista_archivos,informar,filial,almacenar_excel=True,thread=None):
     for archivo in lista_archivos:
         lista_df = lectura_dataframe_chunk(archivo)
         if lista_df:
@@ -4847,12 +4847,12 @@ def apoyo_reporte_tarifas_mensual(lista_archivos,informar,filial,almacenar_excel
                 df_filtro["Anio_reportado"] = anio_archivo
                 df_filtro["Mes_reportado"] = mes_archivo
             nombre = archivo.replace("_resumen.csv","_reporte_tarifario.csv")
-            almacenar_df_csv_y_excel(df_filtro, nombre, informar, almacenar_excel)
+            almacenar_df_csv_y_excel(df_filtro, nombre, informar, almacenar_excel, thread=thread)
             return df_filtro, nombre
         else:
             return None, None
 
-def reporte_tarifas_mensual(dic_archivos, seleccionar_reporte, informar=True, almacenar_excel=True):
+def reporte_tarifas_mensual(dic_archivos, seleccionar_reporte, informar=True, almacenar_excel=True, thread=None):
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for fecha, lista_archivos in dic_archivos.items():
         lista_df_filiales = []
@@ -4862,10 +4862,10 @@ def reporte_tarifas_mensual(dic_archivos, seleccionar_reporte, informar=True, al
                 if filial in archivo:
                     lista_archivos_filial.append(archivo)
             if len(lista_archivos_filial):
-                df,nombre = apoyo_reporte_tarifas_mensual(lista_archivos_filial,informar,filial)
+                df,nombre = apoyo_reporte_tarifas_mensual(lista_archivos_filial,informar,filial,thread=thread)
                 if nombre:
                     lista_df_filiales.append(df)
-        if len(lista_df_filiales) > 0 and len(lista_filiales_archivo) == 4:
+        if len(lista_df_filiales) and len(lista_filiales_archivo) == 4:
             df_total = pd.concat(lista_df_filiales, ignore_index=True)
             lista_nombre = nombre.split("\\")
             lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[2:],"_",False)
@@ -4873,7 +4873,7 @@ def reporte_tarifas_mensual(dic_archivos, seleccionar_reporte, informar=True, al
             lista_nombre.pop(-2)
             nuevo_nombre = lista_a_texto(lista_nombre,"\\")
             df_total.to_csv(nuevo_nombre, index=False, encoding="utf-8-sig")
-            almacenar_df_csv_y_excel(df_total, nuevo_nombre, informar, almacenar_excel)
+            almacenar_df_csv_y_excel(df_total, nuevo_nombre, informar, almacenar_excel, thread=thread)
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Reportes Técnicos
@@ -4974,7 +4974,7 @@ def apoyo_generar_reporte_indicadores_tecnicos_IRST_mensual(lista_archivos, fili
         df['Observaciones'] = np.where(df['Observaciones'].str.contains('NO CONTR', case=False), 'NO CONTROLADO', df['Observaciones'])
         df['Observaciones'] = df['Observaciones'].str.strip().astype(str)
         df = diferencia_minutos_fechas(df, list(df["Fecha_solicitud"]), list(df["Hora_solicitud"]), list(df["Fecha_llegada_servicio_tecnico"]), list(df["Hora_llegada_servicio_tecnico"]))
-        df['Hora_solicitud'] = pd.to_numeric(df["Hora_solicitud"], errors='coerce').fillna(0).astype(int)//100
+        df['Hora_solicitud'] = df['Hora_solicitud'].apply(lambda x: int(str(x).replace(':', '').replace('/', '').replace('-', '').zfill(4)[:2]))
         lista_eventos = list(df["Observaciones"].unique())
         dic_df_evento = {"Tipo_evento":[],
                         "Cantidad_eventos":[],
@@ -5560,6 +5560,7 @@ def generar_archivos_reporte(reporte, info, thread):
     lista_generar = []
     opciones = {}
     match reporte:
+        #Reportes comerciales
         case "reporte_comercial_sector_consumo_mensual":
             nombre = "Reporte comercial mensual por sector de consumo"
             opciones = info["Opciones"]
@@ -5644,6 +5645,28 @@ def generar_archivos_reporte(reporte, info, thread):
             nombre = "Reporte compensaciones anual unión"
             thread.message_sent.emit(f" ", "white")
             thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+        #Reportes tarifarios
+        case "reportes_tarifarios_mensual":
+            nombre = "Reporte tarifario mensual"
+            opciones = info["Opciones"]
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread)
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        #Reportes técnicos
         case _:
             pass
     return lista_generar, opciones
@@ -5651,6 +5674,7 @@ def generar_archivos_reporte(reporte, info, thread):
 def generar_reporte(reporte, info, thread):
     info_reporte = None
     match reporte:
+        #Reportes comerciales
         case "generar_reporte_comercial_sector_consumo_mensual":
             opciones = info["Opciones"]
             sumatoria = False
@@ -5707,6 +5731,12 @@ def generar_reporte(reporte, info, thread):
             proceso,dic_archivos_anual = generar_archivos_extra_anual(info, reporte)
             if proceso:
                 union_archivos_mensuales_anual(dic_archivos_anual, info, informar=True, thread=thread)
+        #Reportes tarifarios
+        case "generar_reportes_tarifarios_mensual":
+            for valor in info["Archivos"]:
+                dic = {valor[0]:valor[2]}
+                reporte_tarifas_mensual(dic, valor[1], informar=True, thread=thread)
+        #Reportes técnicos
         case _:
             pass
     return info_reporte
@@ -5764,6 +5794,7 @@ class Envio_mensajes(QThread):
                                 self.message_sent.emit(f"\nNo existe el archivo {info}\n", "red")
                             else:
                                 self.message_sent.emit(f"\n{info}\n", "green")
+                #Reportes comerciales
                 case "reporte_comercial_sector_consumo_mensual":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
@@ -5805,6 +5836,17 @@ class Envio_mensajes(QThread):
                 case "generar_reporte_compensaciones_anual_union":
                     if self.info:
                         generar_reporte(self.estado, self.info["Reporte"], self)
+                #Reportes tarifarios
+                case "reportes_tarifarios_mensual":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                        dic_info["Opciones"] = opciones
+                case "generar_reportes_tarifarios_mensual":
+                    if self.info:
+                        generar_reporte(self.estado, self.info, self)
+                #Reportes técnicos
                 case _:
                     print("Estado no activo")
             self.message_sent.emit("\nFin de procesamiento de archivos\n", "green")
