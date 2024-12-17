@@ -4385,6 +4385,13 @@ def reporte_comportamiento_patrimonial(fi,ff,listas_unidas):
             df_total = pd.concat(lista_df, ignore_index=True)
             lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Cumplimientos_Regulatorios"]
             nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"porcentaje_patrimonial_{f_inicial[0]}_{f_inicial[1]}_{f_final[0]}_{f_final[1]}")
+            lista_nombre = nuevo_nombre.split("\\")
+            ext = lista_nombre[-1]
+            lista_nombre[-1] = "KPIs"
+            nombre_carpeta = lista_a_texto(lista_nombre, "\\")
+            crear_carpeta(nombre_carpeta)
+            lista_nombre.append(ext)
+            nuevo_nombre = lista_a_texto(lista_nombre, "\\")
             almacenar_df_csv_y_excel(df_total,nuevo_nombre)
             return nuevo_nombre
         else:
@@ -4394,7 +4401,7 @@ def reporte_comportamiento_patrimonial(fi,ff,listas_unidas):
         print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
         return None
 
-def reporte_info_reclamos(fi,ff,listas_unidas, dashboard=False, texto_fecha=None):
+def reporte_info_reclamos(fi,ff,listas_unidas, dashboard=False, texto_fecha=None, thread=None):
     nombre = "info_trimestral"
     hoja = "relacion_reclamos_facturacion"
     archivo = ruta_constantes+"\\"+f"{nombre}.xlsx"
@@ -4427,18 +4434,31 @@ def reporte_info_reclamos(fi,ff,listas_unidas, dashboard=False, texto_fecha=None
             if not dashboard:
                 lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Cumplimientos_Regulatorios"]
                 nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"porcentaje_reclamos_facturacion_10000_{f_inicial[0]}_{f_inicial[1]}_{f_final[0]}_{f_final[1]}")
-                almacenar_df_csv_y_excel(df_total,nuevo_nombre)
+                lista_nombre = nuevo_nombre.split("\\")
+                ext = lista_nombre[-1]
+                lista_nombre[-1] = "KPIs"
+                nombre_carpeta = lista_a_texto(lista_nombre, "\\")
+                crear_carpeta(nombre_carpeta)
+                lista_nombre.append(ext)
+                nuevo_nombre = lista_a_texto(lista_nombre, "\\")
+                almacenar_df_csv_y_excel(df_total,nuevo_nombre,thread=thread)
                 return nuevo_nombre
             else:
                 lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", texto_fecha, "Cumplimientos_Regulatorios"]
                 nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"porcentaje_reclamos_facturacion_10000")
-                almacenar_df_csv_y_excel(df_total,nuevo_nombre)
+                almacenar_df_csv_y_excel(df_total,nuevo_nombre,thread=thread)
                 return nuevo_nombre
         else:
-            print(f"No es posible acceder al archivo {archivo}.")
+            if thread:
+                thread.message_sent.emit(f"No es posible acceder al archivo {archivo}.", "red")
+            else:
+                print(f"No es posible acceder al archivo {archivo}.")
             return None,None
     else:
-        print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
+        if thread:
+            thread.message_sent.emit(f"No existe el archivo {archivo}. No es posible generar el reporte.", "red")
+        else:
+            print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
         return None,None
 
 def convertir_fecha_2(fecha):
@@ -4448,7 +4468,7 @@ def convertir_fecha_2(fecha):
     except (ValueError, TypeError):
         return pd.NaT
 
-def generar_porcentaje_matriz_requerimientos(dashboard=False, texto_fecha=None):
+def generar_porcentaje_matriz_requerimientos(dashboard=False, texto_fecha=None, thread=None):
     nombre = "Matriz requerimientos"
     hoja = "BD"
     archivo = ruta_constantes+"\\"+f"{nombre}.xlsm"
@@ -4463,13 +4483,13 @@ def generar_porcentaje_matriz_requerimientos(dashboard=False, texto_fecha=None):
                 df = df[["fecha_de_recibido","entidad"]]
             except BaseException:
                 texto = lista_a_texto(["Fecha de recibido","Entidad"],", ")
-                print(f"Algunas de las columnas {texto} no se encunetran en el archivo.")
+                if thread:
+                    thread.message_sent.emit(f"Algunas de las columnas {texto} no se encunetran en el archivo.", "red")
+                else:
+                    print(f"Algunas de las columnas {texto} no se encunetran en el archivo.")
                 return None
             df['fecha_de_recibido'] = (
-                df['fecha_de_recibido']
-                .fillna("")  # Reemplazar NaN con cadena vacía
-                .astype(str)  # Convertir a string
-                .apply(lambda x: x.replace(" 00:00:00", "").strip()))
+                df['fecha_de_recibido'].fillna("").astype(str).apply(lambda x: x.replace(" 00:00:00", "").strip()))
             df['fecha_de_recibido'] = (
                 df['fecha_de_recibido'].apply(convertir_fecha_2))
             df_filtrado = df[df['fecha_de_recibido'].dt.year == anio_actual]
@@ -4499,21 +4519,34 @@ def generar_porcentaje_matriz_requerimientos(dashboard=False, texto_fecha=None):
             if not dashboard:
                 lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Cumplimientos_Regulatorios"]
                 nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"porcentaje_matriz_requerimientos")
-                almacenar_df_csv_y_excel(df,nuevo_nombre)
+                lista_nombre = nuevo_nombre.split("\\")
+                ext = lista_nombre[-1]
+                lista_nombre[-1] = "KPIs"
+                nombre_carpeta = lista_a_texto(lista_nombre, "\\")
+                crear_carpeta(nombre_carpeta)
+                lista_nombre.append(ext)
+                nuevo_nombre = lista_a_texto(lista_nombre, "\\")
+                almacenar_df_csv_y_excel(df,nuevo_nombre, thread=thread)
                 return nuevo_nombre
             else:
                 lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", texto_fecha, "Cumplimientos_Regulatorios"]
                 nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"porcentaje_matriz_requerimientos")
-                almacenar_df_csv_y_excel(df,nuevo_nombre)
+                almacenar_df_csv_y_excel(df,nuevo_nombre, thread=thread)
                 return nuevo_nombre
         else:
-            print(f"No es posible acceder al archivo {archivo}.")
+            if thread:
+                thread.message_sent.emit(f"No es posible acceder al archivo {archivo}.", "red")
+            else:
+                print(f"No es posible acceder al archivo {archivo}.")
             return None
     else:
-        print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
+        if thread:
+            thread.message_sent.emit(f"No existe el archivo {archivo}. No es posible generar el reporte.", "red")
+        else:
+            print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
         return None
 
-def gastos_AOM(dashboard=False, texto_fecha=None):
+def gastos_AOM(dashboard=False, texto_fecha=None, thread=None):
     nombre = "BD"
     anio_actual = fecha_actual.year
     archivo_csv = ruta_constantes+"\\"+f"{nombre}.csv"
@@ -4535,7 +4568,10 @@ def gastos_AOM(dashboard=False, texto_fecha=None):
                 df_prueba_2 = df_prueba[columnas_AOM]
             except BaseException:
                 texto = lista_a_texto(columnas_AOM, ", ")
-                print(f"Algunas de las columnas {texto} no se encuentran en el archivo {nombre}.csv")
+                if thread:
+                    thread.message_sent.emit(f"Algunas de las columnas {texto} no se encuentran en el archivo {nombre}.csv", "red")
+                else:
+                    print(f"Algunas de las columnas {texto} no se encuentran en el archivo {nombre}.csv")
                 return None
             dic = {}
             for df in lista_df:
@@ -4602,12 +4638,19 @@ def gastos_AOM(dashboard=False, texto_fecha=None):
             if not dashboard:
                 lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", str(anio_actual-1), "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Cumplimientos_Regulatorios"]
                 nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"Gastos_AOM_{anio_actual-1}")
-                almacenar_df_csv_y_excel(df_AOM,nuevo_nombre)
+                lista_nombre = nuevo_nombre.split("\\")
+                ext = lista_nombre[-1]
+                lista_nombre[-1] = "KPIs"
+                nombre_carpeta = lista_a_texto(lista_nombre, "\\")
+                crear_carpeta(nombre_carpeta)
+                lista_nombre.append(ext)
+                nuevo_nombre = lista_a_texto(lista_nombre, "\\")
+                almacenar_df_csv_y_excel(df_AOM,nuevo_nombre, thread=thread)
                 return nuevo_nombre
             else:
                 lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", texto_fecha, "Cumplimientos_Regulatorios"]
                 nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"Gastos_AOM")
-                almacenar_df_csv_y_excel(df_AOM,nuevo_nombre)
+                almacenar_df_csv_y_excel(df_AOM,nuevo_nombre, thread=thread)
                 return nuevo_nombre
     elif os.path.exists(archivo):
         lista_hojas = mod_5.hojas_disponibles(archivo)
@@ -4619,19 +4662,28 @@ def gastos_AOM(dashboard=False, texto_fecha=None):
         if proceso:
             df, proceso = mod_5.lectura_hoja_xlsx(archivo, hoja)
             if proceso:
-                almacenar_df_csv_y_excel(df, ruta_constantes+"\\"+f"{nombre}.csv", almacenar_excel=False)
+                almacenar_df_csv_y_excel(df, ruta_constantes+"\\"+f"{nombre}.csv", almacenar_excel=False, thread=thread)
                 gastos_AOM()
             else:
-                print(f"No es posible a acceder al archivo {archivo}.")
+                if thread:
+                    thread.message_sent.emit(f"No se pudo leer la hoja {hoja} del archivo {nombre}.xlsx", "red")
+                else:
+                    print(f"No es posible a acceder al archivo {archivo}.")
                 return None
         else:
-            print(f"No existe un hoja {hoja} en el archivo {nombre}.xlsx")
+            if thread:
+                thread.message_sent.emit(f"No existe un hoja {hoja} en el archivo {nombre}.xlsx", "red")
+            else:
+                print(f"No existe un hoja {hoja} en el archivo {nombre}.xlsx")
             return None
     else:
-        print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
+        if thread:
+            thread.message_sent.emit(f"No existe el archivo {archivo}. No es posible generar el reporte.", "red")
+        else:
+            print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
         return None
 
-def contribuciones_MME(dashboard=False, texto_fecha=None):
+def contribuciones_MME(dashboard=False, texto_fecha=None, thread=None):
     nombre = "subsidios"
     anio_actual = fecha_actual.year
     mes_actual = lista_meses[fecha_actual.month-1]
@@ -4695,10 +4747,24 @@ def contribuciones_MME(dashboard=False, texto_fecha=None):
                     if not dashboard:
                         lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Cumplimientos_Regulatorios"]
                         nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"subsidios_KPI")
-                        almacenar_df_csv_y_excel(df_12_meses,nuevo_nombre)
+                        lista_nombre = nuevo_nombre.split("\\")
+                        ext = lista_nombre[-1]
+                        lista_nombre[-1] = "KPIs"
+                        nombre_carpeta = lista_a_texto(lista_nombre, "\\")
+                        crear_carpeta(nombre_carpeta)
+                        lista_nombre.append(ext)
+                        nuevo_nombre = lista_a_texto(lista_nombre, "\\")
+                        almacenar_df_csv_y_excel(df_12_meses,nuevo_nombre, thread=thread)
                         lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", str(anio_actual), "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Cumplimientos_Regulatorios"]
                         nuevo_nombre_1 = encontrar_ubi_archivo(lista_ubi, f"subsidios_KPI_anio")
-                        almacenar_df_csv_y_excel(df_meses_anio,nuevo_nombre_1)
+                        lista_nombre = nuevo_nombre_1.split("\\")
+                        ext = lista_nombre[-1]
+                        lista_nombre[-1] = "KPIs"
+                        nombre_carpeta = lista_a_texto(lista_nombre, "\\")
+                        crear_carpeta(nombre_carpeta)
+                        lista_nombre.append(ext)
+                        nuevo_nombre_1 = lista_a_texto(lista_nombre, "\\")
+                        almacenar_df_csv_y_excel(df_meses_anio,nuevo_nombre_1, thread=thread)
                         return nuevo_nombre, nuevo_nombre_1
                     else:
                         lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", texto_fecha, "Cumplimientos_Regulatorios"]
@@ -4706,18 +4772,27 @@ def contribuciones_MME(dashboard=False, texto_fecha=None):
                         almacenar_df_csv_y_excel(df_12_meses,nuevo_nombre)
                         lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", str(anio_actual), "REPORTES_GENERADOS_APLICATIVO", "Compilado", texto_fecha, "Cumplimientos_Regulatorios"]
                         nuevo_nombre_1 = encontrar_ubi_archivo(lista_ubi, f"subsidios_KPI_anio")
-                        almacenar_df_csv_y_excel(df_meses_anio,nuevo_nombre_1)
+                        almacenar_df_csv_y_excel(df_meses_anio,nuevo_nombre_1, thread=thread)
                         return nuevo_nombre, nuevo_nombre_1
                 else:
                     return None, None
             else:
-                print("No hay datos disponibles para la filial GRUPO.")
+                if thread:
+                    thread.message_sent.emit("\nNo hay datos disponibles para la filial GRUPO.\n", "red")
+                else:
+                    print("No hay datos disponibles para la filial GRUPO.")
                 return None, None
         else:
-            print(f"No es posible a acceder al archivo {archivo_csv}, revisar la estructura del mismo.")
+            if thread:
+                thread.message_sent.emit(f"No es posible a acceder al archivo {archivo_csv}, revisar la estructura del mismo.", "red")
+            else:
+                print(f"No es posible a acceder al archivo {archivo_csv}, revisar la estructura del mismo.")
             return None, None
     else:
-        print(f"No existe el archivo {archivo_csv}. No es posible generar el reporte.")
+        if thread:
+            thread.message_sent.emit(f"No existe el archivo {archivo_csv}. No es posible generar el reporte.", "red")
+        else:
+            print(f"No existe el archivo {archivo_csv}. No es posible generar el reporte.")
         return None, None
 
 def tarifas_distribuidoras_GN():
@@ -4788,6 +4863,43 @@ def tarifas_distribuidoras_GN():
         print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
         return None
 
+def cumplimientos_SUI_distribuidoras():
+    nombre = "Cumplimientos_SUI"
+    hoja = nombre
+    archivo = ruta_constantes+"\\"+f"{nombre}.xlsx"
+    if os.path.exists(archivo):
+        lista_hojas = mod_5.hojas_disponibles(archivo)
+        proceso = False
+        for i in lista_hojas:
+            if hoja in i:
+                hoja = i
+                proceso = True
+        if proceso:
+            df, proceso = mod_5.lectura_hoja_xlsx(archivo, hoja)
+            if proceso:
+                df["Fecha_act"] = pd.to_datetime(df['Fecha_act'])
+                fecha_reciente = max(list(df["Fecha_act"].unique()))
+                df_fecha_reciente = df[df["Fecha_act"] == fecha_reciente].reset_index(drop=True)
+                lista_estado = list(df_fecha_reciente["Estado"].unique())
+                dic = {grupo_vanti:{"Certificado":0,"Pendiente":0},
+                        "Distribuidoras":{"Certificado":0,"Pendiente":0}}
+                df_vanti = df_fecha_reciente[df_fecha_reciente['Distribuidora'].isin(lista_filiales)]
+                for i in lista_estado:
+                    llave = "Certificado"
+                    if i == "Pendiente":
+                        llave = "Pendiente"
+                    dic["Distribuidoras"][llave] += df_fecha_reciente[df_fecha_reciente["Estado"]==i]["Cantidad"].sum()
+                    dic[grupo_vanti][llave] += df_vanti[df_vanti["Estado"]==i]["Cantidad"].sum()
+                return dic
+            else:
+                print(f"No es posible a acceder al archivo {archivo}.")
+                return None
+        else:
+            print(f"No existe un hoja {hoja} en el archivo {nombre}.xlsx")
+            return None
+    else:
+        print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
+        return None
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Reportes Tarifarios
@@ -5152,7 +5264,7 @@ def encontrar_ubi_archivo(lista, nombre):
                 ruta_actual = carpeta
     return ruta_actual+"\\"+nombre+".csv"
 
-def generar_porcentaje_cumplimientos_regulatorios(dashboard=False, texto_fecha=None):
+def generar_porcentaje_cumplimientos_regulatorios(dashboard=False, texto_fecha=None, thread=None):
     nombre = "Reporte SUI"
     archivo = ruta_constantes+"\\"+f"{nombre}.xlsx"
     if os.path.exists(archivo):
@@ -5187,18 +5299,31 @@ def generar_porcentaje_cumplimientos_regulatorios(dashboard=False, texto_fecha=N
             if not dashboard:
                 lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", str(anio_actual), "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Cumplimientos_Regulatorios"]
                 nuevo_nombre = encontrar_ubi_archivo(lista_ubi, "porcentaje_cumplimientos_regulatorios")
-                almacenar_df_csv_y_excel(df_porcentaje,nuevo_nombre)
+                lista_nombre = nuevo_nombre.split("\\")
+                ext = lista_nombre[-1]
+                lista_nombre[-1] = "KPIs"
+                nombre_carpeta = lista_a_texto(lista_nombre, "\\")
+                crear_carpeta(nombre_carpeta)
+                lista_nombre.append(ext)
+                nuevo_nombre = lista_a_texto(lista_nombre, "\\")
+                almacenar_df_csv_y_excel(df_porcentaje,nuevo_nombre, thread=thread)
                 return nuevo_nombre
             else:
                 lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", texto_fecha, "Cumplimientos_Regulatorios"]
                 nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"porcentaje_cumplimientos_regulatorios")
-                almacenar_df_csv_y_excel(df_porcentaje,nuevo_nombre)
+                almacenar_df_csv_y_excel(df_porcentaje,nuevo_nombre, thread=thread)
                 return nuevo_nombre
         else:
-            print(f"No es posible acceder al archivo {archivo}.")
+            if thread:
+                thread.message_sent.emit(f"No es posible acceder al archivo {archivo}.", "red")
+            else:
+                print(f"No es posible acceder al archivo {archivo}.")
             return None
     else:
-        print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
+        if thread:
+            thread.message_sent.emit(f"No existe el archivo {archivo}. No es posible generar el reporte.", "red")
+        else:
+            print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
         return None
 
 # * -------------------------------------------------------------------------------------------------------
@@ -6146,6 +6271,18 @@ class Envio_mensajes(QThread):
                 case "generar_reporte_IRST_anual_union":
                     if self.info:
                         generar_reporte(self.estado, self.info["Reporte"], self)
+                #KPIs
+                case "cumplimientos_regulatorios":
+                    generar_porcentaje_cumplimientos_regulatorios(thread=self)
+                case "matriz_requerimientos":
+                    generar_porcentaje_matriz_requerimientos(thread=self)
+                case "gastos_AOM":
+                    gastos_AOM(thread=self)
+                case "contribuciones_MME":
+                    contribuciones_MME(thread=self)
+                case "reclamos_facturas":
+                    if self.info:
+                        reporte_info_reclamos(self.info["fi"], self.info["ff"], self.info["listas_unidas"], thread=self)
                 case _:
                     print("Estado no activo")
             self.message_sent.emit("\nFin de procesamiento de archivos\n", "green")

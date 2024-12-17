@@ -33,16 +33,16 @@ meta_kpi_sub = "1,4"
 valor_x = 10
 dic_ubi_tarifas = {"VANTI":{23:[[(1155-valor_x,660),(1390-valor_x,895)],(1375,695)],
                             113:[[(1155-valor_x,180),(1390-valor_x,415)],(1375,240)],
-                            139:[[(0,180),(235,415)],(205,240)],
-                            149:[[(0,660),(235,895)],(205,695)]},
-                    "GNCB":{106:[[(555-8,800),(790-8,1035)],(770,840)],
-                            1825:[[(1120-valor_x,545),(1355,780)],(1350,580)],
-                            169:[[(0,545),(235,780)],(210,580)]},
+                            139:[[(0,180),(235,415)],(245,240)],
+                            149:[[(0,660),(235,895)],(245,695)]},
+                    "GNCB":{106:[[(555-8,800),(790-8,1035)],(780,840)],
+                            1825:[[(1120-valor_x,545),(1355,780)],(1425,580)],
+                            169:[[(0,545),(235,780)],(255,585)]},
                     "GNCR":{80:[[(1295,625),(1530,860)],(1175,425)],
                             21:[[(150,625),(385,860)],(45,425)]},
-                    "GOR":{11:[[(1145-valor_x,550),(1380-valor_x,785)],(1350,580)],
-                            9:[[(580-valor_x,800),(815-valor_x,1035)],(770,840)],
-                            16:[[(0,550),(235,785)],(215,570)]}}
+                    "GOR":{11:[[(1145-valor_x,550),(1380-valor_x,785)],(1365,580)],
+                            9:[[(580-valor_x,800),(815-valor_x,1035)],(810,840)],
+                            16:[[(0,550),(235,785)],(250,570)]}}
 dic_colores_tarifas = {23:dic_colores["naranja_v"],
                         113:dic_colores["azul_agua_v"],
                         139:dic_colores["verde_v"],
@@ -134,7 +134,12 @@ def slide_portada(ubi,fecha,fecha_actual,ubi_carpeta,texto_fecha, dic_metricas, 
         dibujo.text((1440,890), str(dic_metricas["cantidad_eventos"]), fill=dic_colores["morado_v"], font=ImageFont.truetype(ruta_fuente, 60))
         dibujo.text((850,790), str(dic_metricas["usuarios_compensados"]), fill=dic_colores["morado_v"], font=ImageFont.truetype(ruta_fuente, 60))
         dibujo.text((810,890), "$ "+str(dic_metricas["valor_compensado"]), fill=dic_colores["morado_v"], font=ImageFont.truetype(ruta_fuente, 60))
-
+        valor = conversion_decimales(str(round(100-((dic_metricas["Cumplimientos_SUI"]["Distribuidoras"]["Pendiente"]/dic_metricas["Cumplimientos_SUI"]["Distribuidoras"]["Certificado"])*100),2)))+" %"
+        texto_rotado = Image.new('RGBA', (140, 50), (255, 255, 255, 0))
+        draw = ImageDraw.Draw(texto_rotado)
+        draw.text((0, 0), valor, fill=dic_colores["morado_v"], font=ImageFont.truetype(ruta_fuente_negrilla, 30))
+        texto_rotado = texto_rotado.rotate(90, expand=True)
+        imagen.paste(texto_rotado, (98, 470), texto_rotado)
         ubi_imagen = ubi_carpeta+"\\03. Cumplimientos_Regulatorios\\Imagenes\\"
         esp = [(170,440),(620,440),(620,670),(170,670)]
         nueva_imagen = ubi_imagen+"porcentaje_cumplimientos_regulatorios_grupo_vanti.png"
@@ -178,7 +183,7 @@ def cargar_imagen(imagen, nombre_imagen, esp):
 
 def slide_def_1(ubi,fecha,fecha_actual, dic_metricas,mes_corte,fecha_anio_anterior,c_slide):
     try:
-        lista_plantilla = ["p2","p3","p4","p5","p6"]
+        lista_plantilla = ["p2","p3","p6","p29","p4","p5"]
         for i in lista_plantilla:
             plantilla = ruta_imagenes+f"{i}.png"
             imagen = Image.open(plantilla)

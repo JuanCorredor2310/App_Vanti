@@ -28,7 +28,7 @@ import archivo_interfaz as mod_9
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Constantes globales
 # * -------------------------------------------------------------------------------------------------------
-global version, lista_meses, lista_empresas,lista_anios,dic_reportes,lista_reportes_generales,reportes_generados,lista_reportes_totales,t_i,t_f,lista_reportes_generados,cantidad_datos_estilo_excel,fecha_actual,dic_meses,dic_filiales,trimestre_mes,anio_actual,fecha_actual_texto,lista_archivo_desviaciones,ruta_fuente,ruta_fuente_negrilla,fecha_corte_tupla,fecha_anio_anterior_tupla
+global version, lista_meses, lista_empresas,lista_anios,dic_reportes,lista_reportes_generales,reportes_generados,lista_reportes_totales,t_i,t_f,lista_reportes_generados,cantidad_datos_estilo_excel,fecha_actual,dic_meses,dic_filiales,trimestre_mes,anio_actual,fecha_actual_texto,lista_archivo_desviaciones,ruta_fuente,ruta_fuente_negrilla,fecha_corte_tupla,fecha_anio_anterior_tupla,grupo_vanti
 version = "1.0"
 lista_anios = list(mod_2.leer_archivos_json(ruta_constantes+"anios.json")["datos"].values())
 dic_meses = mod_2.leer_archivos_json(ruta_constantes+"tabla_18.json")["datos"]
@@ -59,6 +59,7 @@ fecha_anio_anterior_tupla = (dia_corte,mes_corte,anio_corte)
 lista_archivo_desviaciones = ["DS56","DS57","DS58"]
 ruta_fuente = ruta_fuentes + "Muli.ttf"
 ruta_fuente_negrilla = ruta_fuentes + "Muli-Bold.ttf"
+grupo_vanti = "Grupo Vanti"
 
 def crear_lista_reportes_totales():
     dic = mod_2.leer_archivos_json(ruta_constantes+"/reportes_disponibles.json")["datos"]
@@ -1742,6 +1743,10 @@ def menu_cumplimientos_reportes(option, valor):
         mod_1.tarifas_distribuidoras_GN()
         t_f = time.time()
         mod_1.mostrar_tiempo(t_f, t_i)
+    #? Cumplimientos SUI (Distribuidoras de GN)
+    elif option == "7":
+        print(f"\nInicio de procesamiento para: {valor}\n\n")
+        mod_1.cumplimientos_SUI_distribuidoras()
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Creación DASHBOARD
@@ -1786,7 +1791,6 @@ def menu_creacion_dashboard():
         print(f"\nInicio de creación del Dashboard para el periodo: ({periodo})\n\n")
         periodo = f"{fi_2[:3]}/{fi_1} - {ff_2[:3]}/{ff_1}"
         lista_archivos_anuales = generar_archivos_anuales_dashboard(seleccionar_reporte_dashboard)
-        #print(seleccionar_reporte_dashboard)
         if len(lista_archivos_anuales):
             dic_metricas = {}
             for i in range(len(lista_archivos_anuales)):
@@ -1835,6 +1839,9 @@ def menu_creacion_dashboard():
             dic_tarifas = mod_1.tarifas_distribuidoras_GN()
             if dic_tarifas:
                 dic_metricas["Tarifas_nacionales"] = dic_tarifas
+            dic_distribuidoras = mod_1.cumplimientos_SUI_distribuidoras()
+            if dic_distribuidoras:
+                dic_metricas["Cumplimientos_SUI"] = dic_distribuidoras
             archivo = mod_1.generar_porcentaje_matriz_requerimientos(dashboard=True, texto_fecha=texto_fecha)
             if archivo:
                 mod_6.grafica_matriz_requerimientos(archivo)
@@ -1906,6 +1913,7 @@ def menu_inicial(lista, nombre):
                     "Gastos AOM (Administrativos, Operativos y Mantenimiento)",
                     "Pagos contribuciones MME",
                     "Tarifas distribuidoras de GN en Colombia",
+                    "Cumplimientos SUI (Distribuidoras de GN)",
                     "Regresar al menú inicial"]
         option,valor = opcion_menu_valida(lista_menu, "KPIs", False)
         menu_cumplimientos_reportes(option,valor)
@@ -2706,6 +2714,11 @@ def formato_seleccionar_reporte(dic_info, estado):
                 for llave, valor in dic_info["Opciones_adicionales"].items():
                     if valor[0]:
                         opciones[llave] = valor[0]
+        case "reclamos_facturas":
+            rango = fechas_anuales(dic_info["Fecha"])
+            dic_info_reporte["fi"] = rango[0]
+            dic_info_reporte["ff"] = rango[1]
+            dic_info_reporte["listas_unidas"] = dic_info["Trimestres"]
         case _:
             pass
     dic_info_reporte["Reportes"] = lista_seleccionar_reporte
@@ -2834,6 +2847,24 @@ def activar_funciones(estado, info):
             titulo = "Reportes indicador IRST anual"
             info = formato_seleccionar_reporte(info, estado)
             estado = mod_1.run_app(titulo, estado, info)
+        #KPIs
+        case "cumplimientos_regulatorios":
+            titulo = "Porcentaje cumplimientos regulatorios"
+            estado = mod_1.run_app(titulo, estado)
+        case "matriz_requerimientos":
+            titulo = "Informaciones matriz de requerimientos"
+            estado = mod_1.run_app(titulo, estado)
+        case "gastos_AOM":
+            titulo = f"Información gastos AOM {grupo_vanti}"
+            estado = mod_1.run_app(titulo, estado)
+        case "contribuciones_MME":
+            titulo = "Información CxC por parte del MME"
+            estado = mod_1.run_app(titulo, estado)
+        case "reclamos_facturas":
+            titulo = "Información reclamos por cada 10.000 facturas"
+            info = formato_seleccionar_reporte(info, estado)
+            estado = mod_1.run_app(titulo, estado, info)
+        #Dashboard
         case _:
             print(estado, "\n")
             print(info, "\n"*2)
