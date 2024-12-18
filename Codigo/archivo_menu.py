@@ -431,7 +431,6 @@ def menu_opciones_archivos(option, valor):
         elif option_1 == "2":
             eliminar = True
         t_i = time.time()
-        print(seleccionar_reporte)
         lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, [])
         lista_archivos.extend(mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo.upper(), []))
         if len(lista_archivos) == 0:
@@ -2394,6 +2393,34 @@ def formato_seleccionar_reporte(dic_info, estado):
     lista_seleccionar_reporte = []
     opciones = {}
     match estado:
+        #Edición de archivos
+        case "convertir_archivos":
+            if "Opciones_adicionales" in dic_info:
+                for llave, valor in dic_info["Opciones_adicionales"].items():
+                    if valor[0]:
+                        opciones[llave] = valor[0]
+            reporte = {}
+            reporte["ubicacion"] = []
+            for llave, valor in dic_info["Carpetas"].items():
+                if valor[0]:
+                    reporte["ubicacion"].append(llave)
+            reporte["tipo"] = []
+            for llave, valor in dic_info["Categoria"].items():
+                if valor[0]:
+                    reporte["tipo"].append(llave)
+            reporte["clasificacion"] = []
+            for _, dic in dic_info["Reporte"].items():
+                for llave, valor in dic.items():
+                    if valor[0]:
+                        reporte["clasificacion"].append(llave)
+            reporte["filial"] = ["VANTI", "GNCB", "GNCR", "GOR"]
+            reporte["fecha_personalizada"] = None
+            for _, valor in dic_info["Fecha"].items():
+                if valor[1]:
+                    reporte_copia = reporte.copy()
+                    reporte_copia["anios"] = [valor[0][0]]
+                    reporte_copia["meses"] = [valor[0][1]]
+                    lista_seleccionar_reporte.append(reporte_copia)
         #Reportes comerciales
         case "reporte_comercial_sector_consumo_mensual":
             ubi = ["Reportes Nuevo SUI"]
@@ -2763,8 +2790,6 @@ def mostrar_inicio_app():
     mod_1.mostrar_titulo("Regulación, Márgenes y Tarifas", None, "down")
     iniciar_menu()
 
-
-
 # TODO: Pendientes Urgentes
     #Creación de mapa de suspensiones
 
@@ -2812,6 +2837,10 @@ def activar_funciones(estado, info):
             estado = mod_1.run_app(titulo, estado, info)
         case "agregar_reporte":
             titulo = "Agregar nuevo reporte"
+            estado = mod_1.run_app(titulo, estado, info)
+        case "convertir_archivos":
+            titulo = "Conversión de archivos"
+            info = formato_seleccionar_reporte(info, estado)
             estado = mod_1.run_app(titulo, estado, info)
         #Reportes comerciales
         case "reporte_comercial_sector_consumo_mensual":

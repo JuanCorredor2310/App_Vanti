@@ -1784,15 +1784,14 @@ def seleccionar_reporte_categoria(app, window, central_widget, dimensiones, esta
             if texto == "volver":
                 if estado_anterior == "menu_inicial":
                     estado, info = menu_config_inicial(app, window, central_widget, dimensiones)
-                elif estado_anterior == "seleccionar_carpetas":
-                    estado, info = seleccionar_carpetas(app, window, central_widget, dimensiones, estado=estado, info=info)
                 else:
-                    estado, info = menu_seleccion(app, window, central_widget, dimensiones)
+                    estado, info = seleccionar_carpetas(app, window, central_widget, dimensiones, estado=estado, info=info)
             elif texto == "aceptar":
                 if estado_anterior == "menu_inicial":
                     info["Reporte"] = dic_reportes
                 elif estado == "convertir_archivos":
                     info["Reporte"] = dic_reportes
+                    info["Categoria"] = dic_categorias
                     estado, info = seleccionar_periodo(app, window, central_widget, dimensiones, estado, info, estado_anterior="seleccionar_reporte_categoria")
                 else:
                     estado, info = seleccionar_carpetas(app, window, central_widget, dimensiones, estado, info)
@@ -1957,10 +1956,15 @@ def seleccionar_periodo(app, window, central_widget, dimensiones, estado=None, i
             if texto == "volver":
                 if estado_anterior == "seleccionar_reporte_categoria":
                     estado, info = seleccionar_reporte_categoria(app, window, central_widget, dimensiones, estado=estado, info=info)
+                if estado == "convertir_archivos":
+                    estado, info = seleccionar_reporte_categoria(app, window, central_widget, dimensiones, estado=estado, info=info)
                 else:
                     estado, info = menu_inicial(app, window, central_widget, dimensiones)
             elif texto == "aceptar":
                 info["Fecha"] = dic_fechas
+                if estado == "convertir_archivos":
+                    opciones = {"conservar_archivos": True}
+                    estado, info = opciones_adicionales(app, window, central_widget, dimensiones, estado=estado, info=info, estado_anterior="seleccionar_periodo", opciones=opciones)
     boton_1.clicked.connect(lambda:on_button_clicked("aceptar"))
     boton_2.clicked.connect(lambda:cambiar_botones_x(boton_2))
     boton_3.clicked.connect(lambda:limpiar_botones(boton_3))
@@ -2197,10 +2201,7 @@ def seleccionar_carpetas(app, window, central_widget, dimensiones, estado=None, 
                 esconder_label(valor[1])
                 esconder_label(valor[2])
             if texto == "volver":
-                if estado_anterior == "menu_edicion_archivos":
-                    estado, info = menu_edicion_archivos(app, window, central_widget, dimensiones, estado=estado, info=info)
-                else:
-                    estado, info = seleccionar_reporte(app, window, central_widget, dimensiones, estado, info)
+                estado, info = menu_edicion_archivos(app, window, central_widget, dimensiones, estado=estado, info=info)
             elif texto == "aceptar":
                 info["Carpetas"] = dic_carpetas
                 if estado == "convertir_archivos":
@@ -2285,17 +2286,19 @@ def lista_codigo_DANE(texto):
 def opciones_adicionales(app, window, central_widget, dimensiones, opciones={}, estado=None, info=None, estado_anterior=None):
     dic_adicionales_texto = {"codigo_DANE":"Código DANE", "valor_facturado":"Valor total facturado", "cantidad_filas":"Cantidad de filas", "inventario":"Inventario de suscriptores", "regenerar":"Regenerar archivos necesarios (form_estandar, resumen)",
                         "reportes_mensuales":"Reportes mensuales", "texto_regenerar":"_form_estandar, _resumen",
-                    "usuarios_activos":"Info. usuarios activos", "sumatoria":f"Sumatoria {grupo_vanti}","facturas":"Cantidad de facturas emitidas"}
+                    "usuarios_activos":"Info. usuarios activos", "sumatoria":f"Sumatoria {grupo_vanti}","facturas":"Cantidad de facturas emitidas",
+                    "conservar_archivos":"Conservar los archivos originales"}
     dic_explicacion = {"codigo_DANE":"Código DANE de 8 dígitos relacionad con diversas entidades geográficas,\ncomo departamentos, municipios, y localidades.",
                         "valor_facturado":"Incluir el valor facturado por los usuarios.\nValor de facturación por consumo y valor de facturación total.",
                         "cantidad_filas":"Selección de cantidad de filas mínimo.",
                         "inventario":"Incluir la información correspondiente del inventario de suscriptores.",
-                        "regenerar":"Regenerar archivos necesarios (form_estandar, resumen)",
-                        "reportes_mensuales":"Información a generar para los reportes mensuales",
-                        "texto_regenerar":"_form_estandar, _resumen",
-                        "usuarios_activos":"Info. usuarios activos", 
-                        "sumatoria":f"Sumatoria {grupo_vanti}",
-                        "facturas":"Cantidad de facturas emitidas"}
+                        "regenerar":"Regenerar archivos necesarios (form_estandar, resumen).",
+                        "reportes_mensuales":"Información a generar para los reportes mensuales.",
+                        "texto_regenerar":"_form_estandar, _resumen.",
+                        "usuarios_activos":"Info. usuarios activos.",
+                        "sumatoria":f"Sumatoria {grupo_vanti}.",
+                        "facturas":"Cantidad de facturas emitidas.",
+                        "conservar_archivos":"Conservar los archivos originales."}
     if not len(opciones):
         return estado, info
     screen_width = dimensiones[0]
@@ -2442,6 +2445,8 @@ def opciones_adicionales(app, window, central_widget, dimensiones, opciones={}, 
             if texto == "volver":
                 if estado_anterior == "menu_seleccion":
                     estado,info = menu_seleccion(app, window, central_widget, dimensiones, estado=estado, info=info)
+                elif estado_anterior == "seleccionar_periodo":
+                    estado, info = seleccionar_periodo(app, window, central_widget, dimensiones, estado=estado, info=info)
                 else:
                     estado, info = menu_inicial(app, window, central_widget, dimensiones)
             elif texto == "aceptar":

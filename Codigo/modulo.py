@@ -5661,7 +5661,23 @@ def almacenar_archivos_2(ruta_guardar_archivos, thread):
         except BaseException:
             pass
 
-def generar_archivos_extra(seleccionar_reporte, regenerar=False, thread=None, evitar_extra=[], ext="_resumen.csv", solo_crear_arc=False):
+def conversion_archivos_txt(lista_reportes, eliminar=False, thread=None, tipo=".txt"):
+    for reporte in lista_reportes:
+        lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(reporte, tipo, [])
+        lista_archivos.extend(mod_4.encontrar_archivos_seleccionar_reporte(reporte, tipo.upper(), []))
+        if len(lista_archivos) == 0:
+            if thread:
+                thread.message_sent.emit(f"No se encontraron archivos con la extensión {tipo}", "red")
+            else:
+                print(f"\nNo se encontraron archivos con la extensión {tipo}\n")
+        else:
+            if thread:
+                thread.message_sent.emit(f"Inicio de procesamiento para: Conversión de archivos {tipo} a .csv", "green")
+                conversion_archivos_lista(lista_archivos,"txt","csv")
+                if eliminar:
+                    eliminar_archivos(lista_archivos)
+
+def generar_archivos_extra(seleccionar_reporte, regenerar=False, thread=None, evitar_extra=[], ext="_resumen.csv", solo_crear_arc=False, archivos_resumen=True):
     if regenerar:
         tipo = ".csv"
         proceso, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte,evitar_extra, thread=thread)
@@ -5669,7 +5685,7 @@ def generar_archivos_extra(seleccionar_reporte, regenerar=False, thread=None, ev
             estandarizacion_archivos(lista_archivos,True)
             tipo = "_form_estandar.csv"
             proceso, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte,evitar_extra, thread=thread)
-            if proceso:
+            if proceso and archivos_resumen:
                 archivos_resumen(lista_archivos,True)
                 tipo = "_resumen.csv"
                 proceso, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte,evitar_extra, thread=thread)
@@ -6677,6 +6693,7 @@ class Envio_mensajes(QThread):
             self.message_sent.emit("Inicio de procesamiento de archivos\n", "green")
             t_i = time.time()
             match self.estado:
+                #Edición de archivos
                 case "almacenar_archivos":
                     almacenar_archivos_2(self.ruta_guardar_archivos, self)
                 case "crear_carpetas":
@@ -6715,6 +6732,14 @@ class Envio_mensajes(QThread):
                                 self.message_sent.emit(f"\nNo existe el archivo {info}\n", "red")
                             else:
                                 self.message_sent.emit(f"\n{info}\n", "green")
+                case "convertir_archivos":
+                    if self.info:
+                        eliminar = False
+                        if "Opciones" in self.info:
+                            if "conservar_archivos" in self.info["Opciones"]:
+                                if not self.info["Opciones"]["conservar_archivos"]:
+                                    eliminar = True
+                        conversion_archivos_txt(self.info["Reportes"], eliminar, self)
                 #Reportes comerciales
                 case "reporte_comercial_sector_consumo_mensual":
                     if self.info:
