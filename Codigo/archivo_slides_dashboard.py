@@ -1,16 +1,7 @@
-import matplotlib.pyplot as plt
-from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.font_manager as font_manager
-import matplotlib.ticker as ticker
-from matplotlib.offsetbox import OffsetImage, AnnotationBbox
-import numpy as np
-import seaborn as sns
-import pandas as pd
-from pandas.plotting import table
 import os
 from PIL import Image,ImageDraw,ImageFont
-from skimage.transform import resize
-
+import json
 import ruta_principal as mod_rp
 global ruta_principal, ruta_codigo, ruta_constantes, ruta_nuevo_sui, ruta_archivos,ruta_fuentes,ruta_imagenes,fuente_texto,azul_vanti,dic_colores,meta_kpi_sub,dic_ubi_tarifas,dic_distri,dic_colores_distri,dic_ubi_disti
 ruta_principal = mod_rp.v_ruta_principal()
@@ -20,14 +11,17 @@ ruta_codigo = mod_rp.v_codigo()
 ruta_archivos = mod_rp.v_archivos()
 ruta_fuentes = mod_rp.v_fuentes()
 ruta_imagenes = mod_rp.v_imagenes()
-import modulo as mod_1
-import archivo_creacion_json as mod_2
 global ruta_fuente,grupo_vanti
 grupo_vanti = "Grupo Vanti"
 ruta_fuente = ruta_fuentes+"Muli.ttf"
 ruta_fuente_negrilla = ruta_fuentes+"Mulish-Bold.ttf"
 fuente_texto = font_manager.FontProperties(fname=ruta_fuentes+"Muli.ttf")
-dic_colores = mod_1.leer_archivos_json(ruta_constantes+"colores.json")["datos"]
+
+def leer_archivos_json(archivo):
+    with open(archivo) as file:
+            data = json.load(file)
+    return data
+dic_colores = leer_archivos_json(ruta_constantes+"colores.json")["datos"]
 azul_vanti = dic_colores["azul_v"]
 meta_kpi_sub = "1,4"
 valor_x = 10
@@ -92,6 +86,22 @@ dic_ubi_disti = {"GNCB":(415,475),
                 "METROGAS":(392,432),
                 "ALCANOS":(295,655)}
 
+def acortar_nombre(nombre, cantidad=6):
+    lista_nombre = nombre.split("\\")
+    largo = len(lista_nombre)
+    if largo > cantidad:
+        texto = ("...\\"+lista_a_texto(lista_nombre[largo-cantidad:], "\\", False)).replace("\\\\","\\")
+    else:
+        texto = texto.replace("\\\\","\\")
+    return texto
+
+def lista_a_texto(lista, separador, salto=False):
+    lista = [str(elemento) for elemento in lista]
+    texto = separador.join(lista)
+    if salto:
+        texto += "\n"
+    return texto
+
 def conversion_decimales(texto):
     return str(texto).replace(".",",")
 
@@ -120,7 +130,7 @@ def ubicacion_imagen(nueva_imagen, espacio):
     posicion = (espacio[0][0]+(abs(espacio[1][0]-espacio[0][0]-ancho)//2),abs(espacio[0][1]))
     return nueva_imagen,posicion
 
-def slide_portada(ubi,fecha,fecha_actual,ubi_carpeta,texto_fecha, dic_metricas, c_slide):
+def slide_portada(ubi,fecha,fecha_actual,ubi_carpeta,texto_fecha, dic_metricas, c_slide, thread=None):
     try:
         plantilla = ruta_imagenes+"p1.png"
         imagen = Image.open(plantilla)
@@ -148,7 +158,10 @@ def slide_portada(ubi,fecha,fecha_actual,ubi_carpeta,texto_fecha, dic_metricas, 
             nueva_imagen,pos = ubicacion_imagen(nueva_imagen,esp)
             imagen.paste(nueva_imagen, pos, nueva_imagen)
         else:
-            print(f"No existe la imagen ...{mod_1.acortar_nombre(nueva_imagen)}")
+            if thread:
+                thread.message_sent.emit(f"No existe la imagen ...{acortar_nombre(nueva_imagen)}", "red")
+            else:
+                print(f"No existe la imagen ...{acortar_nombre(nueva_imagen)}")
         esp = [(170,770),(620,770),(620,995),(170,995)]
         nueva_imagen = ubi_imagen+"porcentaje_matriz_requerimientos.png"
         if  os.path.exists(nueva_imagen):
@@ -156,7 +169,10 @@ def slide_portada(ubi,fecha,fecha_actual,ubi_carpeta,texto_fecha, dic_metricas, 
             nueva_imagen,pos = ubicacion_imagen(nueva_imagen,esp)
             imagen.paste(nueva_imagen, pos, nueva_imagen)
         else:
-            print(f"No existe la imagen ...{mod_1.acortar_nombre(nueva_imagen)}")
+            if thread:
+                thread.message_sent.emit(f"No existe la imagen ...{acortar_nombre(nueva_imagen)}", "red")
+            else:
+                print(f"No existe la imagen ...{acortar_nombre(nueva_imagen)}")
         ubi_imagen = ubi_carpeta+"\\00. Comercial\\Imagenes\\"
         esp = [(730,440),(1180,440),(1180,670),(730,670)]
         nueva_imagen = ubi_imagen+texto_fecha+"_reporte_consumo_sumatoria_grupo_vanti_pie_consumo_m3.png"
@@ -165,7 +181,10 @@ def slide_portada(ubi,fecha,fecha_actual,ubi_carpeta,texto_fecha, dic_metricas, 
             nueva_imagen,pos = ubicacion_imagen(nueva_imagen,esp)
             imagen.paste(nueva_imagen, pos, nueva_imagen)
         else:
-            print(f"No existe la imagen ...{mod_1.acortar_nombre(nueva_imagen)}")
+            if thread:
+                thread.message_sent.emit(f"No existe la imagen ...{acortar_nombre(nueva_imagen)}", "red")
+            else:
+                print(f"No existe la imagen ...{acortar_nombre(nueva_imagen)}")
         imagen.save(ubi+f"slide_{c_slide}.png")
         c_slide += 1
         return c_slide
@@ -179,7 +198,7 @@ def cargar_imagen(imagen, nombre_imagen, esp):
         imagen.paste(nueva_imagen, pos)
         imagen.save(nombre_imagen)
     else:
-        print(f"No existe la imagen ...{mod_1.acortar_nombre(nueva_imagen)}")
+        print(f"No existe la imagen ...{acortar_nombre(nueva_imagen)}")
 
 def slide_def_1(ubi,fecha,fecha_actual, dic_metricas,mes_corte,fecha_anio_anterior,c_slide):
     try:
@@ -222,7 +241,7 @@ def slide_usuarios(ubi,fecha,fecha_actual,ubi_carpeta,texto_fecha, dic_metricas,
                 nueva_imagen, pos = ubicacion_imagen(nueva_imagen,esp)
                 imagen.paste(nueva_imagen, pos, nueva_imagen)
             else:
-                print(f"No existe la imagen ...{mod_1.acortar_nombre(nueva_imagen)}")
+                print(f"No existe la imagen ...{acortar_nombre(nueva_imagen)}")
             imagen.save(ubi+f"slide_{c_slide}.png")
             c_slide += 1
         return c_slide
@@ -246,7 +265,7 @@ def slide_pie_usuarios(ubi,fecha,fecha_actual,ubi_carpeta,texto_fecha, dic_metri
                 nueva_imagen, pos = ubicacion_imagen(nueva_imagen,esp)
                 imagen.paste(nueva_imagen, pos, nueva_imagen)
             else:
-                print(f"No existe la imagen ...{mod_1.acortar_nombre(nueva_imagen)}")
+                print(f"No existe la imagen ...{acortar_nombre(nueva_imagen)}")
             esp = [(990,190),(1890,190),(1890,820),(990,820)]
             nueva_imagen = ubi_imagen+texto_fecha+"_pie_no_regulados.png"
             if os.path.exists(nueva_imagen):
@@ -254,7 +273,7 @@ def slide_pie_usuarios(ubi,fecha,fecha_actual,ubi_carpeta,texto_fecha, dic_metri
                 nueva_imagen, pos = ubicacion_imagen(nueva_imagen,esp)
                 imagen.paste(nueva_imagen, pos, nueva_imagen)
             else:
-                print(f"No existe la imagen ...{mod_1.acortar_nombre(nueva_imagen)}")
+                print(f"No existe la imagen ...{acortar_nombre(nueva_imagen)}")
             imagen.save(ubi+f"slide_{c_slide}.png")
             c_slide +=1
         return c_slide
@@ -291,7 +310,7 @@ def slide_consumo(ubi,fecha_actual,ubi_carpeta,texto_fecha, dic_metricas, c_slid
                 nueva_imagen, pos = ubicacion_imagen(nueva_imagen,esp)
                 imagen.paste(nueva_imagen, pos, nueva_imagen)
             else:
-                print(f"No existe la imagen ...{mod_1.acortar_nombre(nueva_imagen)}")
+                print(f"No existe la imagen ...{acortar_nombre(nueva_imagen)}")
             imagen.save(ubi+f"slide_{c_slide}.png")
             c_slide += 1
         return c_slide
@@ -304,7 +323,7 @@ def pegar_imagen(nueva_imagen, imagen, esp):
         nueva_imagen, pos = ubicacion_imagen(nueva_imagen,esp)
         imagen.paste(nueva_imagen, pos, nueva_imagen)
     else:
-        print(f"No existe la imagen ...{mod_1.acortar_nombre(nueva_imagen)}")
+        print(f"No existe la imagen ...{acortar_nombre(nueva_imagen)}")
     return imagen
 
 def slide_pie_consumo(ubi, fecha_actual, ubi_carpeta, texto_fecha, dic_metricas, c_slide):
@@ -645,15 +664,17 @@ def slide_cumplimientos(ubi, fecha_actual, ubi_carpeta, c_slide):
     except BaseException:
         return c_slide
 
-def crear_slides(ubi, fecha, fecha_completa, fecha_corte, texto_fecha, dic_metricas,mes_corte, fecha_anio_anterior,periodo):
+def crear_slides(ubi, fecha, fecha_completa, fecha_corte, texto_fecha, dic_metricas,mes_corte, fecha_anio_anterior, periodo, thread=None):
     ubi_carpeta = ubi
     ubi += "\\04. Dashboard\\Imagenes\\"
     anio = fecha[0]
     mes = fecha[1].capitalize()[:3]
     fecha = f"{fecha[1]}/{fecha[0]}"
     c_slide = 1
-    c_slide = slide_portada(ubi, fecha, fecha_corte, ubi_carpeta, texto_fecha, dic_metricas, c_slide)
+    c_slide = slide_portada(ubi, fecha, fecha_corte, ubi_carpeta, texto_fecha, dic_metricas, c_slide, thread=thread)
     c_slide = slide_def_1(ubi, fecha, fecha_corte, dic_metricas,mes_corte,fecha_anio_anterior, c_slide)
+
+    
     c_slide = slide_usuarios(ubi, fecha, fecha_corte, ubi_carpeta, texto_fecha, dic_metricas, c_slide)
     c_slide = slide_pie_usuarios(ubi, fecha, fecha_corte, ubi_carpeta, texto_fecha, dic_metricas, c_slide)
     c_slide = slide_consumo(ubi, fecha_corte, ubi_carpeta, texto_fecha, dic_metricas, c_slide)
@@ -672,5 +693,8 @@ def crear_slides(ubi, fecha, fecha_completa, fecha_corte, texto_fecha, dic_metri
     c_slide = slide_cumplimientos(ubi, fecha_corte, ubi_carpeta, c_slide)
     # mapa_suspensiones
     ubi = ubi.replace("Imagenes\\", "Imagenes")
-    print(f"\n\nEl Dashboard para el periodo: {fecha_completa} se ha creado en la carpeta {mod_1.acortar_nombre(ubi)}\n")
+    if thread:
+        thread.message_sent.emit(f"El Dashboard para el periodo: {fecha_completa} se ha creado en la carpeta {acortar_nombre(ubi)}", "green")
+    else:
+        print(f"\n\nEl Dashboard para el periodo: {fecha_completa} se ha creado en la carpeta {acortar_nombre(ubi)}\n")
     os.startfile(ubi)

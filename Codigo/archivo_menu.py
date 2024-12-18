@@ -4,9 +4,6 @@ import time
 import subprocess
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QHBoxLayout, QSpacerItem, QSizePolicy, QDialog, QPushButton, QScrollArea, QLineEdit
-from PyQt5.QtGui import QPalette, QColor, QFont, QFontDatabase, QPixmap, QIcon
-from PyQt5.QtCore import Qt, QEventLoop, QSize
 import ruta_principal as mod_rp
 global ruta_principal, ruta_codigo, ruta_constantes, ruta_nuevo_sui, ruta_archivos, ruta_guardar_archivos, ruta_fuentes
 ruta_principal = mod_rp.v_ruta_principal()
@@ -433,8 +430,8 @@ def menu_opciones_archivos(option, valor):
             eliminar = False
         elif option_1 == "2":
             eliminar = True
-        opciones_adicionales = anadir_opciones(False, False)
         t_i = time.time()
+        print(seleccionar_reporte)
         lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, [])
         lista_archivos.extend(mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo.upper(), []))
         if len(lista_archivos) == 0:
@@ -1787,8 +1784,6 @@ def menu_creacion_dashboard():
         texto_fecha_completo = f"{fi_2}/{fi_1} - {ff_2}/{ff_1}"
         v_fecha_anterior = mod_1.fecha_anterior(ff_1, ff_2)
         v_fecha_inicial = mod_1.fecha_anterior(fi_1, fi_2)
-        periodo = f"{fi_1}/{fi_2} - {ff_1}/{ff_2}"
-        print(f"\nInicio de creación del Dashboard para el periodo: ({periodo})\n\n")
         periodo = f"{fi_2[:3]}/{fi_1} - {ff_2[:3]}/{ff_1}"
         lista_archivos_anuales = generar_archivos_anuales_dashboard(seleccionar_reporte_dashboard)
         if len(lista_archivos_anuales):
@@ -1848,7 +1843,8 @@ def menu_creacion_dashboard():
             fecha_corte = f"{fecha_corte_tupla[0]} de {lista_meses[int(fecha_corte_tupla[1])-1]} del {fecha_corte_tupla[2]}"
             fecha_corte_anterior = f"{fecha_anio_anterior_tupla[0]} de {lista_meses[int(fecha_anio_anterior_tupla[1])-1]} del {fecha_anio_anterior_tupla[2]}"
             mes_corte = f"{lista_meses[int(fecha_corte_tupla[1])-1]}-{fecha_corte_tupla[2]}"
-            mod_7.crear_slides(mod_1.lista_a_texto(archivo.split("\\")[:-2],"\\"),v_fecha_anterior,texto_fecha_completo, fecha_corte, texto_fecha, dic_metricas,mes_corte,fecha_corte_anterior,periodo)
+            mod_7.crear_slides(mod_1.lista_a_texto(archivo.split("\\")[:-2],"\\"),v_fecha_anterior,texto_fecha_completo,
+                        fecha_corte, texto_fecha, dic_metricas, mes_corte, fecha_corte_anterior,periodo,)
             t_f = time.time()
             print(mod_1.mostrar_tiempo(t_f, t_i))
 
@@ -2719,6 +2715,26 @@ def formato_seleccionar_reporte(dic_info, estado):
             dic_info_reporte["fi"] = rango[0]
             dic_info_reporte["ff"] = rango[1]
             dic_info_reporte["listas_unidas"] = dic_info["Trimestres"]
+        #Dashboard
+        case "dashboard":
+            opciones = dic_info["Opciones_adicionales"]
+            dic_info_reporte["Reporte"] = dic_info["Reporte"].copy()
+            seleccionar_reporte = dic_info["Reporte"]
+            seleccionar_reporte["tipo"] = list(dic_reportes.keys()).copy()
+            seleccionar_reporte["clasificacion"] = lista_reportes_totales.copy()
+            seleccionar_reporte["anios"] = None
+            seleccionar_reporte["meses"] = None
+            seleccionar_reporte["fecha_personalizada"] = [(dic_info["Reporte"]["fecha_personalizada"][0][0],dic_info["Reporte"]["fecha_personalizada"][0][1]),
+                                                        (dic_info["Reporte"]["fecha_personalizada"][1][0],dic_info["Reporte"]["fecha_personalizada"][1][1])]
+            dic_info_reporte["Reporte_add"] = {}
+            dic_info_reporte["Reporte_add"]["anual"] = seleccionar_reporte.copy()
+            seleccionar_reporte = dic_info["Reporte"]
+            seleccionar_reporte["anios"] = [dic_info["Reporte"]["fecha_personalizada"][1][0]]
+            seleccionar_reporte["meses"] = [dic_info["Reporte"]["fecha_personalizada"][1][1]]
+            seleccionar_reporte["tipo"] = list(dic_reportes.keys()).copy()
+            seleccionar_reporte["clasificacion"] = lista_reportes_totales.copy()
+            seleccionar_reporte["fecha_personalizada"] = None
+            dic_info_reporte["Reporte_add"]["mensual"] = seleccionar_reporte.copy()
         case _:
             pass
     dic_info_reporte["Reportes"] = lista_seleccionar_reporte
@@ -2781,6 +2797,7 @@ def iniciar_app(info_app):
 
 def activar_funciones(estado, info):
     match estado:
+        #Edición de archivos
         case "almacenar_archivos":
             titulo = "Almacenamiento de archivos"
             estado = mod_1.run_app(titulo, estado)
@@ -2865,6 +2882,10 @@ def activar_funciones(estado, info):
             info = formato_seleccionar_reporte(info, estado)
             estado = mod_1.run_app(titulo, estado, info)
         #Dashboard
+        case "dashboard":
+            titulo = "Dashboard"
+            info = formato_seleccionar_reporte(info, estado)
+            estado = mod_1.run_app(titulo, estado, info)
         case _:
             print(estado, "\n")
             print(info, "\n"*2)

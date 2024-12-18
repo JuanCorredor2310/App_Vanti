@@ -15,12 +15,10 @@ import shutil
 import calendar
 import warnings
 import unicodedata
-import re
+from dateutil.relativedelta import relativedelta
 from decimal import Decimal
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QHBoxLayout, QSpacerItem, QSizePolicy, QDialog, QPushButton, QScrollArea, QLineEdit, QMessageBox
-from PyQt5.QtGui import QPalette, QColor, QFont, QFontDatabase, QPixmap, QIcon
-from PyQt5.QtCore import Qt, QEventLoop, QSize, QThread, pyqtSignal
-import random
+from PyQt5.QtWidgets import QLabel, QPushButton, QVBoxLayout, QWidget, QHBoxLayout, QDialog, QPushButton, QScrollArea
+from PyQt5.QtCore import QThread, pyqtSignal
 import ruta_principal as mod_rp
 global ruta_principal, ruta_codigo, ruta_constantes, ruta_nuevo_sui, ruta_archivos, ruta_guardar_archivos
 ruta_principal = mod_rp.v_ruta_principal()
@@ -34,6 +32,8 @@ import archivo_df_a_doc as mod_8
 import archivo_crear_carpetas as mod_3
 import archivo_creacion_json as mod_2
 import archivo_busqueda_reportes as mod_4
+import archivo_graficas as mod_6
+import archivo_slides_dashboard as mod_7
 ruta_guardar_archivos = mod_rp.v_guardar_archivos().replace('\\', '\\\\')
 
 # * -------------------------------------------------------------------------------------------------------
@@ -52,7 +52,7 @@ def leer_archivos_json(archivo):
 # *                                             Constantes globales
 # * -------------------------------------------------------------------------------------------------------
 
-global lista_meses, lista_empresas, lista_anios, dic_reportes, lista_reportes_generales, reportes_generados, lista_reportes_totales,chunksize,llaves_dic_reporte, dic_carpetas, dic_filiales,antidad_datos_excel, dic_nit, cantidad_datos_estilo_excel,grupo_vanti,mercado_relevante,mercado_relevante_resumen,mercado_relevante_id,tabla_3,tabla_11,fecha_actual,lista_trimestres, dic_meses_abre,lista_clasi_reportes,categoria_matriz_requerimientos,lista_archivo_desviaciones,tabla_2_DS,tabla_3_DS,tabla_4_DS,tabla_5_DS,tabla_6_DS,tabla_8_DS,indicador_SUI,tabla_30,tabla_8_DS_categoria,tabla_71,tabla_16, tabla_3_data,lista_carpetas_extra,anio_actual,dic_ciudades,lista_reportes_generados
+global lista_meses, lista_empresas, lista_anios, dic_reportes, lista_reportes_generales, reportes_generados, lista_reportes_totales,chunksize,llaves_dic_reporte, dic_carpetas, dic_filiales,antidad_datos_excel, dic_nit, cantidad_datos_estilo_excel,grupo_vanti,mercado_relevante,mercado_relevante_resumen,mercado_relevante_id,tabla_3,tabla_11,fecha_actual,lista_trimestres, dic_meses_abre,lista_clasi_reportes,categoria_matriz_requerimientos,lista_archivo_desviaciones,tabla_2_DS,tabla_3_DS,tabla_4_DS,tabla_5_DS,tabla_6_DS,tabla_8_DS,indicador_SUI,tabla_30,tabla_8_DS_categoria,tabla_71,tabla_16, tabla_3_data,lista_carpetas_extra,anio_actual,dic_ciudades,lista_reportes_generados,trimestre_mes
 grupo_vanti = "Grupo Vanti"
 dic_carpetas = leer_archivos_json(ruta_constantes+"carpetas.json")
 lista_carpetas_extra = leer_archivos_json(ruta_constantes+"carpetas_extra.json")
@@ -92,6 +92,14 @@ tabla_30 = leer_archivos_json(ruta_constantes+"/tabla_30.json")["datos"]
 indicador_SUI = leer_archivos_json(ruta_constantes+"/indicador_SUI.json")["datos"]
 empresa_indicador_SUI = leer_archivos_json(ruta_constantes+"/empresa_indicador_SUI.json")["datos"]
 dic_ciudades = leer_archivos_json(ruta_constantes+"ciudades_tarifas.json")["datos"]
+trimestre_mes = mod_2.leer_archivos_json(ruta_constantes+"trimestre_mes.json")["datos"]
+fecha_actual = datetime.now()
+anio_actual = fecha_actual.year
+fecha_actual_texto = f"{fecha_actual.day} de {lista_meses[int(fecha_actual.month)-1]} del {anio_actual}"
+dia_corte, mes_corte, anio_corte = ((datetime.now() - relativedelta(months=2) + relativedelta(months=1)).replace(day=1) - relativedelta(days=1)).day, ((datetime.now() - relativedelta(months=2) + relativedelta(months=1)).replace(day=1) - relativedelta(days=1)).month, ((datetime.now() - relativedelta(months=2) + relativedelta(months=1)).replace(day=1) - relativedelta(days=1)).year
+fecha_corte_tupla = (dia_corte,mes_corte,anio_corte)
+dia_corte, mes_corte, anio_corte = (fecha_actual.replace(month=1, day=1) - relativedelta(days=1)).day, (fecha_actual.replace(month=1, day=1) - relativedelta(days=1)).month, (fecha_actual.replace(month=1, day=1) - relativedelta(days=1)).year
+fecha_anio_anterior_tupla = (dia_corte,mes_corte,anio_corte)
 def crear_lista_reportes_totales():
     dic = leer_archivos_json(ruta_constantes+"reportes_disponibles.json")["datos"]
     lista = []
@@ -1690,12 +1698,12 @@ def diferencia_columnas_dataframe(df_actual, df_anterior):
             pass
     return df_actual
 
-def union_archivos_mensuales_anual_reporte_consumo(dic_archivos, seleccionar_reporte, informar, almacenar_excel=True, subsidio=True):
-    v_fecha_siguiente = fecha_siguiente(seleccionar_reporte["fecha_personalizada"][0][0],seleccionar_reporte["fecha_personalizada"][0][1])
-    v_fecha_anterior = fecha_anterior(seleccionar_reporte["fecha_personalizada"][1][0],seleccionar_reporte["fecha_personalizada"][1][1])
+def union_archivos_mensuales_anual_reporte_consumo(dic_archivos, seleccionar_reporte, informar, almacenar_excel=True, subsidio=True, thread=None):
+    #v_fecha_siguiente = fecha_siguiente(seleccionar_reporte["fecha_personalizada"][0][0],seleccionar_reporte["fecha_personalizada"][0][1])
+    #v_fecha_anterior = fecha_anterior(seleccionar_reporte["fecha_personalizada"][1][0],seleccionar_reporte["fecha_personalizada"][1][1])
     lista_anual = []
     lista_df_anual_dif = []
-    for fecha, lista_archivos in dic_archivos.items():
+    for _, lista_archivos in dic_archivos.items():
         for archivo in lista_archivos:
             df = leer_dataframe_utf_8(archivo)
             nombre = archivo
@@ -1709,7 +1717,7 @@ def union_archivos_mensuales_anual_reporte_consumo(dic_archivos, seleccionar_rep
         else:
             lista_df_anual_dif = lista_anual[1:]
     else:
-        fecha_nombre = (v_fecha_siguiente[0]+"_"+v_fecha_siguiente[1].upper()
+        fecha_nombre = (seleccionar_reporte["fecha_personalizada"][0][0]+"_"+seleccionar_reporte["fecha_personalizada"][0][1].upper()
                     +"_"+seleccionar_reporte["fecha_personalizada"][1][0]+"_"+seleccionar_reporte["fecha_personalizada"][1][1].upper())
         if len(seleccionar_reporte["filial"]) == 4:
             for i in range(1,len(lista_anual)):
@@ -1734,7 +1742,7 @@ def union_archivos_mensuales_anual_reporte_consumo(dic_archivos, seleccionar_rep
             lista_nombre.insert(-2, fecha_nombre)
             nombre = lista_a_texto(lista_nombre, "\\")
             df_anual = pd.concat(lista_df_anual_dif)
-            almacenar_df_csv_y_excel(df_anual, nombre, informar, almacenar_excel)
+            almacenar_df_csv_y_excel(df_anual, nombre, informar, almacenar_excel, thread=thread)
             return nombre
         else:
             lista_nombre = nombre.split("\\")
@@ -1746,7 +1754,7 @@ def union_archivos_mensuales_anual_reporte_consumo(dic_archivos, seleccionar_rep
             lista_nombre[-1] = lista_a_texto(ext_nombre, "_")
             nombre = lista_a_texto(lista_nombre, "\\")
             df_anual = pd.concat(lista_df_anual_dif)
-            almacenar_df_csv_y_excel(df_anual, nombre, informar, almacenar_excel)
+            almacenar_df_csv_y_excel(df_anual, nombre, informar, almacenar_excel, thread=thread)
             return None
     else:
         return None
@@ -2920,7 +2928,7 @@ def generar_reporte_compensacion_mensual(dic_archivos, seleccionar_reporte, info
             nuevo_nombre = nuevo_nombre.replace("_resumen","_compilado_compensacion")
             almacenar_df_csv_y_excel(df_total_compilado,nuevo_nombre, informar,thread=thread)
 
-def apoyo_generar_reporte_desviaciones_mensual_DS56(lista_archivos,filial,fecha,filas_minimas,reporte,informar=True):
+def apoyo_generar_reporte_desviaciones_mensual_DS56(lista_archivos,filial,fecha,filas_minimas,reporte,informar=True, thread=None):
     lista_reporte = []
     indicador_SUI_filial = indicador_SUI[filial]
     lista_fecha = fecha.split(" - ")
@@ -3164,11 +3172,14 @@ def apoyo_generar_reporte_desviaciones_mensual_DS56(lista_archivos,filial,fecha,
                     largo = 0
                     for valor in dic_error.values():
                         largo += len(valor[1])
-                    op = mod_8.almacenar_errores(dic_error, filial, indicador_SUI[filial], mes, anio, nombre_error_doc, largo, reporte[2:], clasi)
+                    op = mod_8.almacenar_errores(dic_error, filial, indicador_SUI[filial], mes, anio, nombre_error_doc, largo, reporte[2:], clasi, thread=thread)
                     if op:
-                        informar_archivo_creado(nombre_error_pdf, True)
+                        informar_archivo_creado(nombre_error_pdf, True, thread=thread)
                     else:
-                        print(f"No es posible acceder al archivo {acortar_nombre(nombre_error_pdf)}")
+                        if thread:
+                            thread.message_sent.emit(f"No es posible acceder al archivo {acortar_nombre(nombre_error_pdf)}", "red")
+                        else:
+                            print(f"No es posible acceder al archivo {acortar_nombre(nombre_error_pdf)}")
     if len(lista_reporte):
         df_reporte = pd.concat(lista_reporte, ignore_index=True)
         ext = f"Desviaciones_{indicador_SUI_filial}_56_{pos_mes}{v_fecha_anterior[0]}.csv"
@@ -3176,7 +3187,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS56(lista_archivos,filial,fecha,
         carpeta = lista_nombre[-1]
         lista_nombre[-1] = ext
         nombre_1 = lista_a_texto(lista_nombre, "\\")
-        almacenar_df_csv_y_excel(df_reporte, nombre_1, BOM=False, almacenar_excel=False)
+        almacenar_df_csv_y_excel(df_reporte, nombre_1, BOM=False, almacenar_excel=False, thread=thread)
         v_fun_tamanio_archivos = fun_tamanio_archivos(nombre_1)/(1024**2)
         if v_fun_tamanio_archivos >= 25:
             archivo_zip = os.path.join(carpeta, ext.replace(".csv", ".zip"))
@@ -3194,7 +3205,7 @@ def completar_codigo_DANE_000(valor):
 def completar_codigo_DANE(valor):
     return valor.zfill(8)
 
-def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,filas_minimas,reporte,dic_reporte,dic_reporte_empresa,informar=True):
+def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,filas_minimas,reporte,dic_reporte,dic_reporte_empresa,informar=True, thread=None):
     lista_reporte = []
     lista_fecha = fecha.split(" - ")
     v_fecha_anterior = fecha_anterior(lista_fecha[0], lista_fecha[1])
@@ -3590,11 +3601,14 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                     largo = 0
                     for valor in dic_error.values():
                         largo += len(valor[1])
-                    op = mod_8.almacenar_errores(dic_error, filial, indicador_SUI[filial], mes, anio, nombre_error_doc, largo, reporte[2:], clasi)
+                    op = mod_8.almacenar_errores(dic_error, filial, indicador_SUI[filial], mes, anio, nombre_error_doc, largo, reporte[2:], clasi, thread=thread)
                     if op:
-                        informar_archivo_creado(nombre_error_pdf, True)
+                        informar_archivo_creado(nombre_error_pdf, True, thread=thread)
                     else:
-                        print(f"No es posible acceder al archivo {acortar_nombre(nombre_error_pdf)}")
+                        if thread:
+                            thread.message_sent.emit(f"No es posible acceder al archivo {acortar_nombre(nombre_error_pdf)}", "red")
+                        else:
+                            print(f"No es posible acceder al archivo {acortar_nombre(nombre_error_pdf)}")
     if len(lista_reporte):
         df_reporte = pd.concat(lista_reporte, ignore_index=True)
         ext = f"Desviaciones_{indicador_SUI_filial}_57_{pos_mes}{v_fecha_anterior[0]}.csv"
@@ -3602,7 +3616,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
         carpeta = lista_nombre[-1]
         lista_nombre[-1] = ext
         nombre_1 = lista_a_texto(lista_nombre, "\\")
-        almacenar_df_csv_y_excel(df_reporte, nombre_1, BOM=False, almacenar_excel=False)
+        almacenar_df_csv_y_excel(df_reporte, nombre_1, BOM=False, almacenar_excel=False, thread=thread)
         v_fun_tamanio_archivos = fun_tamanio_archivos(nombre_1)/(1024**2)
         if v_fun_tamanio_archivos >= 25:
             archivo_zip = os.path.join(carpeta, ext.replace(".csv", ".zip"))
@@ -3612,7 +3626,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
     else:
         return None, None, None, None
 
-def apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos,filial,fecha,filas_minimas,reporte,informar=True):
+def apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos,filial,fecha,filas_minimas,reporte,informar=True, thread=None):
     lista_reporte = []
     lista_fecha = fecha.split(" - ")
     v_fecha_reporte = fecha_anterior(lista_fecha[0], lista_fecha[1])
@@ -3918,11 +3932,14 @@ def apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos,filial,fecha,
                     largo = 0
                     for valor in dic_error.values():
                         largo += len(valor[1])
-                    op = mod_8.almacenar_errores(dic_error, filial, indicador_SUI[filial], mes_reporte, anio_reporte, nombre_error_doc, largo, reporte[2:], clasi)
+                    op = mod_8.almacenar_errores(dic_error, filial, indicador_SUI[filial], mes_reporte, anio_reporte, nombre_error_doc, largo, reporte[2:], clasi, thread=thread)
                     if op:
-                        informar_archivo_creado(nombre_error_pdf, True)
+                        informar_archivo_creado(nombre_error_pdf, True, thread=thread)
                     else:
-                        print(f"No es posible acceder al archivo {acortar_nombre(nombre_error_pdf)}")
+                        if thread:
+                            thread.message_sent.emit(f"No es posible acceder al archivo {acortar_nombre(nombre_error_pdf)}", "red")
+                        else:
+                            print(f"No es posible acceder al archivo {acortar_nombre(nombre_error_pdf)}")
     if len(lista_reporte):
         df_reporte = pd.concat(lista_reporte, ignore_index=True)
         ext = f"Desviaciones_{indicador_SUI_filial}_58_{pos_mes_1}{v_fecha_reporte[0]}.csv"
@@ -3930,7 +3947,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos,filial,fecha,
         carpeta = lista_nombre[-1]
         lista_nombre[-1] = ext
         nombre_1 = lista_a_texto(lista_nombre, "\\")
-        almacenar_df_csv_y_excel(df_reporte, nombre_1, BOM=False, almacenar_excel=False)
+        almacenar_df_csv_y_excel(df_reporte, nombre_1, BOM=False, almacenar_excel=False, thread=thread)
         v_fun_tamanio_archivos = fun_tamanio_archivos(nombre_1)/(1024**2)
         if v_fun_tamanio_archivos >= 25:
             archivo_zip = os.path.join(carpeta, ext.replace(".csv", ".zip"))
@@ -3940,7 +3957,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos,filial,fecha,
     else:
         return None, None
 
-def generar_reporte_desviaciones_mensual(dic_archivos, seleccionar_reporte, informar=True):
+def generar_reporte_desviaciones_mensual(dic_archivos, seleccionar_reporte, informar=True, thread=False):
     filas_minimas = ["ID_EMPRESA","NIU","ID_MERCADO"]
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for fecha, lista_archivos in dic_archivos.items():
@@ -3955,15 +3972,15 @@ def generar_reporte_desviaciones_mensual(dic_archivos, seleccionar_reporte, info
                         lista_archivos_filial.append(archivo)
                 if len(lista_archivos_filial):
                     if reporte == "DS56":
-                        df1,nombre = apoyo_generar_reporte_desviaciones_mensual_DS56(lista_archivos_filial,filial,fecha, filas_minimas, reporte)
+                        df1,nombre = apoyo_generar_reporte_desviaciones_mensual_DS56(lista_archivos_filial,filial,fecha, filas_minimas, reporte, thread=thread)
                         if nombre:
                             lista_df_filiales.append(df1)
                     elif reporte == "DS57":
-                        df1,nombre,dic_reporte,dic_reporte_empresa = apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos_filial,filial,fecha, filas_minimas, reporte, dic_reporte,dic_reporte_empresa)
+                        df1,nombre,dic_reporte,dic_reporte_empresa = apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos_filial,filial,fecha, filas_minimas, reporte, dic_reporte,dic_reporte_empresa, thread=thread)
                         if nombre:
                             lista_df_filiales.append(df1)
                     elif reporte == "DS58":
-                        df1,nombre = apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos_filial,filial,fecha, filas_minimas, reporte)
+                        df1,nombre = apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos_filial,filial,fecha, filas_minimas, reporte, thread=thread)
                         if nombre:
                             lista_df_filiales.append(df1)
             if len(lista_df_filiales) and len(lista_filiales_archivo) == 4 and reporte == "DS57":
@@ -3976,7 +3993,7 @@ def generar_reporte_desviaciones_mensual(dic_archivos, seleccionar_reporte, info
                 lista_nombre.pop(-2)
                 nuevo_nombre = lista_a_texto(lista_nombre,"\\")
                 nuevo_nombre = nuevo_nombre.replace("_resumen","_compilado_DS")
-                almacenar_df_csv_y_excel(df_total_compilado,nuevo_nombre, informar, almacenar_excel=False)
+                almacenar_df_csv_y_excel(df_total_compilado,nuevo_nombre, informar, almacenar_excel=False, thread=thread)
                 lista_id_empresa = list(df_total_compilado["ID_EMPRESA"].unique())
                 dic_reporte_atendidos = {}
                 dic_df = {"Filial":[],
@@ -4057,9 +4074,9 @@ def generar_reporte_desviaciones_mensual(dic_archivos, seleccionar_reporte, info
                 df_metricas_categoria["Anio_reportado"] = lista_fecha[0]
                 df_metricas_categoria["Mes_reportado"] = lista_fecha[1]
                 nombre = nuevo_nombre.replace(".csv", "_metricas.csv")
-                almacenar_df_csv_y_excel(df_metricas, nombre)
+                almacenar_df_csv_y_excel(df_metricas, nombre, thread=thread)
                 nombre = nuevo_nombre.replace(".csv", "_metricas_categorias.csv")
-                almacenar_df_csv_y_excel(df_metricas_categoria, nombre)
+                almacenar_df_csv_y_excel(df_metricas_categoria, nombre, thread=thread)
 
 def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, almacenar_excel=True):
     proceso_GRC1 = False
@@ -4769,7 +4786,7 @@ def contribuciones_MME(dashboard=False, texto_fecha=None, thread=None):
                     else:
                         lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", texto_fecha, "Cumplimientos_Regulatorios"]
                         nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"subsidios_KPI")
-                        almacenar_df_csv_y_excel(df_12_meses,nuevo_nombre)
+                        almacenar_df_csv_y_excel(df_12_meses,nuevo_nombre, thread=thread)
                         lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", str(anio_actual), "REPORTES_GENERADOS_APLICATIVO", "Compilado", texto_fecha, "Cumplimientos_Regulatorios"]
                         nuevo_nombre_1 = encontrar_ubi_archivo(lista_ubi, f"subsidios_KPI_anio")
                         almacenar_df_csv_y_excel(df_meses_anio,nuevo_nombre_1, thread=thread)
@@ -4795,7 +4812,7 @@ def contribuciones_MME(dashboard=False, texto_fecha=None, thread=None):
             print(f"No existe el archivo {archivo_csv}. No es posible generar el reporte.")
         return None, None
 
-def tarifas_distribuidoras_GN():
+def tarifas_distribuidoras_GN(thread=None):
     max_bola = 65
     nombre = "tarifas_nacionales"
     hoja = nombre
@@ -4854,16 +4871,25 @@ def tarifas_distribuidoras_GN():
                 else:
                     return None
             else:
-                print(f"No es posible a acceder al archivo {archivo}.")
+                if thread:
+                    thread.message_sent.emit(f"No es posible a acceder al archivo {archivo}.", "red")
+                else:
+                    print(f"No es posible a acceder al archivo {archivo}.")
                 return None
         else:
-            print(f"No existe un hoja {hoja} en el archivo {nombre}.xlsx")
+            if thread:
+                thread.message_sent.emit(f"No existe un hoja {hoja} en el archivo {nombre}.xlsx", "red")
+            else:
+                print(f"No existe un hoja {hoja} en el archivo {nombre}.xlsx")
             return None
     else:
-        print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
+        if thread:
+            thread.message_sent.emit(f"No existe el archivo {archivo}. No es posible generar el reporte.", "red")
+        else:
+            print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
         return None
 
-def cumplimientos_SUI_distribuidoras():
+def cumplimientos_SUI_distribuidoras(thread=None):
     nombre = "Cumplimientos_SUI"
     hoja = nombre
     archivo = ruta_constantes+"\\"+f"{nombre}.xlsx"
@@ -4892,13 +4918,22 @@ def cumplimientos_SUI_distribuidoras():
                     dic[grupo_vanti][llave] += df_vanti[df_vanti["Estado"]==i]["Cantidad"].sum()
                 return dic
             else:
-                print(f"No es posible a acceder al archivo {archivo}.")
+                if thread:
+                    thread.message_sent.emit(f"No es posible a acceder al archivo {archivo}.", "red")
+                else:
+                    print(f"No es posible a acceder al archivo {archivo}.")
                 return None
         else:
-            print(f"No existe un hoja {hoja} en el archivo {nombre}.xlsx")
+            if thread:
+                thread.message_sent.emit(f"No existe un hoja {hoja} en el archivo {nombre}.xlsx", "red")
+            else:
+                print(f"No existe un hoja {hoja} en el archivo {nombre}.xlsx")
             return None
     else:
-        print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
+        if thread:
+            thread.message_sent.emit(f"No existe el archivo {archivo}. No es posible generar el reporte.", "red")
+        else:
+            print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
         return None
 
 # * -------------------------------------------------------------------------------------------------------
@@ -5681,6 +5716,550 @@ def mostrar_info_reporte(reporte, thread):
         if thread:
             thread.message_sent.emit(texto, "white")
 
+def reportes_add_men_DB(dic_info, thread=None, regenerar_mensual=False, regenerar_anual=False):
+    if regenerar_mensual:
+        proceso, dic_archivos = generar_archivos_extra(dic_info["Reporte_add"]["mensual"], regenerar=True, thread=thread, evitar_extra=[], ext="_resumen.csv", solo_crear_arc=False)
+        if proceso:
+            generar_archivos_mensuales_dashboard(dic_info["Reporte_add"]["mensual"], evitar_extra=[], ext="_resumen.csv", thread=thread)
+    elif regenerar_anual:
+        proceso, dic_archivos = generar_archivos_extra(dic_info["Reporte_add"]["anual"], regenerar=True, thread=thread, evitar_extra=[], ext="_resumen.csv", solo_crear_arc=False)
+        if proceso:
+            generar_archivos_extra_dashboard(dic_info["Reporte_add"]["anual"], evitar_extra=[], ext="_resumen.csv", thread=thread)
+    lista_dic = generar_archivos_anuales_dashboard(dic_info["Reporte"], thread=thread)
+    return lista_dic
+
+def cambio_diccionario_reportes(diccionario):
+    nuevo_dic = {}
+    for fecha, dic in diccionario.items():
+        if fecha not in nuevo_dic:
+            nuevo_dic[fecha] = []
+            for llave, valor in dic.items():
+                for elemento in valor:
+                    nuevo_dic[fecha].append(elemento)
+    return nuevo_dic
+
+def generar_archivos_mensuales_dashboard(seleccionar_reporte, evitar_extra=[], ext="_resumen.csv", thread=None):
+    tipo = ext
+    lista_agrupar_archivos = []
+    lista_agrupar_archivos_mostrar = []
+    seleccionar_reporte["tipo"] = ["Comercial"]
+    seleccionar_reporte["clasificacion"] = ["GRC1","GRC2","GRTT2"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte, evitar_extra, informar=False)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte,"Sector de consumo"])
+            lista_agrupar_archivos_mostrar.append({"Sector de consumo":dic_archivos_mostrar})
+        else:
+            lista_agrupar_archivos.append([{},None])
+    seleccionar_reporte["tipo"] = ["Comercial"]
+    seleccionar_reporte["clasificacion"] = ["GRC1","GRC2","GRTT2"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte, evitar_extra, informar=False)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte,"Sector de consumo subsidio"])
+        else:
+            lista_agrupar_archivos.append([{},None])
+    seleccionar_reporte["tipo"] = ["Comercial"]
+    seleccionar_reporte["clasificacion"] = ["GRC3"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte, evitar_extra, informar=False)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte,"Compensaciones"])
+            lista_agrupar_archivos_mostrar.append({"Compensaciones":dic_archivos_mostrar})
+        else:
+            lista_agrupar_archivos.append([{},None])
+    seleccionar_reporte["tipo"] = ["Comercial"]
+    seleccionar_reporte["clasificacion"] = ["DS"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte, evitar_extra, informar=False)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte,"Desviaciones Significativas"])
+            lista_agrupar_archivos_mostrar.append({"Desviaciones Significativas":dic_archivos_mostrar})
+        else:
+            lista_agrupar_archivos.append([{},None])
+    seleccionar_reporte["tipo"] = ["Tarifario"]
+    seleccionar_reporte["clasificacion"] = ["GRT1"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte, evitar_extra, informar=False)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte,"Tarifas"])
+            lista_agrupar_archivos_mostrar.append({"Tarifas":dic_archivos_mostrar})
+        else:
+            lista_agrupar_archivos.append([{},None])
+    seleccionar_reporte["tipo"] = ["Tecnico"]
+    seleccionar_reporte["clasificacion"] = ["GRS1"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte, evitar_extra, informar=False)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte,"Suspensiones"])
+            lista_agrupar_archivos_mostrar.append({"Suspensiones":dic_archivos_mostrar})
+        else:
+            lista_agrupar_archivos.append([{},None])
+    seleccionar_reporte["tipo"] = ["Tecnico"]
+    seleccionar_reporte["clasificacion"] = ["GRCS1"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte, evitar_extra, informar=False)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte,"Índices de Respuesta Servicio Ténico"])
+            lista_agrupar_archivos_mostrar.append({"Índices de Respuesta Servicio Ténico":dic_archivos_mostrar})
+        else:
+            lista_agrupar_archivos.append([{},None])
+    seleccionar_reporte["tipo"] = ["Tecnico"]
+    seleccionar_reporte["clasificacion"] = ["GRCS2"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte, evitar_extra, informar=False)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte,"Indicadores tecnicos"])
+            lista_agrupar_archivos_mostrar.append({"Indicadores técnicos":dic_archivos_mostrar})
+        else:
+            lista_agrupar_archivos.append([{},None])
+    nuevo_dic_mostrar = {}
+    if len(lista_agrupar_archivos_mostrar):
+        for elemento in lista_agrupar_archivos_mostrar:
+            for llave, dic in elemento.items():
+                for fecha, dic_filial in dic.items():
+                    if fecha not in nuevo_dic_mostrar:
+                        nuevo_dic_mostrar[fecha] = {}
+                    nuevo_dic_mostrar[fecha][llave] = dic_filial
+        for i in range(len(lista_agrupar_archivos)):
+            elemento = lista_agrupar_archivos[i][0]
+            seleccionar_reporte = lista_agrupar_archivos[i][1]
+            nombre = lista_agrupar_archivos[i][2]
+            if len(elemento):
+                if thread:
+                    thread.message_sent.emit(f"Inicio de procesamiento para: {nombre}\n\n", "green")
+                else:
+                    print(f"\nInicio de procesamiento para: {nombre}\n\n")
+                if i == 0:
+                    reporte_comercial_sector_consumo(cambio_diccionario_reportes(elemento), seleccionar_reporte, total=True, valor_facturado=True, thread=thread)
+                elif i == 1:
+                    reporte_comercial_sector_consumo(cambio_diccionario_reportes(elemento), seleccionar_reporte, total=True, valor_facturado=True, subsidio=True, thread=thread)
+                elif i == 2:
+                    generar_reporte_compensacion_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte, thread=thread)
+                elif i == 3:
+                    generar_reporte_desviaciones_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte, thread=thread)
+                elif i == 4:
+                    reporte_tarifas_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte, thread=thread)
+                elif i == 5:
+                    generar_reporte_suspension_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte, thread=thread)
+                elif i == 6:
+                    generar_reporte_indicadores_tecnicos_IRST_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte, thread=thread)
+                elif i == 7:
+                    generar_reporte_indicadores_tecnicos_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte, thread=thread)
+
+def generar_archivos_extra_dashboard(seleccionar_reporte, evitar_extra=[], ext="_resumen.csv", thread=None):
+    tipo = ext
+    lista_agrupar_archivos = []
+    lista_agrupar_archivos_mostrar = []
+    seleccionar_reporte["tipo"] = ["Comercial"]
+    seleccionar_reporte["clasificacion"] = ["GRC1","GRC2","GRTT2"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte, evitar_extra, informar=False, thread=thread)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte,"Sector de consumo"])
+            lista_agrupar_archivos_mostrar.append({"Sector de consumo":dic_archivos_mostrar})
+        else:
+            lista_agrupar_archivos.append([{},None])
+    seleccionar_reporte["tipo"] = ["Comercial"]
+    seleccionar_reporte["clasificacion"] = ["GRC1","GRC2","GRTT2"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte, evitar_extra, informar=False, thread=thread)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte,"Sector de consumo subsidio"])
+        else:
+            lista_agrupar_archivos.append([{},None])
+    seleccionar_reporte["tipo"] = ["Comercial"]
+    seleccionar_reporte["clasificacion"] = ["GRC3"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte, evitar_extra, informar=False, thread=thread)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte,"Compensaciones"])
+            lista_agrupar_archivos_mostrar.append({"Compensaciones":dic_archivos_mostrar})
+        else:
+            lista_agrupar_archivos.append([{},None])
+    seleccionar_reporte["tipo"] = ["Comercial"]
+    seleccionar_reporte["clasificacion"] = ["DS"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte, evitar_extra, informar=False, thread=thread)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte,"Desviaciones Significativas"])
+            lista_agrupar_archivos_mostrar.append({"Desviaciones Significativas":dic_archivos_mostrar})
+        else:
+            lista_agrupar_archivos.append([{},None])
+    seleccionar_reporte["tipo"] = ["Tarifario"]
+    seleccionar_reporte["clasificacion"] = ["GRT1"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte, evitar_extra, informar=False, thread=thread)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte,"Tarifas"])
+            lista_agrupar_archivos_mostrar.append({"Tarifas":dic_archivos_mostrar})
+        else:
+            lista_agrupar_archivos.append([{},None])
+    seleccionar_reporte["tipo"] = ["Tecnico"]
+    seleccionar_reporte["clasificacion"] = ["GRS1"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte, evitar_extra, informar=False, thread=thread)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte,"Suspensiones"])
+            lista_agrupar_archivos_mostrar.append({"Suspensiones":dic_archivos_mostrar})
+        else:
+            lista_agrupar_archivos.append([{},None])
+    seleccionar_reporte["tipo"] = ["Tecnico"]
+    seleccionar_reporte["clasificacion"] = ["GRCS1"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte, evitar_extra, informar=False, thread=thread)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte,"Índices de Respuesta Servicio Ténico"])
+            lista_agrupar_archivos_mostrar.append({"Índices de Respuesta Servicio Ténico":dic_archivos_mostrar})
+        else:
+            lista_agrupar_archivos.append([{},None])
+    seleccionar_reporte["tipo"] = ["Tecnico"]
+    seleccionar_reporte["clasificacion"] = ["GRCS2"]
+    proceso_resumen, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte, evitar_extra, informar=False, thread=thread)
+    if proceso_resumen:
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos)
+        if proceso_agrupar:
+            lista_agrupar_archivos.append([dic_archivos,seleccionar_reporte,"Indicadores tecnicos"])
+            lista_agrupar_archivos_mostrar.append({"Indicadores técnicos":dic_archivos_mostrar})
+        else:
+            lista_agrupar_archivos.append([{},None])
+    nuevo_dic_mostrar = {}
+    if len(lista_agrupar_archivos_mostrar):
+        for elemento in lista_agrupar_archivos_mostrar:
+            for llave, dic in elemento.items():
+                for fecha, dic_filial in dic.items():
+                    if fecha not in nuevo_dic_mostrar:
+                        nuevo_dic_mostrar[fecha] = {}
+                    nuevo_dic_mostrar[fecha][llave] = dic_filial
+        for i in range(len(lista_agrupar_archivos)):
+            elemento = lista_agrupar_archivos[i][0]
+            seleccionar_reporte = lista_agrupar_archivos[i][1]
+            nombre = lista_agrupar_archivos[i][2]
+            if len(elemento):
+                if thread:
+                    thread.message_sent.emit(f"Inicio de procesamiento para: {nombre}\n\n", "green")
+                else:
+                    print(f"\nInicio de procesamiento para: {nombre}\n\n")
+                if i == 0:
+                    reporte_comercial_sector_consumo(cambio_diccionario_reportes(elemento), seleccionar_reporte, total=True, valor_facturado=True, thread=thread)
+                elif i == 1:
+                    reporte_comercial_sector_consumo(cambio_diccionario_reportes(elemento), seleccionar_reporte, total=True, valor_facturado=True, subsidio=True, thread=thread)
+                elif i == 2:
+                    generar_reporte_compensacion_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte, thread=thread)
+                elif i == 3:
+                    generar_reporte_desviaciones_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte, thread=thread)
+                elif i == 4:
+                    reporte_tarifas_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte, thread=thread)
+                elif i == 5:
+                    generar_reporte_suspension_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte, thread=thread)
+                elif i == 6:
+                    generar_reporte_indicadores_tecnicos_IRST_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte, thread=thread)
+                elif i == 7:
+                    generar_reporte_indicadores_tecnicos_mensual(cambio_diccionario_reportes(elemento), seleccionar_reporte, thread=thread)
+
+def fecha_anterior_rango(anio, mes):
+    ubi_mes = lista_meses.index(mes)
+    if ubi_mes == 0:
+        return (str(anio-1), lista_meses[-1])
+    else:
+        anio = str(int(anio))
+        mes = lista_meses[ubi_mes-1]
+        return (anio,  mes)
+
+def mostrar_dic_archivos_agrupados_dashboard(nuevo_dic_mostrar, thread=None):
+    if thread:
+        thread.message_sent.emit("Archivos disponibles para la selección realizada:", "green")
+        for i,j in nuevo_dic_mostrar.items():
+            thread.message_sent.emit(i, "orange")
+            for a,b in j.items():
+                thread.message_sent.emit("\t" + a, "white")
+                thread.message_sent.emit("\t"*3 + b, "white")
+                time.sleep(0.01)
+    else:
+        print("\nArchivos disponibles para la selección realizada: \n")
+        for i,j in nuevo_dic_mostrar.items():
+            print(i)
+            for a,b in j.items():
+                print(a,"\t"*3, b)
+
+def generar_archivos_anuales_dashboard(seleccionar_reporte_dashboard, thread=None):
+    lista_anual = []
+    dic_anual = {}
+    lista_dic = []
+    v_max = 0
+    seleccionar_reporte = seleccionar_reporte_dashboard.copy()
+    seleccionar_reporte_consumo = seleccionar_reporte.copy()
+    fi = seleccionar_reporte_consumo["fecha_personalizada"][0]
+    ff = seleccionar_reporte_consumo["fecha_personalizada"][1]
+    fi = fecha_anterior_rango(fi[0], fi[1])
+    seleccionar_reporte_consumo["fecha_personalizada"] = [fi,ff]
+    seleccionar_reporte_consumo["tipo"] = ["Comercial"]
+    seleccionar_reporte_consumo["clasificacion"] = ["GRC1","GRC2","GRTT2"]
+    reporte = "_reporte_consumo.csv"
+    categoria = "Reporte de sector de consumo"
+    reporte = reporte.replace(".csv", "_sumatoria.csv")
+    proceso,dic_archivos_anual = generar_archivos_extra_anual(seleccionar_reporte_consumo, reporte, ["_reporte_consumo", reporte.replace(".csv","")], continuar=True, mostrar_dic=False)
+    if proceso:
+        lista_dic.append((dic_archivos_anual, categoria))
+        if len(categoria) > v_max:
+            v_max = len(categoria)
+    else:
+        lista_dic.append(({},None))
+    seleccionar_reporte["tipo"] = ["Comercial"]
+    seleccionar_reporte["clasificacion"] = ["GRC1","GRC2","GRTT2"]
+    reporte = "_reporte_consumo_subsidio.csv"
+    categoria = "Reporte de sector de consumo subsidiado"
+    reporte = reporte.replace(".csv", "_sumatoria.csv")
+    proceso,dic_archivos_anual = generar_archivos_extra_anual(seleccionar_reporte, reporte, ["_reporte_consumo", reporte.replace(".csv",""), "_subsidio"], continuar=True, mostrar_dic=False)
+    if proceso:
+        lista_dic.append((dic_archivos_anual,categoria))
+        if len(categoria) > v_max:
+            v_max = len(categoria)
+        if len(categoria) > v_max:
+            v_max = len(categoria)
+    else:
+        lista_dic.append(({},None))
+    seleccionar_reporte["tipo"] = ["Comercial"]
+    seleccionar_reporte["clasificacion"] = ["GRC3"]
+    reporte = "_compilado_compensacion.csv"
+    categoria = "Reporte de compensaciones"
+    proceso,dic_archivos_anual = generar_archivos_extra_anual(seleccionar_reporte, reporte, continuar=True, mostrar_dic=False)
+    if proceso:
+        lista_dic.append((dic_archivos_anual,categoria))
+        if len(categoria) > v_max:
+            v_max = len(categoria)
+    else:
+        lista_dic.append(({},None))
+    seleccionar_reporte["tipo"] = ["Comercial"]
+    seleccionar_reporte["clasificacion"] = ["DS57"]
+    reporte = "_compilado_DS_metricas_categorias.csv"
+    categoria = "Reporte de desviaciones significativas"
+    proceso,dic_archivos_anual = generar_archivos_extra_anual(seleccionar_reporte, reporte, evitar_extra=["_compilado_desviaciones","_compilado_DS_metricas"], continuar=True, mostrar_dic=False)
+    if proceso:
+        lista_dic.append((dic_archivos_anual,categoria))
+        if len(categoria) > v_max:
+            v_max = len(categoria)
+    else:
+        lista_dic.append(({},None))
+    seleccionar_reporte["tipo"] = ["Tarifario"]
+    seleccionar_reporte["clasificacion"] = ["GRT1"]
+    reporte = "_reporte_tarifario.csv"
+    categoria = "Reporte de tarifas"
+    proceso,dic_archivos_anual = generar_archivos_extra_anual(seleccionar_reporte, reporte, continuar=True, mostrar_dic=False)
+    if proceso:
+        lista_dic.append((dic_archivos_anual,categoria))
+        if len(categoria) > v_max:
+            v_max = len(categoria)
+    else:
+        lista_dic.append(({},None))
+    seleccionar_reporte["tipo"] = ["Tecnico"]
+    seleccionar_reporte["clasificacion"] = ["GRS1"]
+    reporte = "_reporte_suspension.csv"
+    categoria = "Reporte de suspensiones"
+    proceso,dic_archivos_anual = generar_archivos_extra_anual(seleccionar_reporte, reporte, continuar=True, mostrar_dic=False)
+    if proceso:
+        lista_dic.append((dic_archivos_anual,categoria))
+        if len(categoria) > v_max:
+            v_max = len(categoria)
+    else:
+        lista_dic.append(({},None))
+    seleccionar_reporte["tipo"] = ["Tecnico"]
+    seleccionar_reporte["clasificacion"] = ["GRCS1"]
+    reporte_1 = "_indicador_tecnico_IRST.csv"
+    reporte_2 = "_indicador_tecnico_IRST_minutos.csv"
+    reporte_3 = "_indicador_tecnico_IRST_horas.csv"
+    categoria = "Reporte de IRST"
+    proceso,dic_archivos_anual = generar_archivos_extra_anual(seleccionar_reporte, reporte_1, evitar_extra=["_indicador_tecnico_IRST", "_indicador_tecnico"], continuar=True, mostrar_dic=False)
+    if proceso:
+        lista_dic.append((dic_archivos_anual,categoria))
+        if len(categoria) > v_max:
+            v_max = len(categoria)
+    else:
+        lista_dic.append(({},None))
+    categoria = "Reporte de IRST (minutos)"
+    proceso,dic_archivos_anual = generar_archivos_extra_anual(seleccionar_reporte, reporte_2, evitar_extra=["_indicador_tecnico_IRST_minutos","_indicador_tecnico","_indicador_tecnico_IRST"], continuar=True, mostrar_dic=False)
+    if proceso:
+        lista_dic.append((dic_archivos_anual,categoria))
+        if len(categoria) > v_max:
+            v_max = len(categoria)
+    else:
+        lista_dic.append(({},None))
+    categoria = "Reporte de IRST (horas)"
+    proceso,dic_archivos_anual = generar_archivos_extra_anual(seleccionar_reporte, reporte_3, evitar_extra=["_indicador_tecnico_IRST_horas","_indicador_tecnico","_indicador_tecnico_IRST"], continuar=True, mostrar_dic=False)
+    if proceso:
+        lista_dic.append((dic_archivos_anual,categoria))
+        if len(categoria) > v_max:
+            v_max = len(categoria)
+    else:
+        lista_dic.append(({},None))
+    seleccionar_reporte["tipo"] = ["Tecnico"]
+    seleccionar_reporte["clasificacion"] = ["GRCS2"]
+    reporte = "_indicador_tecnico.csv"
+    categoria = "Reporte de indicadores técnicos"
+    proceso,dic_archivos_anual = generar_archivos_extra_anual(seleccionar_reporte, reporte, continuar=True, mostrar_dic=False)
+    if proceso:
+        lista_dic.append((dic_archivos_anual,categoria))
+        if len(categoria) > v_max:
+            v_max = len(categoria)
+    else:
+        lista_dic.append(({},None))
+    v_max += 5
+    nuevo_dic_mostrar = {}
+    if len(lista_dic):
+        for elemento in lista_dic:
+            dic = elemento[0]
+            if len(dic):
+                categoria = elemento[1]
+                for fecha, lista_fecha in dic.items():
+                    if len(lista_fecha):
+                        if fecha not in nuevo_dic_mostrar:
+                            nuevo_dic_mostrar[fecha] = {}
+                        if categoria not in nuevo_dic_mostrar[fecha]:
+                            nuevo_dic_mostrar[fecha][categoria] = None
+                        nuevo_dic_mostrar[fecha][categoria] = lista_fecha[0].split("\\")[-1]
+        mostrar_dic_archivos_agrupados_dashboard(nuevo_dic_mostrar, thread=thread)
+        return lista_dic
+    else:
+        return {}
+
+def archivos_dashboard(lista_dic, reporte, thread=None):
+    lista_anual = []
+    for pos in range(len(lista_dic)):
+        elemento = lista_dic[pos]
+        dic_archivos_anual = elemento[0]
+        categoria = elemento[1]
+        if categoria:
+            if pos == 0:
+                archivo = union_archivos_mensuales_anual_reporte_consumo(dic_archivos_anual, reporte, True, subsidio=False, thread=thread)
+            elif pos == 1:
+                archivo = union_archivos_mensuales_anual_reporte_consumo(dic_archivos_anual, reporte, True, thread=thread)
+            else:
+                archivo = union_archivos_mensuales_anual(dic_archivos_anual, reporte, True, thread=thread)
+            lista_anual.append(archivo)
+        else:
+            lista_anual.append(None)
+    return lista_anual
+
+def eleccion_rango_trimestral(fecha=[]):
+    listas_unidas = unir_listas_anio_tri(lista_anios, lista_trimestres)
+    if len(fecha):
+        mes_i = fecha[0][1]
+        anio_i = int(fecha[0][0])
+        mes_f = fecha[1][1]
+        anio_f = fecha[1][0]
+        pos_mes = lista_meses.index(mes_i)
+        tri_i = trimestre_mes[fecha[0][1]]
+        tri_f = trimestre_mes[fecha[1][1]]
+        if pos_mes <= 3:
+            anio_i -=1
+        anio_i = str(anio_i)
+        fi = (anio_i,tri_i)
+        ff = (anio_f,tri_f)
+        return fi,ff,listas_unidas
+
+def generar_grafias_DB(lista_anual, reporte, thread=None):
+    fi_1 = reporte["fecha_personalizada"][0][0]
+    fi_2 = reporte["fecha_personalizada"][0][1]
+    ff_1 = reporte["fecha_personalizada"][1][0]
+    ff_2 = reporte["fecha_personalizada"][1][1]
+    texto_fecha = f"{fi_1}_{fi_2.upper()}_{ff_1}_{ff_2.upper()}"
+    fecha = ((fi_1, fi_2),(ff_1, ff_2))
+    texto_fecha_completo = f"{fi_2}/{fi_1} - {ff_2}/{ff_1}"
+    v_fecha_anterior = fecha_anterior(ff_1, ff_2)
+    v_fecha_inicial = fecha_anterior(fi_1, fi_2)
+    periodo = f"{fi_1}/{fi_2} - {ff_1}/{ff_2}"
+    periodo = f"{fi_2[:3]}/{fi_1} - {ff_2[:3]}/{ff_1}"
+    if len(lista_anual):
+        dic_metricas = {}
+        for i in range(len(lista_anual)):
+            archivo = lista_anual[i]
+            if archivo:
+                if i == 0:
+                    thread.message_sent.emit("Gráficas sectores de consumo", "orange")
+                    mod_6.grafica_pie_tipo_usuario(archivo, v_fecha_anterior, thread=thread)
+                    dic_metricas = mod_6.grafico_barras_consumo(archivo, dic_metricas, thread=thread)
+                    mod_6.grafico_usuarios(archivo, thread=thread)
+                    dic_metricas = mod_6.grafica_pie_usuarios(archivo, v_fecha_anterior, dic_metricas, thread=thread)
+                    dic_metricas = mod_6.grafica_tabla_sector_consumo(archivo, v_fecha_anterior, dic_metricas, thread=thread)
+                    dic_metricas = mod_6.metricas_sector_consumo(archivo, v_fecha_inicial, v_fecha_anterior, dic_metricas, thread=thread)
+                elif i == 1:
+                    thread.message_sent.emit("Gráficas sectores de consumo subsidiados", "orange")
+                    mod_6.grafica_pie_subsidios(archivo, v_fecha_anterior, thread=thread)
+                    dic_metricas = mod_6.grafica_barras_subsidios(archivo, dic_metricas, thread=thread)
+                elif i == 2:
+                    thread.message_sent.emit("Gráficas compensaciones", "orange")
+                    mod_6.grafica_compensacion(archivo, thread=thread)
+                    dic_metricas = mod_6.metricas_compensacines(archivo, v_fecha_anterior, dic_metricas)
+                elif i == 3:
+                    thread.message_sent.emit("Gráficas desviaciones significativas", "orange")
+                    dic_metricas = mod_6.grafica_DS(archivo, dic_metricas, thread=thread)
+                elif i == 4:
+                    thread.message_sent.emit(f"Gráficas tarifas {grupo_vanti}", "orange")
+                    dic_metricas = mod_6.fun_tarifas(archivo, v_fecha_anterior, dic_metricas, thread=thread)
+                elif i == 5:
+                    #thread.message_sent.emit("Gráficas suspensiones", "orange")
+                    dic_metricas = mod_6.metricas_suspensiones(archivo, v_fecha_anterior, dic_metricas)
+                elif i == 6:
+                    dic_metricas = mod_6.metricas_indicadores(archivo, v_fecha_anterior, dic_metricas)
+                elif i == 7:
+                    thread.message_sent.emit("Gráficas indicador IRST-EG", "orange")
+                    mod_6.grafica_barras_indicador_tecnico_minutos(archivo, thread=thread)
+                elif i == 8:
+                    mod_6.grafica_barras_indicador_tecnico_horas(archivo, fecha, thread=thread)
+                elif i == 9:
+                    thread.message_sent.emit("Gráficas indicadores técnicos (IPLI, IO, IRST-EG)", "orange")
+                    dic_metricas = mod_6.grafica_barras_indicador_tecnico(archivo, dic_metricas, thread=thread)
+        fi,ff,listas_unidas = eleccion_rango_trimestral([(fi_1, fi_2),(ff_1, ff_2)])
+        archivo = reporte_info_reclamos(fi,ff,listas_unidas, dashboard=True, texto_fecha=texto_fecha, thread=thread)
+        if archivo:
+            mod_6.grafica_barras_trimestre_reclamos(archivo, thread=thread)
+        thread.message_sent.emit("Gráficas gastos AOM", "orange")
+        archivo = gastos_AOM(dashboard=True, texto_fecha=texto_fecha, thread=thread)
+        if archivo:
+            mod_6.grafica_gastos_AOM(archivo, anio_actual-1, thread=thread)
+        thread.message_sent.emit("Gráficas porcentaje cumplimientos regulatorios", "orange")
+        archivo = generar_porcentaje_cumplimientos_regulatorios(dashboard=True, texto_fecha=texto_fecha, thread=thread)
+        if archivo:
+            mod_6.velocimetro_cumplimientos_regulatorios(archivo, v_fecha_anterior, thread=thread)
+        thread.message_sent.emit("Gráficas pagos de contribuciones MME", "orange")
+        archivo, archivo_1 = contribuciones_MME(dashboard=True, texto_fecha=texto_fecha, thread=thread)
+        if archivo and archivo_1:
+            dic_metricas = mod_6.grafica_deuda_subsidios(archivo, archivo_1, dic_metricas, thread=thread)
+        dic_tarifas = tarifas_distribuidoras_GN(thread=thread)
+        if dic_tarifas:
+            dic_metricas["Tarifas_nacionales"] = dic_tarifas
+        dic_distribuidoras = cumplimientos_SUI_distribuidoras(thread=thread)
+        if dic_distribuidoras:
+            dic_metricas["Cumplimientos_SUI"] = dic_distribuidoras
+        thread.message_sent.emit("Gráficas matriz de requerimientos", "orange")
+        archivo = generar_porcentaje_matriz_requerimientos(dashboard=True, texto_fecha=texto_fecha, thread=thread)
+        if archivo:
+            mod_6.grafica_matriz_requerimientos(archivo, thread=thread)
+        fecha_corte = f"{fecha_corte_tupla[0]} de {lista_meses[int(fecha_corte_tupla[1])-1]} del {fecha_corte_tupla[2]}"
+        fecha_corte_anterior = f"{fecha_anio_anterior_tupla[0]} de {lista_meses[int(fecha_anio_anterior_tupla[1])-1]} del {fecha_anio_anterior_tupla[2]}"
+        mes_corte = f"{lista_meses[int(fecha_corte_tupla[1])-1]}-{fecha_corte_tupla[2]}"
+        t = " "*17+"\t"*6
+        thread.message_sent.emit(f"{t} Inicio generación slides", "orange")
+        mod_7.crear_slides(lista_a_texto(archivo.split("\\")[:-2],"\\"),v_fecha_anterior,texto_fecha_completo,
+                        fecha_corte, texto_fecha, dic_metricas, mes_corte, fecha_corte_anterior,periodo,
+                        thread=thread)
+    return dic_metricas
+
 def generar_archivos_reporte(reporte, info, thread):
     lista_generar = []
     opciones = {}
@@ -6092,6 +6671,7 @@ class Envio_mensajes(QThread):
         self.info = info
     def run(self):
         try:
+            dashboard = False
             dic_info = {}
             valor = False
             self.message_sent.emit("Inicio de procesamiento de archivos\n", "green")
@@ -6283,6 +6863,26 @@ class Envio_mensajes(QThread):
                 case "reclamos_facturas":
                     if self.info:
                         reporte_info_reclamos(self.info["fi"], self.info["ff"], self.info["listas_unidas"], thread=self)
+                case "dashboard":
+                    if self.info:
+                        regenerar_mensual = False
+                        regenerar_anual = False
+                        if self.info["Opciones"]["regenerar_mensual"][0]:
+                            regenerar_mensual = True
+                        if self.info["Opciones"]["regenerar_anual"][0]:
+                            regenerar_anual = True
+                        lista_dic = reportes_add_men_DB(self.info, thread=self, regenerar_mensual=regenerar_mensual, regenerar_anual=regenerar_anual)
+                        dic_info["archivos"] = lista_dic
+                        dic_info["Reporte"] = self.info["Reporte"]
+                        valor = True
+                case "generar_dashboard":
+                    v_fecha_anterior = fecha_siguiente(self.info["Reporte"]["fecha_personalizada"][0][0], self.info["Reporte"]["fecha_personalizada"][0][1])
+                    self.info["Reporte"]["fecha_personalizada"][0] = (v_fecha_anterior[0], v_fecha_anterior[1])
+                    lista_anual = archivos_dashboard(self.info["archivos"], self.info["Reporte"], thread=self)
+                    dashboard = True
+                    t = " "*17+"\t"*6
+                    self.message_sent.emit(f"{t} Inicio generación gráficas", "orange")
+                    generar_grafias_DB(lista_anual, self.info["Reporte"], thread=self)
                 case _:
                     print("Estado no activo")
             self.message_sent.emit("\nFin de procesamiento de archivos\n", "green")
@@ -6290,8 +6890,12 @@ class Envio_mensajes(QThread):
             tiempo = mostrar_tiempo(t_f, t_i)
             self.message_sent.emit(f"{tiempo}\n", "white")
             if valor:
-                t = " "*17+"\t"*6
-                self.message_sent.emit(f"{t} ¿Desea continuar con el procesamiento?", "white")
+                if dashboard:
+                    t = " "*10+"\t"*3
+                    self.message_sent.emit(f"{t} ¿Desea continuar con la creación del DB con los archivos disponibles?", "white")
+                else:
+                    t = " "*17+"\t"*6
+                    self.message_sent.emit(f"{t} ¿Desea continuar con el procesamiento?", "white")
             self.finished.emit(valor, dic_info)
         except BaseException as e:
             self.message_sent.emit(f"\nError en el proceso: {e}\n", "red")

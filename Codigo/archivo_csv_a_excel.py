@@ -1,5 +1,5 @@
 from openpyxl import load_workbook
-from openpyxl.styles import PatternFill, Border, Side, Alignment, NamedStyle
+from openpyxl.styles import PatternFill, Border, Side, Alignment
 global color_ele
 import pandas as pd
 color_ele = "56affe"
@@ -121,7 +121,7 @@ def definir_tipo_texto(sheet, reporte_DANE=False):
 def ajustar_ancho_columna(sheet):
     for column in sheet.columns:
         max_length = 0
-        column_name = column[0].column_letter # Obtiene la letra de la columna
+        column_name = column[0].column_letter
         for cell in column:
             try:
                 if len(str(cell.value)) > max_length:
