@@ -2388,6 +2388,11 @@ def fechas_anuales(dic):
     lista_fecha_anual = [(lista_fechas[0][0],lista_fechas[0][1]),(lista_fechas[-1][0],lista_fechas[-1][1])]
     return lista_fecha_anual
 
+def formato_reporte(reporte):
+    lista = ["ubicacion","anios","filial","meses","tipo","clasificacion","fecha_personalizada"]
+    reporte_formato = {llave: reporte.get(llave, None) for llave in lista}
+    return reporte_formato
+
 def formato_seleccionar_reporte(dic_info, estado):
     dic_info_reporte = {}
     lista_seleccionar_reporte = []
@@ -2409,10 +2414,12 @@ def formato_seleccionar_reporte(dic_info, estado):
                 if valor[0]:
                     reporte["tipo"].append(llave)
             reporte["clasificacion"] = []
-            for _, dic in dic_info["Reporte"].items():
+            for tipo, dic in dic_info["Reporte"].items():
                 for llave, valor in dic.items():
                     if valor[0]:
                         reporte["clasificacion"].append(llave)
+                        if tipo not in reporte["tipo"]:
+                            reporte["tipo"].append(tipo)
             reporte["filial"] = ["VANTI", "GNCB", "GNCR", "GOR"]
             reporte["fecha_personalizada"] = None
             for _, valor in dic_info["Fecha"].items():
@@ -2420,7 +2427,118 @@ def formato_seleccionar_reporte(dic_info, estado):
                     reporte_copia = reporte.copy()
                     reporte_copia["anios"] = [valor[0][0]]
                     reporte_copia["meses"] = [valor[0][1]]
-                    lista_seleccionar_reporte.append(reporte_copia)
+                    lista_seleccionar_reporte.append(formato_reporte(reporte_copia))
+        case "archivos_estandar":
+            reporte = {}
+            reporte["ubicacion"] = ["Reportes Nuevo SUI"]
+            reporte["tipo"] = []
+            for llave, valor in dic_info["Categoria"].items():
+                if valor[0]:
+                    reporte["tipo"].append(llave)
+            reporte["clasificacion"] = []
+            for tipo, dic in dic_info["Reporte"].items():
+                for llave, valor in dic.items():
+                    if valor[0]:
+                        reporte["clasificacion"].append(llave)
+                        if tipo not in reporte["tipo"]:
+                            reporte["tipo"].append(tipo)
+            reporte["filial"] = []
+            if "Filial" in dic_info:
+                if dic_info["Filial"]["Todas"][2]:
+                    reporte["filial"] = ["VANTI", "GNCB", "GNCR", "GOR"]
+                else:
+                    for llave, valor in dic_info["Filial"].items():
+                        if valor[2]:
+                            reporte["filial"].append(llave)
+            reporte["fecha_personalizada"] = None
+            reporte_copia = reporte.copy()
+            if "Fecha" in dic_info:
+                for _, valor in dic_info["Fecha"].items():
+                    if valor[1]:
+                        reporte_copia["anios"] = [valor[0][0]]
+                        reporte_copia["meses"] = [valor[0][1]]
+                        lista_seleccionar_reporte.append(formato_reporte(reporte_copia))
+        case "archivos_resumen":
+            reporte = {}
+            reporte["ubicacion"] = ["Reportes Nuevo SUI"]
+            reporte["tipo"] = []
+            for llave, valor in dic_info["Categoria"].items():
+                if valor[0]:
+                    reporte["tipo"].append(llave)
+            reporte["clasificacion"] = []
+            for tipo, dic in dic_info["Reporte"].items():
+                for llave, valor in dic.items():
+                    if valor[0]:
+                        reporte["clasificacion"].append(llave)
+                        if tipo not in reporte["tipo"]:
+                            reporte["tipo"].append(tipo)
+            reporte["filial"] = []
+            if "Filial" in dic_info:
+                if dic_info["Filial"]["Todas"][2]:
+                    reporte["filial"] = ["VANTI", "GNCB", "GNCR", "GOR"]
+                else:
+                    for llave, valor in dic_info["Filial"].items():
+                        if valor[2]:
+                            reporte["filial"].append(llave)
+            reporte["fecha_personalizada"] = None
+            reporte_copia = reporte.copy()
+            if "Fecha" in dic_info:
+                for _, valor in dic_info["Fecha"].items():
+                    if valor[1]:
+                        reporte_copia["anios"] = [valor[0][0]]
+                        reporte_copia["meses"] = [valor[0][1]]
+                        lista_seleccionar_reporte.append(formato_reporte(reporte_copia))
+        case "archivos_existentes":
+            reporte = {}
+            reporte["ubicacion"] = ["Reportes Nuevo SUI"]
+            reporte["tipo"] = []
+            for llave, valor in dic_info["Categoria"].items():
+                if valor[0]:
+                    reporte["tipo"].append(llave)
+            reporte["clasificacion"] = []
+            for tipo, dic in dic_info["Reporte"].items():
+                for llave, valor in dic.items():
+                    if valor[0]:
+                        reporte["clasificacion"].append(llave)
+                        if tipo not in reporte["tipo"]:
+                            reporte["tipo"].append(tipo)
+            reporte["filial"] = []
+            if "Filial" in dic_info:
+                if dic_info["Filial"]["Todas"][2]:
+                    reporte["filial"] = ["VANTI", "GNCB", "GNCR", "GOR"]
+                else:
+                    for llave, valor in dic_info["Filial"].items():
+                        if valor[2]:
+                            reporte["filial"].append(llave)
+            reporte["fecha_personalizada"] = None
+            reporte_copia = reporte.copy()
+            if "Fecha" in dic_info:
+                for _, valor in dic_info["Fecha"].items():
+                    if valor[1]:
+                        reporte_copia["anios"] = [valor[0][0]]
+                        reporte_copia["meses"] = [valor[0][1]]
+                        lista_seleccionar_reporte.append(formato_reporte(reporte_copia))
+        case "reportes_existentes":
+            reporte = {}
+            reporte["ubicacion"] = ["Reportes Nuevo SUI"]
+            reporte["tipo"] = []
+            for llave, valor in dic_info["Categoria"].items():
+                if valor[0]:
+                    reporte["tipo"].append(llave)
+            reporte["clasificacion"] = []
+            for tipo, dic in dic_info["Reporte"].items():
+                for llave, valor in dic.items():
+                    if valor[0]:
+                        reporte["clasificacion"].append(llave)
+                        if tipo not in reporte["tipo"]:
+                            reporte["tipo"].append(tipo)
+            reporte["filial"] = ["VANTI", "GNCB", "GNCR", "GOR"]
+            reporte["fecha_personalizada"] = [(dic_info["Reporte_anual"]["fecha_personalizada"][0][0],dic_info["Reporte_anual"]["fecha_personalizada"][0][1]),
+                                                        (dic_info["Reporte_anual"]["fecha_personalizada"][1][0],dic_info["Reporte_anual"]["fecha_personalizada"][1][1])]
+            reporte["anios"] = None
+            reporte["meses"] = None
+            reporte_copia = formato_reporte(reporte.copy())
+            dic_info_reporte["Reporte_anual"] = reporte_copia
         #Reportes comerciales
         case "reporte_comercial_sector_consumo_mensual":
             ubi = ["Reportes Nuevo SUI"]
@@ -2444,7 +2562,8 @@ def formato_seleccionar_reporte(dic_info, estado):
                         reporte["tipo"] = tipo
                         reporte["clasificacion"] = clasificacion
                         reporte["ubicacion"] = ubi
-                        lista_seleccionar_reporte.append(reporte)
+                        reporte["fecha_personalizada"] = None
+                        lista_seleccionar_reporte.append(formato_reporte(reporte))
             if "Opciones_adicionales" in dic_info:
                 for llave, valor in dic_info["Opciones_adicionales"].items():
                     if llave == "codigo_DANE":
@@ -2473,7 +2592,8 @@ def formato_seleccionar_reporte(dic_info, estado):
                         reporte["tipo"] = tipo
                         reporte["clasificacion"] = clasificacion
                         reporte["ubicacion"] = ubi
-                        lista_seleccionar_reporte.append(reporte)
+                        reporte["fecha_personalizada"] = None
+                        lista_seleccionar_reporte.append(formato_reporte(reporte))
             if "Opciones_adicionales" in dic_info:
                 for llave, valor in dic_info["Opciones_adicionales"].items():
                     if llave == "codigo_DANE":
@@ -2502,7 +2622,8 @@ def formato_seleccionar_reporte(dic_info, estado):
                         reporte["tipo"] = tipo
                         reporte["clasificacion"] = clasificacion
                         reporte["ubicacion"] = ubi
-                        lista_seleccionar_reporte.append(reporte)
+                        reporte["fecha_personalizada"] = None
+                        lista_seleccionar_reporte.append(formato_reporte(reporte))
             if "Opciones_adicionales" in dic_info:
                 for llave, valor in dic_info["Opciones_adicionales"].items():
                     if valor[0]:
@@ -2526,10 +2647,231 @@ def formato_seleccionar_reporte(dic_info, estado):
                 reporte["clasificacion"] = clasificacion
                 reporte["ubicacion"] = ubi
                 reporte["fecha_personalizada"] = fechas_anuales(dic_info["Fecha"])
-                lista_seleccionar_reporte.append(reporte)
+                lista_seleccionar_reporte.append(formato_reporte(reporte))
             if "Opciones_adicionales" in dic_info:
                 for llave, valor in dic_info["Opciones_adicionales"].items():
                     if valor[0]:
+                        opciones[llave] = valor[0]
+        case "desviaciones_significativas_mensual":
+            ubi = ["Reportes Nuevo SUI"]
+            tipo = ["Comercial"]
+            clasificacion = ["DS"]
+            filial = []
+            if "Filial" in dic_info:
+                if dic_info["Filial"]["Todas"][2]:
+                    filial = ["VANTI", "GNCB", "GNCR", "GOR"]
+                else:
+                    for llave, valor in dic_info["Filial"].items():
+                        if valor[2]:
+                            filial.append(llave)
+            if "Fecha" in dic_info:
+                for _, valor in dic_info["Fecha"].items():
+                    reporte = reset_reporte()
+                    if valor[1]:
+                        reporte["anios"] = [valor[0][0]]
+                        reporte["meses"] = [valor[0][1]]
+                        reporte["filial"] = filial
+                        reporte["tipo"] = tipo
+                        reporte["clasificacion"] = clasificacion
+                        reporte["ubicacion"] = ubi
+                        reporte["fecha_personalizada"] = None
+                        lista_seleccionar_reporte.append(formato_reporte(reporte))
+            if "Opciones_adicionales" in dic_info:
+                for llave, valor in dic_info["Opciones_adicionales"].items():
+                    if valor[0]:
+                        opciones[llave] = valor[0]
+        case "desviaciones_significativas_anual":
+            ubi = ["Reportes Nuevo SUI"]
+            tipo = ["Comercial"]
+            clasificacion = ["DS"]
+            filial = []
+            if "Filial" in dic_info:
+                if dic_info["Filial"]["Todas"][2]:
+                    filial = ["VANTI", "GNCB", "GNCR", "GOR"]
+                else:
+                    for llave, valor in dic_info["Filial"].items():
+                        if valor[2]:
+                            filial.append(llave)
+            if "Fecha" in dic_info:
+                reporte = reset_reporte()
+                reporte["filial"] = filial
+                reporte["tipo"] = tipo
+                reporte["clasificacion"] = clasificacion
+                reporte["ubicacion"] = ubi
+                reporte["fecha_personalizada"] = fechas_anuales(dic_info["Fecha"])
+                lista_seleccionar_reporte.append(formato_reporte(reporte))
+            if "Opciones_adicionales" in dic_info:
+                for llave, valor in dic_info["Opciones_adicionales"].items():
+                    if valor[0]:
+                        opciones[llave] = valor[0]
+        case "reporte_DANE_mensual":
+            ubi = ["Reportes Nuevo SUI"]
+            tipo = ["Comercial"]
+            clasificacion = ["GRC1","GRC2","GRTT2"]
+            filial = []
+            if "Filial" in dic_info:
+                if dic_info["Filial"]["Todas"][2]:
+                    filial = ["VANTI", "GNCB", "GNCR", "GOR"]
+                else:
+                    for llave, valor in dic_info["Filial"].items():
+                        if valor[2]:
+                            filial.append(llave)
+            if "Fecha" in dic_info:
+                for _, valor in dic_info["Fecha"].items():
+                    reporte = reset_reporte()
+                    if valor[1]:
+                        reporte["anios"] = [valor[0][0]]
+                        reporte["meses"] = [valor[0][1]]
+                        reporte["filial"] = filial
+                        reporte["tipo"] = tipo
+                        reporte["clasificacion"] = clasificacion
+                        reporte["ubicacion"] = ubi
+                        reporte["fecha_personalizada"] = None
+                        lista_seleccionar_reporte.append(formato_reporte(reporte))
+            if "Opciones_adicionales" in dic_info:
+                for llave, valor in dic_info["Opciones_adicionales"].items():
+                    if llave == "codigo_DANE":
+                        opciones[llave] = valor
+                    elif valor[0]:
+                        opciones[llave] = valor[0]
+        case "reporte_SH":
+            ubi = ["Reportes Nuevo SUI"]
+            tipo = ["Comercial"]
+            clasificacion = ["GRC1","GRTT2"]
+            filial = ["VANTI"]
+            if "Fecha" in dic_info:
+                for _, valor in dic_info["Fecha"].items():
+                    reporte = reset_reporte()
+                    if valor[1]:
+                        reporte["anios"] = [valor[0][0]]
+                        reporte["meses"] = [valor[0][1]]
+                        reporte["filial"] = filial
+                        reporte["tipo"] = tipo
+                        reporte["clasificacion"] = clasificacion
+                        reporte["ubicacion"] = ubi
+                        reporte["fecha_personalizada"] = None
+                        lista_seleccionar_reporte.append(formato_reporte(reporte))
+            if "Opciones_adicionales" in dic_info:
+                for llave, valor in dic_info["Opciones_adicionales"].items():
+                    if valor[0]:
+                        opciones[llave] = valor[0]
+        case "comparacion_CER_CLD_PRD":
+            ubi = ["Reportes Nuevo SUI"]
+            tipo = ["Comercial"]
+            clasificacion = ["GRC1","GRTT2"]
+            filial = []
+            if "Filial" in dic_info:
+                if dic_info["Filial"]["Todas"][2]:
+                    filial = ["VANTI", "GNCB", "GNCR", "GOR"]
+                else:
+                    for llave, valor in dic_info["Filial"].items():
+                        if valor[2]:
+                            filial.append(llave)
+            if "Fecha" in dic_info:
+                for _, valor in dic_info["Fecha"].items():
+                    reporte = reset_reporte()
+                    if valor[1]:
+                        reporte["anios"] = [valor[0][0]]
+                        reporte["meses"] = [valor[0][1]]
+                        reporte["filial"] = filial
+                        reporte["tipo"] = tipo
+                        reporte["clasificacion"] = clasificacion
+                        reporte["ubicacion"] = ubi
+                        reporte["fecha_personalizada"] = None
+                        lista_seleccionar_reporte.append(formato_reporte(reporte))
+            if "Opciones_adicionales" in dic_info:
+                for llave, valor in dic_info["Opciones_adicionales"].items():
+                    if valor[0]:
+                        opciones[llave] = valor[0]
+        case "comparacion_CER_CLD":
+            ubi = ["Reportes Nuevo SUI"]
+            tipo = ["Comercial"]
+            clasificacion = ["GRC1"]
+            filial = []
+            if "Filial" in dic_info:
+                if dic_info["Filial"]["Todas"][2]:
+                    filial = ["VANTI", "GNCB", "GNCR", "GOR"]
+                else:
+                    for llave, valor in dic_info["Filial"].items():
+                        if valor[2]:
+                            filial.append(llave)
+            if "Fecha" in dic_info:
+                for _, valor in dic_info["Fecha"].items():
+                    reporte = reset_reporte()
+                    if valor[1]:
+                        reporte["anios"] = [valor[0][0]]
+                        reporte["meses"] = [valor[0][1]]
+                        reporte["filial"] = filial
+                        reporte["tipo"] = tipo
+                        reporte["clasificacion"] = clasificacion
+                        reporte["ubicacion"] = ubi
+                        reporte["fecha_personalizada"] = None
+                        lista_seleccionar_reporte.append(formato_reporte(reporte))
+            if "Opciones_adicionales" in dic_info:
+                for llave, valor in dic_info["Opciones_adicionales"].items():
+                    if llave == "cantidad_filas":
+                        opciones[llave] = int(valor)
+                    elif valor[0]:
+                        opciones[llave] = valor[0]
+        case "comparacion_CER_PRD":
+            ubi = ["Reportes Nuevo SUI"]
+            tipo = ["Comercial"]
+            clasificacion = ["GRC1"]
+            filial = []
+            if "Filial" in dic_info:
+                if dic_info["Filial"]["Todas"][2]:
+                    filial = ["VANTI", "GNCB", "GNCR", "GOR"]
+                else:
+                    for llave, valor in dic_info["Filial"].items():
+                        if valor[2]:
+                            filial.append(llave)
+            if "Fecha" in dic_info:
+                for _, valor in dic_info["Fecha"].items():
+                    reporte = reset_reporte()
+                    if valor[1]:
+                        reporte["anios"] = [valor[0][0]]
+                        reporte["meses"] = [valor[0][1]]
+                        reporte["filial"] = filial
+                        reporte["tipo"] = tipo
+                        reporte["clasificacion"] = clasificacion
+                        reporte["ubicacion"] = ubi
+                        reporte["fecha_personalizada"] = None
+                        lista_seleccionar_reporte.append(formato_reporte(reporte))
+            if "Opciones_adicionales" in dic_info:
+                for llave, valor in dic_info["Opciones_adicionales"].items():
+                    if llave == "cantidad_filas":
+                        opciones[llave] = int(valor)
+                    elif valor[0]:
+                        opciones[llave] = valor[0]
+        case "comparacion_CLD_PRD":
+            ubi = ["Reportes Nuevo SUI"]
+            tipo = ["Comercial"]
+            clasificacion = ["GRC1"]
+            filial = []
+            if "Filial" in dic_info:
+                if dic_info["Filial"]["Todas"][2]:
+                    filial = ["VANTI", "GNCB", "GNCR", "GOR"]
+                else:
+                    for llave, valor in dic_info["Filial"].items():
+                        if valor[2]:
+                            filial.append(llave)
+            if "Fecha" in dic_info:
+                for _, valor in dic_info["Fecha"].items():
+                    reporte = reset_reporte()
+                    if valor[1]:
+                        reporte["anios"] = [valor[0][0]]
+                        reporte["meses"] = [valor[0][1]]
+                        reporte["filial"] = filial
+                        reporte["tipo"] = tipo
+                        reporte["clasificacion"] = clasificacion
+                        reporte["ubicacion"] = ubi
+                        reporte["fecha_personalizada"] = None
+                        lista_seleccionar_reporte.append(formato_reporte(reporte))
+            if "Opciones_adicionales" in dic_info:
+                for llave, valor in dic_info["Opciones_adicionales"].items():
+                    if llave == "cantidad_filas":
+                        opciones[llave] = int(valor)
+                    elif valor[0]:
                         opciones[llave] = valor[0]
         #Reportes tarifarios
         case "reportes_tarifarios_mensual":
@@ -2554,7 +2896,8 @@ def formato_seleccionar_reporte(dic_info, estado):
                         reporte["tipo"] = tipo
                         reporte["clasificacion"] = clasificacion
                         reporte["ubicacion"] = ubi
-                        lista_seleccionar_reporte.append(reporte)
+                        reporte["fecha_personalizada"] = None
+                        lista_seleccionar_reporte.append(formato_reporte(reporte))
             if "Opciones_adicionales" in dic_info:
                 for llave, valor in dic_info["Opciones_adicionales"].items():
                     if valor[0]:
@@ -2578,7 +2921,7 @@ def formato_seleccionar_reporte(dic_info, estado):
                 reporte["clasificacion"] = clasificacion
                 reporte["ubicacion"] = ubi
                 reporte["fecha_personalizada"] = fechas_anuales(dic_info["Fecha"])
-                lista_seleccionar_reporte.append(reporte)
+                lista_seleccionar_reporte.append(formato_reporte(reporte))
             if "Opciones_adicionales" in dic_info:
                 for llave, valor in dic_info["Opciones_adicionales"].items():
                     if valor[0]:
@@ -2606,7 +2949,8 @@ def formato_seleccionar_reporte(dic_info, estado):
                         reporte["tipo"] = tipo
                         reporte["clasificacion"] = clasificacion
                         reporte["ubicacion"] = ubi
-                        lista_seleccionar_reporte.append(reporte)
+                        reporte["fecha_personalizada"] = None
+                        lista_seleccionar_reporte.append(formato_reporte(reporte))
             if "Opciones_adicionales" in dic_info:
                 for llave, valor in dic_info["Opciones_adicionales"].items():
                     if valor[0]:
@@ -2630,7 +2974,7 @@ def formato_seleccionar_reporte(dic_info, estado):
                 reporte["clasificacion"] = clasificacion
                 reporte["ubicacion"] = ubi
                 reporte["fecha_personalizada"] = fechas_anuales(dic_info["Fecha"])
-                lista_seleccionar_reporte.append(reporte)
+                lista_seleccionar_reporte.append(formato_reporte(reporte))
             if "Opciones_adicionales" in dic_info:
                 for llave, valor in dic_info["Opciones_adicionales"].items():
                     if valor[0]:
@@ -2657,7 +3001,8 @@ def formato_seleccionar_reporte(dic_info, estado):
                         reporte["tipo"] = tipo
                         reporte["clasificacion"] = clasificacion
                         reporte["ubicacion"] = ubi
-                        lista_seleccionar_reporte.append(reporte)
+                        reporte["fecha_personalizada"] = None
+                        lista_seleccionar_reporte.append(formato_reporte(reporte))
             if "Opciones_adicionales" in dic_info:
                 for llave, valor in dic_info["Opciones_adicionales"].items():
                     if valor[0]:
@@ -2681,7 +3026,7 @@ def formato_seleccionar_reporte(dic_info, estado):
                 reporte["clasificacion"] = clasificacion
                 reporte["ubicacion"] = ubi
                 reporte["fecha_personalizada"] = fechas_anuales(dic_info["Fecha"])
-                lista_seleccionar_reporte.append(reporte)
+                lista_seleccionar_reporte.append(formato_reporte(reporte))
             if "Opciones_adicionales" in dic_info:
                 for llave, valor in dic_info["Opciones_adicionales"].items():
                     if valor[0]:
@@ -2708,7 +3053,8 @@ def formato_seleccionar_reporte(dic_info, estado):
                         reporte["tipo"] = tipo
                         reporte["clasificacion"] = clasificacion
                         reporte["ubicacion"] = ubi
-                        lista_seleccionar_reporte.append(reporte)
+                        reporte["fecha_personalizada"] = None
+                        lista_seleccionar_reporte.append(formato_reporte(reporte))
             if "Opciones_adicionales" in dic_info:
                 for llave, valor in dic_info["Opciones_adicionales"].items():
                     if valor[0]:
@@ -2732,7 +3078,7 @@ def formato_seleccionar_reporte(dic_info, estado):
                 reporte["clasificacion"] = clasificacion
                 reporte["ubicacion"] = ubi
                 reporte["fecha_personalizada"] = fechas_anuales(dic_info["Fecha"])
-                lista_seleccionar_reporte.append(reporte)
+                lista_seleccionar_reporte.append(formato_reporte(reporte))
             if "Opciones_adicionales" in dic_info:
                 for llave, valor in dic_info["Opciones_adicionales"].items():
                     if valor[0]:
@@ -2754,14 +3100,14 @@ def formato_seleccionar_reporte(dic_info, estado):
             seleccionar_reporte["fecha_personalizada"] = [(dic_info["Reporte"]["fecha_personalizada"][0][0],dic_info["Reporte"]["fecha_personalizada"][0][1]),
                                                         (dic_info["Reporte"]["fecha_personalizada"][1][0],dic_info["Reporte"]["fecha_personalizada"][1][1])]
             dic_info_reporte["Reporte_add"] = {}
-            dic_info_reporte["Reporte_add"]["anual"] = seleccionar_reporte.copy()
+            dic_info_reporte["Reporte_add"]["anual"] = formato_reporte(seleccionar_reporte).copy()
             seleccionar_reporte = dic_info["Reporte"]
             seleccionar_reporte["anios"] = [dic_info["Reporte"]["fecha_personalizada"][1][0]]
             seleccionar_reporte["meses"] = [dic_info["Reporte"]["fecha_personalizada"][1][1]]
             seleccionar_reporte["tipo"] = list(dic_reportes.keys()).copy()
             seleccionar_reporte["clasificacion"] = lista_reportes_totales.copy()
             seleccionar_reporte["fecha_personalizada"] = None
-            dic_info_reporte["Reporte_add"]["mensual"] = seleccionar_reporte.copy()
+            dic_info_reporte["Reporte_add"]["mensual"] = formato_reporte(seleccionar_reporte).copy()
         case _:
             pass
     dic_info_reporte["Reportes"] = lista_seleccionar_reporte
@@ -2789,15 +3135,6 @@ def mostrar_inicio_app():
     mod_1.mostrar_titulo("Vicepresidencia de Estrategia y Finanzas", None, "up")
     mod_1.mostrar_titulo("Regulación, Márgenes y Tarifas", None, "down")
     iniciar_menu()
-
-# TODO: Pendientes Urgentes
-    #Creación de mapa de suspensiones
-
-# TODO Documento:
-    #Incluir tiempo estimado promedio por mes para la documentación de explicación (Pruebas de tiempo con otros dispositivos)
-
-# TODO Opcionales:
-    # Creación doc unión GRC1/GRTT2 y/o GRC2
 
 def on_close(event, app):
     app.closeAllWindows()
@@ -2842,6 +3179,22 @@ def activar_funciones(estado, info):
             titulo = "Conversión de archivos"
             info = formato_seleccionar_reporte(info, estado)
             estado = mod_1.run_app(titulo, estado, info)
+        case "archivos_estandar":
+            titulo = "Generación de archivos estándar"
+            info = formato_seleccionar_reporte(info, estado)
+            estado = mod_1.run_app(titulo, estado, info)
+        case "archivos_resumen":
+            titulo = "Generación de archivos resumen"
+            info = formato_seleccionar_reporte(info, estado)
+            estado = mod_1.run_app(titulo, estado, info)
+        case "archivos_existentes":
+            titulo = "Generación de archivos existentes"
+            info = formato_seleccionar_reporte(info, estado)
+            estado = mod_1.run_app(titulo, estado, info)
+        case "reportes_existentes":
+            titulo = "Selección de reportes existentes"
+            info = formato_seleccionar_reporte(info, estado)
+            estado = mod_1.run_app(titulo, estado, info)
         #Reportes comerciales
         case "reporte_comercial_sector_consumo_mensual":
             titulo = "Reporte comercial sector consumo"
@@ -2857,6 +3210,38 @@ def activar_funciones(estado, info):
             estado = mod_1.run_app(titulo, estado, info)
         case "reporte_compensaciones_anual":
             titulo = "Reporte compensaciones anual"
+            info = formato_seleccionar_reporte(info, estado)
+            estado = mod_1.run_app(titulo, estado, info)
+        case "desviaciones_significativas_mensual":
+            titulo = "Desviaciones significativas"
+            info = formato_seleccionar_reporte(info, estado)
+            estado = mod_1.run_app(titulo, estado, info)
+        case "desviaciones_significativas_anual":
+            titulo = "Desviaciones significativas anual"
+            info = formato_seleccionar_reporte(info, estado)
+            estado = mod_1.run_app(titulo, estado, info)
+        case "reporte_DANE_mensual":
+            titulo = "Reporte DANE"
+            info = formato_seleccionar_reporte(info, estado)
+            estado = mod_1.run_app(titulo, estado, info)
+        case "reporte_SH":
+            titulo = "Reporte Secretaria de Hacienda de Bogotá D.C."
+            info = formato_seleccionar_reporte(info, estado)
+            estado = mod_1.run_app(titulo, estado, info)
+        case "comparacion_CER_CLD_PRD":
+            titulo = "Comparación CER-CLD-PRD"
+            info = formato_seleccionar_reporte(info, estado)
+            estado = mod_1.run_app(titulo, estado, info)
+        case "comparacion_CER_CLD":
+            titulo = "Comparación CER-CLD"
+            info = formato_seleccionar_reporte(info, estado)
+            estado = mod_1.run_app(titulo, estado, info)
+        case "comparacion_CER_PRD":
+            titulo = "Comparación CER-PRD"
+            info = formato_seleccionar_reporte(info, estado)
+            estado = mod_1.run_app(titulo, estado, info)
+        case "comparacion_CLD_PRD":
+            titulo = "Comparación CLD-PRD"
             info = formato_seleccionar_reporte(info, estado)
             estado = mod_1.run_app(titulo, estado, info)
         #Reportes tarifarios
@@ -2932,3 +3317,13 @@ if __name__ == "__main__":
         iniciar_menu()"""
     #iniciar_menu()
     iniciar_app(crear_app())
+
+# TODO: Pendientes Urgentes
+    #Creación de mapa de suspensiones
+    #Revisión Business Plan
+
+# TODO Documento:
+    #Incluir tiempo estimado promedio por mes para la documentación de explicación (Pruebas de tiempo con otros dispositivos)
+
+# TODO Opcionales:
+    # Creación doc unión GRC1/GRTT2 y/o GRC2

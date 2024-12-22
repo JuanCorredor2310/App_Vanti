@@ -583,7 +583,7 @@ def informar_archivo_creado(nombre,valor,thread=None):
         else:
             print(f"\nArchivo {texto} creado\n")
 
-def estandarizacion_archivos(lista_archivos, informar):
+def estandarizacion_archivos(lista_archivos, informar, thread=None):
     dic_reporte = None
     for archivo in lista_archivos:
         exitoso = True
@@ -602,11 +602,15 @@ def estandarizacion_archivos(lista_archivos, informar):
                 df = pd.concat(lista_df, ignore_index=True)
                 nuevo_nombre = archivo.replace(".csv", "_form_estandar.csv")
                 if exitoso:
-                    almacenar_df_csv_y_excel(df, nuevo_nombre, almacenar_excel=False)
+                    almacenar_df_csv_y_excel(df, nuevo_nombre, almacenar_excel=False, thread=thread)
                 else:
                     v_nombre_archivo_json_reporte = nombre_archivo_json_reporte(archivo)
-                    print(f"\nEl archivo {acortar_nombre(archivo,3)} no cumple con las columnas del archivo {acortar_nombre(v_nombre_archivo_json_reporte,3)}")
-                    print(f"Revisar el archivo {acortar_nombre(archivo)}\n")
+                    if thread:
+                        thread.message_sent.emit(f"El archivo {acortar_nombre(archivo,3)} no cumple con las columnas del archivo {acortar_nombre(v_nombre_archivo_json_reporte,3)}", "white")
+                        thread.message_sent.emit(f"Revisar el archivo {acortar_nombre(archivo)}", "white")
+                    else:
+                        print(f"\nEl archivo {acortar_nombre(archivo,3)} no cumple con las columnas del archivo {acortar_nombre(v_nombre_archivo_json_reporte,3)}")
+                        print(f"Revisar el archivo {acortar_nombre(archivo)}\n")
 
 def cambiar_formato_dataframe_resumen(df, dic_reporte):
     df = df[dic_reporte["seleccionados"]]
@@ -626,7 +630,7 @@ def buscar_reporte(archivo):
         return dic_reporte
     return None
 
-def archivos_resumen(lista_archivos, informar):
+def archivos_resumen(lista_archivos, informar, thread=None):
     dic_reporte = None
     for archivo in lista_archivos:
         if buscar_formato(archivo):
@@ -647,7 +651,7 @@ def archivos_resumen(lista_archivos, informar):
                     nuevo_nombre = archivo.replace("_form_estandar.csv", "_resumen.csv")
                     df.to_csv(nuevo_nombre, index=False,encoding="utf-8-sig")
                     if informar:
-                        informar_archivo_creado(nuevo_nombre, True)
+                        informar_archivo_creado(nuevo_nombre, True, thread=thread)
 
 def encontrar_categoria_reporte(reporte):
     for categoria, lista in dic_reportes.items():
@@ -867,7 +871,24 @@ def almacenar_2_archivos(lista_archivos):
     else:
         return False
 
-def comprimir_archivos(lista_archivos, informar=True):
+def comprimir_archivos_aux(seleccionar_reporte, evitar_extra=["_CLD","_PRD"], thread=None):
+    lista_archivos_comprimir = []
+    tipo = ".csv"
+    proceso, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte,evitar_extra, informar=False)
+    if proceso:
+        lista_archivos_comprimir.extend(lista_archivos)
+    tipo = "_form_estandar.csv"
+    proceso, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte,evitar_extra, informar=False)
+    if proceso:
+        lista_archivos_comprimir.extend(lista_archivos)
+    tipo = ".txt"
+    proceso, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte,evitar_extra, informar=False)
+    if proceso:
+        lista_archivos_comprimir.extend(lista_archivos)
+    if len(lista_archivos_comprimir):
+        comprimir_archivos(lista_archivos_comprimir, thread=thread)
+
+def comprimir_archivos(lista_archivos, informar=True, thread=None):
     diccionario_archivos = {}
     for archivo in lista_archivos:
         lista_archivo = archivo.split("\\")
@@ -884,7 +905,10 @@ def comprimir_archivos(lista_archivos, informar=True):
                 for file in tupla[0]:
                     zipf.write(file, os.path.basename(file))
                 if informar:
-                    print(f"\nSe recomienda almacenar la carpeta {llave} en un ubicación externa. \nLos archivos de la carpeta comprimida pesan {v_tamanio_archivos}\n")
+                    if thread:
+                        thread.message_sent.emit(f"Se recomienda almacenar la carpeta {llave} en un ubicación externa. \nLos archivos de la carpeta comprimida pesan {v_tamanio_archivos}", "orange")
+                    else:
+                        print(f"\nSe recomienda almacenar la carpeta {llave} en un ubicación externa. \nLos archivos de la carpeta comprimida pesan {v_tamanio_archivos}\n")
                 eliminar_archivos(tupla[0])
 
 def almacenar_df_csv_y_excel(df, nombre, informar=True, almacenar_excel=True, reporte_DANE=False, BOM=True, thread=None):
@@ -1589,7 +1613,7 @@ def reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar
                     nuevo_nombre = nuevo_nombre.replace(".csv","_sumatoria.csv")
             almacenar_df_csv_y_excel(df_total, nuevo_nombre, informar, almacenar_excel, reporte_DANE=reporte_DANE, thread=thread)
 
-def reporte_SH(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=[]):
+def reporte_SH(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=[], thread=None):
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for fecha, lista_archivos in dic_archivos.items():
         lista_df_filiales = []
@@ -1598,9 +1622,9 @@ def reporte_SH(dic_archivos, seleccionar_reporte, informar=True, codigo_DANE=[])
             for archivo in lista_archivos:
                 if filial in archivo:
                     lista_archivos_filial.append(archivo)
-            apoyo_reporte_SH(lista_archivos_filial, codigo_DANE)
+            apoyo_reporte_SH(lista_archivos_filial, codigo_DANE, thread=thread)
 
-def apoyo_reporte_SH(lista_archivos_filial, codigo_DANE):
+def apoyo_reporte_SH(lista_archivos_filial, codigo_DANE, thread=None):
     ele_codigo_DANE = codigo_DANE[0]
     bool_GRC1 = False
     bool_GRTT2 = False
@@ -1672,7 +1696,7 @@ def apoyo_reporte_SH(lista_archivos_filial, codigo_DANE):
         lista_nombre[-2] = "10. SH"
         lista_nombre[-1] = "SH_"+lista_nombre[-1].split("_")[2]+"_"+lista_nombre[-1].split("_")[3]+".csv"
         nombre = lista_a_texto(lista_nombre,"\\")
-        almacenar_df_csv_y_excel(df_SH, nombre, almacenar_excel=False)
+        almacenar_df_csv_y_excel(df_SH, nombre, almacenar_excel=False, thread=thread)
 
 def diferencia_columnas_dataframe(df_actual, df_anterior):
     df_actual = df_actual.copy().reset_index(drop=True)
@@ -3630,6 +3654,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos,filial,fecha,
     lista_reporte = []
     lista_fecha = fecha.split(" - ")
     v_fecha_reporte = fecha_anterior(lista_fecha[0], lista_fecha[1])
+    v_fecha_reporte = fecha_anterior(v_fecha_reporte[0], v_fecha_reporte[1])
     mes_reporte = v_fecha_reporte[1]
     anio_reporte = v_fecha_reporte[0]
 
@@ -3957,7 +3982,7 @@ def apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos,filial,fecha,
     else:
         return None, None
 
-def generar_reporte_desviaciones_mensual(dic_archivos, seleccionar_reporte, informar=True, thread=False):
+def generar_reporte_desviaciones_mensual(dic_archivos, seleccionar_reporte, informar=True, thread=None):
     filas_minimas = ["ID_EMPRESA","NIU","ID_MERCADO"]
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for fecha, lista_archivos in dic_archivos.items():
@@ -5500,7 +5525,7 @@ def busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte, evitar_extra=[], t
         lista_evitar_extra_copia.append(tipo_evitar)
     lista_evitar = especificar_lista_reportes_generados(lista_evitar_extra_copia)
     lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, lista_evitar)
-    if len(lista_archivos) == 0:
+    if not len(lista_archivos):
         if informar:
             if thread:
                 thread.message_sent.emit(f"No se encontraron archivos con la extensión {tipo}", "red")
@@ -5677,19 +5702,67 @@ def conversion_archivos_txt(lista_reportes, eliminar=False, thread=None, tipo=".
                 if eliminar:
                     eliminar_archivos(lista_archivos)
 
-def generar_archivos_extra(seleccionar_reporte, regenerar=False, thread=None, evitar_extra=[], ext="_resumen.csv", solo_crear_arc=False, archivos_resumen=True):
+def reportes_disponibles_app(reporte, thread=None):
+    v_fecha_siguiente = fecha_siguiente(reporte["fecha_personalizada"][0][0], reporte["fecha_personalizada"][0][1])
+    v_fecha_siguiente = (v_fecha_siguiente[0], v_fecha_siguiente[1])
+    reporte["fecha_personalizada"][0] = v_fecha_siguiente
+    proceso, dic_archivos_mostrar = generar_archivos_extra_anual(reporte, thread=thread, evitar_extra=lista_reportes_generados, reportes_app=True)
+    if proceso:
+        thread.message_sent.emit("Archivos disponibles para la selección realizada: ", "green")
+        for fecha, lista in dic_archivos_mostrar.items():
+            thread.message_sent.emit(f"{fecha}", "white")
+            for elemento in lista:
+                    thread.message_sent.emit(f"\t{elemento}", "white")
+
+def reportes_disponibles_Nuevo_SUI(lista_reportes, thread=None):
+    for reporte in lista_reportes:
+        busqueda_archivos_general(reporte, thread=thread)
+
+def busqueda_archivos_general(seleccionar_reporte, tipo=None, evitar_extra=[],informar=True, thread=None):
+    formato_app = False
+    if thread:
+        formato_app = True
+    lista_archivos = mod_4.encontrar_archivos_seleccionar_reporte(seleccionar_reporte, tipo, evitar_extra)
+    if not len(lista_archivos):
+        if informar:
+            if thread:
+                thread.message_sent.emit(f"No se encontraron archivos con la extensión {tipo}", "red")
+            else:
+                print(f"\nNo se encontraron archivos en la ubicación seleccionada\n")
+    else:
+        lista_archivos_formato = []
+        for archivo in lista_archivos:
+            if archivo.endswith((".csv",".zip",".json",".xlsx")):
+                lista_archivos_formato.append(archivo)
+        proceso, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos(seleccionar_reporte, lista_archivos_formato, formato_app=formato_app)
+        if proceso:
+            thread.message_sent.emit("Archivos disponibles para la selección realizada: ", "green")
+            for fecha, dic_fecha in dic_archivos_mostrar.items():
+                thread.message_sent.emit(f"{fecha}", "white")
+                for filial, lista_archivos_filial in dic_fecha.items():
+                    thread.message_sent.emit(f"\t{filial}", "white")
+                    for elemento in lista_archivos_filial:
+                        thread.message_sent.emit(f"\t\t{elemento}", "white")
+
+
+def generar_archivos_base(lista_reportes, archivos_resumen=False, thread=None):
+    for reporte in lista_reportes:
+        generar_archivos_extra(reporte, regenerar=True, thread=thread, solo_crear_arc=True, v_archivos_resumen=archivos_resumen)
+
+def generar_archivos_extra(seleccionar_reporte, regenerar=False, thread=None, evitar_extra=[], ext="_resumen.csv", solo_crear_arc=False, v_archivos_resumen=True):
     if regenerar:
         tipo = ".csv"
         proceso, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte,evitar_extra, thread=thread)
         if proceso:
-            estandarizacion_archivos(lista_archivos,True)
-            tipo = "_form_estandar.csv"
-            proceso, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte,evitar_extra, thread=thread)
-            if proceso and archivos_resumen:
-                archivos_resumen(lista_archivos,True)
-                tipo = "_resumen.csv"
+            estandarizacion_archivos(lista_archivos,True, thread=thread)
+            if v_archivos_resumen:
+                tipo = "_form_estandar.csv"
                 proceso, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte,evitar_extra, thread=thread)
-                comprimir_archivos(seleccionar_reporte, evitar_extra)
+                if proceso:
+                    archivos_resumen(lista_archivos,True, thread=thread)
+                    tipo = "_resumen.csv"
+                    proceso, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte,evitar_extra, thread=thread)
+                    comprimir_archivos_aux(seleccionar_reporte, evitar_extra, thread=thread)
     if not solo_crear_arc:
         tipo = ext
         proceso_resumen, lista_archivos = busqueda_archivos_tipo_reporte(tipo, seleccionar_reporte, evitar_extra, thread=thread)
@@ -5701,7 +5774,7 @@ def generar_archivos_extra(seleccionar_reporte, regenerar=False, thread=None, ev
     else:
         return None, None
 
-def generar_archivos_extra_anual(seleccionar_reporte, tipo=".csv", evitar_extra=[], continuar=False, informar=True, mostrar_dic=True, todos=False):
+def generar_archivos_extra_anual(seleccionar_reporte, tipo=".csv", evitar_extra=[], continuar=False, informar=True, mostrar_dic=True, todos=False, thread=None, reportes_app=False):
     list_of_tuples = list(seleccionar_reporte.items())
     if len(seleccionar_reporte["filial"]) == 4:
         list_of_tuples.insert(3, ('carpeta', ["REPORTES_GENERADOS_APLICATIVO"]))
@@ -5710,11 +5783,14 @@ def generar_archivos_extra_anual(seleccionar_reporte, tipo=".csv", evitar_extra=
         del seleccionar_reporte_1["filial"]
     else:
         seleccionar_reporte_1 = seleccionar_reporte.copy()
-    proceso, lista_archivos = busqueda_archivos_tipo_reporte_anual(tipo, seleccionar_reporte_1, evitar_extra, informar=informar, todos=todos)
+    proceso, lista_archivos = busqueda_archivos_tipo_reporte_anual(tipo, seleccionar_reporte_1, evitar_extra, informar=informar, todos=todos, thread=thread)
     if proceso:
-        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos_anual(seleccionar_reporte, lista_archivos)
+        proceso_agrupar, dic_archivos, dic_archivos_mostrar = mod_4.agrupar_archivos_anual(seleccionar_reporte, lista_archivos, reportes_app=reportes_app)
         if proceso_agrupar:
-            return True, dic_archivos
+            if reportes_app:
+                return True, dic_archivos_mostrar
+            else:
+                return True, dic_archivos
         else:
             return False, False
     return False, False
@@ -6365,6 +6441,84 @@ def generar_archivos_reporte(reporte, info, thread):
             nombre = "Reporte compensaciones anual unión"
             thread.message_sent.emit(f" ", "white")
             thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+        case "desviaciones_significativas_mensual":
+            nombre = "Reporte desviaciones significativas mensual"
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread)
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "desviaciones_significativas_anual":
+            nombre = "Reporte desviaciones significativas anual"
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread)
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "reporte_DANE_mensual":
+            nombre = "Reporte DANE mensual"
+            opciones = info["Opciones"]
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread)
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "reporte_SH":
+            nombre = "Reporte Secretaria de Hacienda de Bogotá D.C."
+            opciones = info["Opciones"]
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread)
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
         #Reportes tarifarios
         case "reportes_tarifarios_mensual":
             nombre = "Reporte tarifario mensual"
@@ -6607,6 +6761,32 @@ def generar_reporte(reporte, info, thread):
             proceso,dic_archivos_anual = generar_archivos_extra_anual(info, reporte)
             if proceso:
                 union_archivos_mensuales_anual(dic_archivos_anual, info, informar=True, thread=thread)
+        case "generar_desviaciones_significativas_mensual":
+            for valor in info["Archivos"]:
+                dic = {valor[0]:valor[2]}
+                generar_reporte_desviaciones_mensual(dic, valor[1], thread=thread)
+        case "generar_desviaciones_significativas_anual":
+            for valor in info["Archivos"]:
+                dic = {valor[0]:valor[2]}
+                info_reporte = valor[1]
+                generar_reporte_desviaciones_mensual(dic, valor[1], thread=thread)
+        case "generar_desviaciones_significativas_anual_union":
+            reporte = "_compilado_DS_metricas.csv"
+            proceso,dic_archivos_anual = generar_archivos_extra_anual(info, reporte)
+            if proceso:
+                union_archivos_mensuales_anual(dic_archivos_anual, info, informar=True, thread=thread)
+        case "generar_reporte_DANE_mensual":
+            opciones = info["Opciones"]
+            codigo_DANE = None
+            if "codigo_DANE" in opciones:
+                codigo_DANE = opciones["codigo_DANE"]
+            for valor in info["Archivos"]:
+                dic = {valor[0]:valor[2]}
+                reporte_comercial_sector_consumo(dic, valor[1], informar=True, codigo_DANE=codigo_DANE, valor_facturado=True, reporte_DANE=True, thread=thread)
+        case "generar_reporte_SH":
+            for valor in info["Archivos"]:
+                dic = {valor[0]:valor[2]}
+                reporte_SH(dic, valor[1], informar=True, codigo_DANE=[11001000], thread=thread)
         #Reportes tarifarios
         case "generar_reportes_tarifarios_mensual":
             for valor in info["Archivos"]:
@@ -6740,6 +6920,14 @@ class Envio_mensajes(QThread):
                                 if not self.info["Opciones"]["conservar_archivos"]:
                                     eliminar = True
                         conversion_archivos_txt(self.info["Reportes"], eliminar, self)
+                case "archivos_estandar":
+                    generar_archivos_base(self.info["Reportes"], archivos_resumen=False, thread=self)
+                case "archivos_resumen":
+                    generar_archivos_base(self.info["Reportes"], archivos_resumen=True, thread=self)
+                case "archivos_existentes":
+                    reportes_disponibles_Nuevo_SUI(self.info["Reportes"], thread=self)
+                case "reportes_existentes":
+                    reportes_disponibles_app(self.info["Reporte_anual"], thread=self)
                 #Reportes comerciales
                 case "reporte_comercial_sector_consumo_mensual":
                     if self.info:
@@ -6782,6 +6970,45 @@ class Envio_mensajes(QThread):
                 case "generar_reporte_compensaciones_anual_union":
                     if self.info:
                         generar_reporte(self.estado, self.info["Reporte"], self)
+                case "desviaciones_significativas_mensual":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                case "generar_desviaciones_significativas_mensual":
+                    if self.info:
+                        generar_reporte(self.estado, self.info, self)
+                case "desviaciones_significativas_anual":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                case "generar_desviaciones_significativas_anual":
+                    if self.info:
+                        info_reporte = generar_reporte(self.estado, self.info, self)
+                        dic_info["Reporte"] = info_reporte
+                        valor = True
+                case "generar_desviaciones_significativas_anual_union":
+                    if self.info:
+                        generar_reporte(self.estado, self.info["Reporte"], self)
+                case "reporte_DANE_mensual":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                        dic_info["Opciones"] = opciones
+                case "generar_reporte_DANE_mensual":
+                    if self.info:
+                        generar_reporte(self.estado, self.info, self)
+                case "reporte_SH":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                        dic_info["Opciones"] = opciones
+                case "generar_reporte_SH":
+                    if self.info:
+                        generar_reporte(self.estado, self.info, self)
                 #Reportes tarifarios
                 case "reportes_tarifarios_mensual":
                     if self.info:

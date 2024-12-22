@@ -52,13 +52,16 @@ def tamanio_archivos(archivo):
         return ""
 
 
-def formato_nombre(nombre):
+def formato_nombre(nombre, formato_app=False):
     nombre = nombre.replace("\\\\","\\")
     lista_nombre = nombre.split("\\")[-1]
-    largo = 80
-    v_tamanio_archivos = tamanio_archivos(nombre)
-    sepa = largo - len(lista_nombre)- len(v_tamanio_archivos)
-    sepa = " "*sepa
+    if formato_app:
+        sepa = " "
+    else:
+        largo = 80
+        v_tamanio_archivos = tamanio_archivos(nombre)
+        sepa = largo - len(lista_nombre)- len(v_tamanio_archivos)
+        sepa = " "*sepa
     texto = f"{lista_nombre}{sepa}{tamanio_archivos(nombre)}"
     return texto
 
@@ -126,7 +129,7 @@ def agrupar_dic_archivos(dic_archivos):
             dic_archivos_agrupados[llave].extend(lista_archivos_filial)
     return dic_archivos_agrupados
 
-def agrupar_archivos(seleccionar_reporte, lista_archivos):
+def agrupar_archivos(seleccionar_reporte, lista_archivos, formato_app=False):
     dic_archivos = {}
     dic_archivos_tamanio = {}
     dic_archivos_3 = {}
@@ -147,7 +150,7 @@ def agrupar_archivos(seleccionar_reporte, lista_archivos):
                             for archivo in lista_archivos:
                                 if anio in archivo and mes in archivo and filial in archivo:
                                     dic_archivos[fecha][filial].append(archivo)
-                                    dic_archivos_tamanio[fecha][filial].append(formato_nombre(archivo))
+                                    dic_archivos_tamanio[fecha][filial].append(formato_nombre(archivo, formato_app=formato_app))
     else:
         anio = seleccionar_reporte["anios"][0]
         mes = seleccionar_reporte["meses"][0]
@@ -163,20 +166,25 @@ def agrupar_archivos(seleccionar_reporte, lista_archivos):
                         for archivo in lista_archivos:
                             if anio in archivo and mes in archivo and filial in archivo:
                                 dic_archivos[fecha][filial].append(archivo)
-                                dic_archivos_tamanio[fecha][filial].append(formato_nombre(archivo))
+                                dic_archivos_tamanio[fecha][filial].append(formato_nombre(archivo, formato_app=formato_app))
     if len(dic_archivos) > 0:
         for llave, valor in dic_archivos_tamanio.items():
             dic_archivos_3[llave] = {}
             for filial, lista_archivos_filial in valor.items():
                 dic_archivos_3[llave][filial] = []
-                for i in range(0, len(lista_archivos_filial), 2):
-                    elementos = lista_archivos_filial[i:i+2]
-                    dic_archivos_3[llave][filial].append(lista_a_texto(elementos,",    "))
-        return True, dic_archivos,dic_archivos_3
+                if not formato_app:
+                    for i in range(0, len(lista_archivos_filial), 2):
+                        elementos = lista_archivos_filial[i:i+2]
+                        dic_archivos_3[llave][filial].append(lista_a_texto(elementos,",    "))
+                else:
+                    for i in range(len(lista_archivos_filial)):
+                        elementos = lista_archivos_filial[i]
+                        dic_archivos_3[llave][filial].append(elementos)
+        return True, dic_archivos, dic_archivos_3
     else:
         return False, False, False
 
-def agrupar_archivos_anual(seleccionar_reporte, lista_archivos):
+def agrupar_archivos_anual(seleccionar_reporte, lista_archivos, reportes_app=False):
     dic_archivos = {}
     dic_archivos_tamanio = {}
     dic_archivos_3 = {}
@@ -190,13 +198,18 @@ def agrupar_archivos_anual(seleccionar_reporte, lista_archivos):
         for archivo in lista_archivos:
             if anio in archivo and mes in archivo:
                 dic_archivos[fecha].append(archivo)
-                dic_archivos_tamanio[fecha].append(formato_nombre(archivo))
-    if len(dic_archivos) > 0:
+                dic_archivos_tamanio[fecha].append(formato_nombre(archivo, formato_app=reportes_app))
+    if len(dic_archivos):
         for llave, valor in dic_archivos_tamanio.items():
             dic_archivos_3[llave] = []
-            for i in range(0, len(valor), 2):
-                elementos = valor[i:i+2]
-                dic_archivos_3[llave].append(lista_a_texto(elementos,",    "))
+            if not reportes_app:
+                for i in range(0, len(valor), 2):
+                    elementos = valor[i:i+2]
+                    dic_archivos_3[llave].append(lista_a_texto(elementos,",    "))
+            else:
+                for i in range(len(valor)):
+                    elementos = valor[i]
+                    dic_archivos_3[llave].append(elementos)
         return True, dic_archivos,dic_archivos_3
     else:
         return False, False, False
