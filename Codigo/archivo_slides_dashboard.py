@@ -29,9 +29,9 @@ dic_ubi_tarifas = {"VANTI":{23:[[(1155-valor_x,660),(1390-valor_x,895)],(1375,69
                             113:[[(1155-valor_x,180),(1390-valor_x,415)],(1375,240)],
                             139:[[(0,180),(235,415)],(245,240)],
                             149:[[(0,660),(235,895)],(245,695)]},
-                    "GNCB":{106:[[(555-8,800),(790-8,1035)],(780,840)],
-                            1825:[[(1120-valor_x,545),(1355,780)],(1425,580)],
-                            169:[[(0,545),(235,780)],(255,585)]},
+                    "GNCB":{106:[[(555-8,800),(790-8,1035)],(813,840)],
+                            1825:[[(1120-valor_x,545),(1355,780)],(1395,580)],
+                            169:[[(0,545),(235,780)],(266,585)]},
                     "GNCR":{80:[[(1295,625),(1530,860)],(1175,425)],
                             21:[[(150,625),(385,860)],(45,425)]},
                     "GOR":{11:[[(1145-valor_x,550),(1380-valor_x,785)],(1365,580)],
@@ -473,10 +473,10 @@ def slide_desviaciones(ubi, fecha_actual, ubi_carpeta, c_slide, texto_fecha, dic
             dibujo.text((760,1025), f"Último corte: {fecha_actual} - {grupo_vanti}", fill=azul_vanti, font=ImageFont.truetype(ruta_fuente, 30))
             dibujo.text((338,185), str(dic_metricas["usuarios"]), fill=dic_colores["morado_v"], font=ImageFont.truetype(ruta_fuente, 50))
             dibujo.text((315,390), str(dic_metricas["DS"]["Total"])+" ("+str(dic_metricas["DS"]["Porcentaje"])+")", fill=dic_colores["morado_v"], font=ImageFont.truetype(ruta_fuente, 50))
-            dibujar_texto_derecha((726,530), str(dic_metricas["DS"]["Consumos reales"]), fill=dic_colores["morado_v"], font=ImageFont.truetype(ruta_fuente, 46), dibujo=dibujo)
-            dibujar_texto_derecha((726,620), str(dic_metricas["DS"]["Error en la lectura"]), fill=dic_colores["morado_v"], font=ImageFont.truetype(ruta_fuente, 46), dibujo=dibujo)
-            dibujar_texto_derecha((726,750), str(dic_metricas["DS"]["No se logró visita por impedimento"]), fill=dic_colores["morado_v"], font=ImageFont.truetype(ruta_fuente, 46), dibujo=dibujo)
-            dibujar_texto_derecha((726,850), str(dic_metricas["DS"]["No realizó visita"]), fill=dic_colores["morado_v"], font=ImageFont.truetype(ruta_fuente, 46), dibujo=dibujo)
+            dibujar_texto_derecha((736,510), str(dic_metricas["DS"]["Consumos reales"]), fill=dic_colores["morado_v"], font=ImageFont.truetype(ruta_fuente, 46), dibujo=dibujo)
+            dibujar_texto_derecha((736,615), str(dic_metricas["DS"]["Error en la lectura"]), fill=dic_colores["morado_v"], font=ImageFont.truetype(ruta_fuente, 46), dibujo=dibujo)
+            dibujar_texto_derecha((736,735), str(dic_metricas["DS"]["No se logró visita por impedimento"]), fill=dic_colores["morado_v"], font=ImageFont.truetype(ruta_fuente, 46), dibujo=dibujo)
+            dibujar_texto_derecha((736,835), str(dic_metricas["DS"]["No realizó visita"]), fill=dic_colores["morado_v"], font=ImageFont.truetype(ruta_fuente, 46), dibujo=dibujo)
             ubi_imagen = ubi_carpeta+"\\00. Comercial\\Imagenes\\"
             esp = ajustar_coordenadas([(755,205),(1900,910)])
             nueva_imagen = ubi_imagen+texto_fecha+"_compilado_DS_metricas_categorias.png"
@@ -673,8 +673,6 @@ def crear_slides(ubi, fecha, fecha_completa, fecha_corte, texto_fecha, dic_metri
     c_slide = 1
     c_slide = slide_portada(ubi, fecha, fecha_corte, ubi_carpeta, texto_fecha, dic_metricas, c_slide, thread=thread)
     c_slide = slide_def_1(ubi, fecha, fecha_corte, dic_metricas,mes_corte,fecha_anio_anterior, c_slide)
-
-    
     c_slide = slide_usuarios(ubi, fecha, fecha_corte, ubi_carpeta, texto_fecha, dic_metricas, c_slide)
     c_slide = slide_pie_usuarios(ubi, fecha, fecha_corte, ubi_carpeta, texto_fecha, dic_metricas, c_slide)
     c_slide = slide_consumo(ubi, fecha_corte, ubi_carpeta, texto_fecha, dic_metricas, c_slide)

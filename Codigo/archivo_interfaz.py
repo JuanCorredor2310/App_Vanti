@@ -235,7 +235,7 @@ def menu_inicial(app, window, central_widget, dimensiones, estado=None, info=Non
             estado, info = menu_reportes_comerciales(app, window, central_widget, dimensiones)
         elif evento == "reportes_tarifarios":
             estado = evento
-            estado,info = menu_seleccion(app, window, central_widget, dimensiones, "menu_inicial", estado)
+            estado,info = menu_seleccion(app, window, central_widget, dimensiones, "menu_inicial", estado, c_meses=12)
         elif evento == "reportes_tecnicos":
             estado,info = menu_reportes_tecnicos(app, window, central_widget, dimensiones)
         elif evento == "KPIs":
@@ -539,10 +539,10 @@ def menu_reportes_comerciales(app, window, central_widget, dimensiones, estado=N
             estado,info = menu_reporte_comercial(app, window, central_widget, dimensiones, estado, info)
         elif texto == "reporte_compensaciones":
             estado = texto
-            estado,info = menu_seleccion(app, window, central_widget, dimensiones, "menu_reportes_comerciales", estado, info)
+            estado,info = menu_seleccion(app, window, central_widget, dimensiones, "menu_reportes_comerciales", estado, info, c_meses=12)
         elif texto == "desviaciones_significativas":
             estado = texto
-            estado,info = menu_seleccion(app, window, central_widget, dimensiones, "menu_reportes_comerciales", estado, info)
+            estado,info = menu_seleccion(app, window, central_widget, dimensiones, "menu_reportes_comerciales", estado, info, c_meses=12)
         elif texto == "reporte_DANE":
             estado = texto
             estado,info = menu_seleccion(app, window, central_widget, dimensiones, "menu_reportes_comerciales", estado, info, incluir_anual=False)
@@ -623,6 +623,12 @@ def menu_reporte_comercial(app, window, central_widget, dimensiones, estado=None
         esconder_label(image_button_1)
         if texto == "volver":
             estado,info = menu_reportes_comerciales(app, window, central_widget, dimensiones)
+        elif texto == "reporte_comercial_sector_consumo":
+            estado = texto
+            estado,info = menu_seleccion(app, window, central_widget, dimensiones, "menu_reporte_comercial", estado, info)
+        elif texto == "reporte_comercial_sector_consumo_subsidio":
+            estado = texto
+            estado,info = menu_seleccion(app, window, central_widget, dimensiones, "menu_reporte_comercial", estado, info, c_meses=12)
         else:
             estado = texto
             estado,info = menu_seleccion(app, window, central_widget, dimensiones, "menu_reporte_comercial", estado, info)
@@ -692,7 +698,7 @@ def menu_reportes_tecnicos(app, window, central_widget, dimensiones, estado=None
             estado,info = menu_inicial(app, window, central_widget, dimensiones)
         else:
             estado = texto
-            estado,info = menu_seleccion(app, window, central_widget, dimensiones, "menu_reportes_tecnicos", estado, info)
+            estado,info = menu_seleccion(app, window, central_widget, dimensiones, "menu_reportes_tecnicos", estado, info, c_meses=12)
     image_button.clicked.connect(lambda:on_button_clicked("volver"))
     boton_1.clicked.connect(lambda:on_button_clicked("reporte_indicadores"))
     boton_2.clicked.connect(lambda:on_button_clicked("reporte_suspensiones"))
@@ -863,7 +869,8 @@ def menu_CLD_PRD(app, window, central_widget, dimensiones, estado=None, info={},
     event_loop.exec_()
     return estado,info
 
-def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=None, estado=None, info={}, incluir_anual=True):
+def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=None, estado=None, info={}, incluir_anual=True, c_meses=13):
+    c_meses -= 1
     screen_width = dimensiones[0]
 
     titulo = "Selección información"
@@ -1046,7 +1053,7 @@ def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=Non
                         valor[2].setText("X")
                         valor[1] = True
                         contador += 1
-                    if contador > 12:
+                    if contador > c_meses:
                         cambio = False
     def cambiar_botones_fecha(llave):
         nonlocal dic_fechas
@@ -1081,7 +1088,7 @@ def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=Non
                     valor[2].setText("X")
                     valor[1] = True
                     contador += 1
-                if contador > 12:
+                if contador > c_meses:
                     cambio = False
     def limpiar_botones(boton):
         nonlocal incluir_anual
@@ -2442,7 +2449,10 @@ def lista_codigo_DANE(texto):
 def num_aceptado(texto):
     try:
         num = int(texto)
-        return str(num)
+        if num > 0:
+            return str(num)
+        else:
+            return ""
     except BaseException:
         return ""
 

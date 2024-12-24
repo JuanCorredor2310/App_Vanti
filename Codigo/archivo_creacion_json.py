@@ -970,6 +970,17 @@ def variables_reportes(reporte):
                 datos = {"descripcion":desc,
                         "datos":data}
                 guardar_diccionario_ruta(datos, n_archivo)
+        elif reporte == "valores_anuales":
+                with open(ruta_constantes+"valores_anuales.csv", 'r') as archivo:
+                        lineas = archivo.readlines()
+                lista_colores = [(linea.replace("\n","")).split(",") for linea in lineas][1:]
+                desc = "Colores"
+                data = {}
+                for i in range(len(lista_colores)):
+                        data[lista_colores[i][0]] = lista_colores[i][1]
+                datos = {"descripcion":desc,
+                        "datos":data}
+                guardar_diccionario_ruta(datos, n_archivo)
         elif reporte == "indicador_SUI":
                 desc = "indicador_SUI"
                 data = {"VANTI":"488",
@@ -1129,6 +1140,7 @@ def crear_archivos_json_principales():
         variables_reportes("categoria_matriz_requerimientos")
         variables_reportes("sectores_consumo_categoria")
         variables_reportes("colores")
+        variables_reportes("valores_anuales")
         variables_reportes("indicador_SUI")
         variables_reportes("tabla_2_DS")
         variables_reportes("tabla_3_DS")

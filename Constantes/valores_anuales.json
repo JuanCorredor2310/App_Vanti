@@ -1,0 +1,10 @@
+{
+    "descripcion": "Colores",
+    "datos": {
+        "IRST": "100",
+        "IPLI": "100",
+        "IO": "100",
+        "limite_facturas": "4.04",
+        "meta_subsidios": "1.4"
+    }
+}

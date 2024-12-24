@@ -2570,6 +2570,32 @@ def formato_seleccionar_reporte(dic_info, estado):
                         opciones[llave] = valor
                     elif valor[0]:
                         opciones[llave] = valor[0]
+        case "reporte_comercial_sector_consumo_anual":
+            ubi = ["Reportes Nuevo SUI"]
+            tipo = ["Comercial"]
+            clasificacion = ["GRC1","GRC2","GRTT2"]
+            filial = []
+            if "Filial" in dic_info:
+                if dic_info["Filial"]["Todas"][2]:
+                    filial = ["VANTI", "GNCB", "GNCR", "GOR"]
+                else:
+                    for llave, valor in dic_info["Filial"].items():
+                        if valor[2]:
+                            filial.append(llave)
+            if "Fecha" in dic_info:
+                reporte = reset_reporte()
+                reporte["filial"] = filial
+                reporte["tipo"] = tipo
+                reporte["clasificacion"] = clasificacion
+                reporte["ubicacion"] = ubi
+                reporte["fecha_personalizada"] = fechas_anuales(dic_info["Fecha"])
+                lista_seleccionar_reporte.append(formato_reporte(reporte))
+            if "Opciones_adicionales" in dic_info:
+                for llave, valor in dic_info["Opciones_adicionales"].items():
+                    if llave == "codigo_DANE":
+                        opciones[llave] = valor
+                    elif valor[0]:
+                        opciones[llave] = valor[0]
         case "reporte_comercial_sector_consumo_subsidio_mensual":
             ubi = ["Reportes Nuevo SUI"]
             tipo = ["Comercial"]
@@ -2594,6 +2620,32 @@ def formato_seleccionar_reporte(dic_info, estado):
                         reporte["ubicacion"] = ubi
                         reporte["fecha_personalizada"] = None
                         lista_seleccionar_reporte.append(formato_reporte(reporte))
+            if "Opciones_adicionales" in dic_info:
+                for llave, valor in dic_info["Opciones_adicionales"].items():
+                    if llave == "codigo_DANE":
+                        opciones[llave] = valor
+                    elif valor[0]:
+                        opciones[llave] = valor[0]
+        case "reporte_comercial_sector_consumo_subsidio_anual":
+            ubi = ["Reportes Nuevo SUI"]
+            tipo = ["Comercial"]
+            clasificacion = ["GRC1","GRC2","GRTT2"]
+            filial = []
+            if "Filial" in dic_info:
+                if dic_info["Filial"]["Todas"][2]:
+                    filial = ["VANTI", "GNCB", "GNCR", "GOR"]
+                else:
+                    for llave, valor in dic_info["Filial"].items():
+                        if valor[2]:
+                            filial.append(llave)
+            if "Fecha" in dic_info:
+                reporte = reset_reporte()
+                reporte["filial"] = filial
+                reporte["tipo"] = tipo
+                reporte["clasificacion"] = clasificacion
+                reporte["ubicacion"] = ubi
+                reporte["fecha_personalizada"] = fechas_anuales(dic_info["Fecha"])
+                lista_seleccionar_reporte.append(formato_reporte(reporte))
             if "Opciones_adicionales" in dic_info:
                 for llave, valor in dic_info["Opciones_adicionales"].items():
                     if llave == "codigo_DANE":
@@ -3200,8 +3252,16 @@ def activar_funciones(estado, info):
             titulo = "Reporte comercial sector consumo"
             info = formato_seleccionar_reporte(info, estado)
             estado = mod_1.run_app(titulo, estado, info)
+        case "reporte_comercial_sector_consumo_anual":
+            titulo = "Reporte comercial sector consumo anual"
+            info = formato_seleccionar_reporte(info, estado)
+            estado = mod_1.run_app(titulo, estado, info)
         case "reporte_comercial_sector_consumo_subsidio_mensual":
             titulo = "Reporte comercial sector consumo subsidiado"
+            info = formato_seleccionar_reporte(info, estado)
+            estado = mod_1.run_app(titulo, estado, info)
+        case "reporte_comercial_sector_consumo_subsidio_anual":
+            titulo = "Reporte comercial sector consumo subsidiado anual"
             info = formato_seleccionar_reporte(info, estado)
             estado = mod_1.run_app(titulo, estado, info)
         case "reporte_compensaciones_mensual":

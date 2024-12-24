@@ -71,8 +71,8 @@ mercado_relevante_resumen = leer_archivos_json(ruta_constantes+"mercado_relevant
 mercado_relevante_id = leer_archivos_json(ruta_constantes+"mercado_relevante_id.json")
 mercado_relevante_DANE = leer_archivos_json(ruta_constantes+"mercado_relevante_DANE.json")
 chunksize = 60000
+cantidad_datos_estilo_excel = 65000
 cantidad_datos_excel = chunksize
-cantidad_datos_estilo_excel = 120000
 llaves_dic_reporte = ["generales_no_float","generales_float","generales_fecha","generales_hora"]
 tabla_3 = leer_archivos_json(ruta_constantes+"tabla_3.json")
 tabla_3_data = tabla_3["datos"]
@@ -939,7 +939,9 @@ def generar_formato_almacenamiento_reportes(lista_df, nombre, informar=True,alma
 # * -------------------------------------------------------------------------------------------------------
 
 def codigo_DANE_texto(codigo_DANE):
-    if len(codigo_DANE) > 0:
+    if len(codigo_DANE) == 1:
+        return str(codigo_DANE[0])[:5]
+    elif len(codigo_DANE) > 1:
         lista_texto_codigo_DANE = []
         for elemento in codigo_DANE:
             lista_texto_codigo_DANE.append(int(str(elemento)[:5]))
@@ -947,7 +949,7 @@ def codigo_DANE_texto(codigo_DANE):
         lista_texto_codigo_DANE_str = [str(x) for x in lista_texto_codigo_DANE]
         return lista_a_texto(lista_texto_codigo_DANE_str,"_")
     else:
-        return str(codigo_DANE[0])[:5]
+        return ""
 
 def apoyo_reporte_comercial_sector_consumo_no_regulados(lista_archivos, codigo_DANE, reporte, filial, valor_facturado=False, total=False, subsidio=False, facturas=False, reporte_DANE=False):
     for archivo in lista_archivos:
@@ -1725,6 +1727,8 @@ def diferencia_columnas_dataframe(df_actual, df_anterior):
 def union_archivos_mensuales_anual_reporte_consumo(dic_archivos, seleccionar_reporte, informar, almacenar_excel=True, subsidio=True, thread=None):
     #v_fecha_siguiente = fecha_siguiente(seleccionar_reporte["fecha_personalizada"][0][0],seleccionar_reporte["fecha_personalizada"][0][1])
     #v_fecha_anterior = fecha_anterior(seleccionar_reporte["fecha_personalizada"][1][0],seleccionar_reporte["fecha_personalizada"][1][1])
+    fecha_nombre = (seleccionar_reporte["fecha_personalizada"][0][0]+"_"+seleccionar_reporte["fecha_personalizada"][0][1].upper()
+                    +"_"+seleccionar_reporte["fecha_personalizada"][1][0]+"_"+seleccionar_reporte["fecha_personalizada"][1][1].upper())
     lista_anual = []
     lista_df_anual_dif = []
     for _, lista_archivos in dic_archivos.items():
@@ -1733,26 +1737,27 @@ def union_archivos_mensuales_anual_reporte_consumo(dic_archivos, seleccionar_rep
             nombre = archivo
             if len(df):
                 lista_anual.append(df)
+    largo = len(lista_anual)
     if subsidio:
-        fecha_nombre = (seleccionar_reporte["fecha_personalizada"][0][0]+"_"+seleccionar_reporte["fecha_personalizada"][0][1].upper()
-                    +"_"+seleccionar_reporte["fecha_personalizada"][1][0]+"_"+seleccionar_reporte["fecha_personalizada"][1][1].upper())
-        if len(lista_anual) == 12:
+        if largo == 12:
             lista_df_anual_dif = lista_anual.copy()
+        elif largo > 12:
+            lista_df_anual_dif = lista_anual.copy()[-12:]
         else:
-            lista_df_anual_dif = lista_anual[1:]
+            lista_df_anual_dif = lista_anual.copy()
     else:
-        fecha_nombre = (seleccionar_reporte["fecha_personalizada"][0][0]+"_"+seleccionar_reporte["fecha_personalizada"][0][1].upper()
-                    +"_"+seleccionar_reporte["fecha_personalizada"][1][0]+"_"+seleccionar_reporte["fecha_personalizada"][1][1].upper())
         if len(seleccionar_reporte["filial"]) == 4:
             for i in range(1,len(lista_anual)):
                 df = lista_anual[i]
                 df_actual = diferencia_columnas_dataframe(lista_anual[i], lista_anual[i-1])
                 lista_df_anual_dif.append(df_actual)
         else:
-            if len(lista_anual) == 12:
+            if largo == 12:
                 lista_df_anual_dif = lista_anual.copy()
+            elif largo > 12:
+                lista_df_anual_dif = lista_anual.copy()[-12:]
             else:
-                lista_df_anual_dif = lista_anual.copy()[1:]
+                lista_df_anual_dif = lista_anual.copy()
     if len(lista_df_anual_dif):
         if len(seleccionar_reporte["filial"]) == 4:
             lista_nombre = nombre.split("\\")
@@ -1783,7 +1788,7 @@ def union_archivos_mensuales_anual_reporte_consumo(dic_archivos, seleccionar_rep
     else:
         return None
 
-def apoyo_reporte_comparacion_prd_cld_cer(lista_archivos, informar, filial):
+def apoyo_reporte_comparacion_prd_cld_cer(lista_archivos, informar, filial, thread=None):
     dic_GRTT2 = {}
     dic_SAP_CLD = {}
     dic_SAP_PRD = {}
@@ -1907,7 +1912,10 @@ def apoyo_reporte_comparacion_prd_cld_cer(lista_archivos, informar, filial):
         else:
             return None
     if not (proceso_CLD or proceso_PRD):
-        print("\nNo es posible generar el reporte sin el archivo GRC1_PRD o GRC1_CLD\n")
+        if thread:
+            thread.message_sent.emit("No es posible generar el reporte sin el archivo GRC1_PRD o GRC1_CLD", "red")
+        else:
+            print("\nNo es posible generar el reporte sin el archivo GRC1_PRD o GRC1_CLD\n")
         return None
     df_porcentaje = pd.concat(lista_df_porcentaje, ignore_index=True)
     df_porcentaje["Diff. Porcentual Valor Total Facturado"] = "0 %"
@@ -1963,7 +1971,7 @@ def apoyo_reporte_comparacion_prd_cld_cer(lista_archivos, informar, filial):
     df_porcentaje = df_porcentaje[["Archivo","Filial","Anio_reportado","Mes_reportado","Tipo de Lectura","Cantidad Lecturas Totales","Usuarios NIU Unicos","Porcentaje de Lectura","Consumo m3",
                                     "Valor total facturado",'Diff. Porcentual Consumo m3','Diff. Porcentual Valor Total Facturado',"Nuevos NIU"]]
     nombre = nombre_final.replace("_resumen", "_porcentaje_comparacion_SAP")
-    almacenar_df_csv_y_excel(df_porcentaje, nombre)
+    almacenar_df_csv_y_excel(df_porcentaje, nombre, thread=thread)
     dic_total = {"NIU":[],
                 "Tipo de lectura GRC1":[],
                 "Factura GRC1":[]}
@@ -2021,11 +2029,11 @@ def apoyo_reporte_comparacion_prd_cld_cer(lista_archivos, informar, filial):
         df_total["Anio_reportado"] = anio_reportado
         df_total["Mes_reportado"] = mes_reportado
         df_total["Filial"] = dic_filiales[filial]
-        almacenar_df_csv_y_excel(df_total, nombre_final)
+        almacenar_df_csv_y_excel(df_total, nombre_final, thread=thread)
     except ValueError:
         pass
 
-def reporte_comparacion_prd_cld_cer(dic_archivos, seleccionar_reporte, informar):
+def reporte_comparacion_prd_cld_cer(dic_archivos, seleccionar_reporte, informar, thread=None):
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for fecha, lista_archivos in dic_archivos.items():
         for filial in lista_filiales_archivo:
@@ -2035,9 +2043,12 @@ def reporte_comparacion_prd_cld_cer(dic_archivos, seleccionar_reporte, informar)
                     lista_archivos_filial.append(archivo)
             if len(lista_archivos_filial):
                 if len(lista_archivos_filial) > 1:
-                    apoyo_reporte_comparacion_prd_cld_cer(lista_archivos_filial, informar, filial)
+                    apoyo_reporte_comparacion_prd_cld_cer(lista_archivos_filial, informar, filial, thread=thread)
                 else:
-                    print(f"Se necesitan al menos 2 archivos para generar la comparación entre reportes comerciales GRC1")
+                    if thread:
+                        thread.message_sent.emit("Se necesitan al menos 2 archivos para generar la comparación entre reportes comerciales GRC1", "red")
+                    else:
+                        print(f"Se necesitan al menos 2 archivos para generar la comparación entre reportes comerciales GRC1")
 
 def configurar_cantidad_filas_dataframe(lista_df, cantidad_filas):
     nueva_lista_df = []
@@ -2082,7 +2093,7 @@ def listas_diferentes(lista_1, lista_2, llave):
         else:
             return True, dic_diferencias, conteo
 
-def apoyo_reporte_comparacion_p1_p2(lista_archivos, informar, cantidad_filas, p1, p2):
+def apoyo_reporte_comparacion_p1_p2(lista_archivos, informar, cantidad_filas, p1, p2, thread=None):
     proceso_1 = True
     proceso_2 = True
     lista_1 = ["NIU",
@@ -2152,10 +2163,14 @@ def apoyo_reporte_comparacion_p1_p2(lista_archivos, informar, cantidad_filas, p1
                     lista_diferentes.append(valor)
                 else:
                     lista_iguales.append(valor)
-            except KeyError:
+            except BaseException:
                 pass
         largo = len(lista_1)
-        print(f"Para {len(lista_iguales)+len(lista_diferentes)} filas evaluadas: {len(lista_iguales)} filas iguales, {len(lista_diferentes)} filas diferentes")
+        texto = f"Para {len(lista_iguales)+len(lista_diferentes)} filas evaluadas: {len(lista_iguales)} filas iguales, {len(lista_diferentes)} filas diferentes"
+        if thread:
+            thread.message_sent.emit(texto, "orange")
+        else:
+            print(texto)
         lista_df_iguales = [[] for _ in range(largo)]
         lista_df_diferentes = [[] for _ in range(largo)]
         lista_df_diferentes_excel = [[] for _ in range(largo)]
@@ -2168,7 +2183,7 @@ def apoyo_reporte_comparacion_p1_p2(lista_archivos, informar, cantidad_filas, p1
             dic_df_iguales[lista_1[i]] = lista_df_iguales[i]
         df_iguales = pd.DataFrame(dic_df_iguales)
         nombre = nombre_archivo.replace("_resumen", f"_comparacion_iguales{p1}{p2}")
-        almacenar_df_csv_y_excel(df_iguales, nombre)
+        almacenar_df_csv_y_excel(df_iguales, nombre, thread=thread)
         for dic in lista_diferentes:
             for lista in dic.values():
                 for i in range(len(lista)):
@@ -2178,7 +2193,7 @@ def apoyo_reporte_comparacion_p1_p2(lista_archivos, informar, cantidad_filas, p1
             dic_df_diferentes[lista_1[i]] = lista_df_diferentes[i]
         df_diferentes = pd.DataFrame(dic_df_diferentes)
         nombre = nombre_archivo.replace("_resumen", f"_comparacion_diferentes{p1}{p2}")
-        almacenar_df_csv_y_excel(df_diferentes, nombre, almacenar_excel=False)
+        almacenar_df_csv_y_excel(df_diferentes, nombre, almacenar_excel=False, thread=thread)
         for dic in lista_diferentes:
             for lista in dic.values():
                 for i in range(len(lista)):
@@ -2190,11 +2205,14 @@ def apoyo_reporte_comparacion_p1_p2(lista_archivos, informar, cantidad_filas, p1
         nombre = nombre_archivo.replace("_resumen", f"_comparacion_diferentes{p1}{p2}").replace(".csv",".xlsx")
         almacenar = mod_5.almacenar_csv_en_excel_patrones(df_diferentes_excel, nombre,"Datos")
         if informar and almacenar:
-            informar_archivo_creado(nombre, True)
+            informar_archivo_creado(nombre, True, thread=thread)
     else:
-        print(f"\nDeben existir los archivos {p1} y {p2} para el proceso de comparacion\n")
+        if thread:
+            thread.message_sent.emit(f"Deben existir los archivos {p1} y {p2} para el proceso de comparacion", "white")
+        else:
+            print(f"\nDeben existir los archivos {p1} y {p2} para el proceso de comparacion\n")
 
-def reporte_comparacion_SAP(dic_archivos, seleccionar_reporte, informar, cantidad_filas, p1, p2):
+def reporte_comparacion_SAP(dic_archivos, seleccionar_reporte, informar, cantidad_filas, p1, p2, thread=None):
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for fecha, lista_archivos in dic_archivos.items():
         for filial in lista_filiales_archivo:
@@ -2204,9 +2222,12 @@ def reporte_comparacion_SAP(dic_archivos, seleccionar_reporte, informar, cantida
                     lista_archivos_filial.append(archivo)
             if len(lista_archivos_filial):
                 if len(lista_archivos_filial) > 1:
-                    apoyo_reporte_comparacion_p1_p2(lista_archivos_filial, informar, cantidad_filas, p1, p2) #Colocar SIEMPRE primero GRC1, PRD / GRC1, PRD / PRD, CLD
+                    apoyo_reporte_comparacion_p1_p2(lista_archivos_filial, informar, cantidad_filas, p1, p2, thread=thread) #Colocar SIEMPRE primero GRC1, PRD / GRC1, PRD / PRD, CLD
                 else:
-                    print(f"Se necesitan al menos 2 archivos para generar la comparación entre reportes comerciales GRC1")
+                    if thread:
+                        thread.message_sent.emit("Se necesitan al menos 2 archivos para generar la comparación entre reportes comerciales GRC1", "red")
+                    else:
+                        print(f"Se necesitan al menos 2 archivos para generar la comparación entre reportes comerciales GRC1")
 
 def generar_sumatoria_df(df, subsidio, codigo_DANE):
     columnas = list(df.columns)
@@ -6377,8 +6398,48 @@ def generar_archivos_reporte(reporte, info, thread):
                     thread.message_sent.emit(elemento[0], "white")
                     for elemento_1 in elemento[2]:
                         thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "reporte_comercial_sector_consumo_anual":
+            nombre = "Reporte comercial mensual por sector de consumo anual"
+            opciones = info["Opciones"]
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread)
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
         case "reporte_comercial_sector_consumo_subsidio_mensual":
             nombre = "Reporte comercial mensual por sector de consumo con subsidiados o contribuciones"
+            opciones = info["Opciones"]
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread)
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "reporte_comercial_sector_consumo_subsidio_anual":
+            nombre = "Reporte comercial mensual por sector de consumo con subsidiados o contribuciones anual"
             opciones = info["Opciones"]
             regenerar = False
             if "regenerar" in opciones:
@@ -6438,7 +6499,7 @@ def generar_archivos_reporte(reporte, info, thread):
                     for elemento_1 in elemento[2]:
                         thread.message_sent.emit(acortar_nombre(elemento_1), "white")
         case "generar_reporte_compensaciones_anual":
-            nombre = "Reporte compensaciones anual unión"
+            nombre = "Reporte compensaciones anual"
             thread.message_sent.emit(f" ", "white")
             thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
         case "desviaciones_significativas_mensual":
@@ -6509,6 +6570,86 @@ def generar_archivos_reporte(reporte, info, thread):
             for i in info["Reportes"]:
                 mostrar_info_reporte(i, thread)
                 proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread)
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "comparacion_CER_CLD_PRD":
+            nombre = "Comparación CER-CLD-PRD"
+            opciones = info["Opciones"]
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread, evitar_extra=["_CLD","_PRD"])
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "comparacion_CER_CLD":
+            nombre = "Comparación CER-CLD"
+            opciones = info["Opciones"]
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread, evitar_extra=["_CLD"])
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "comparacion_CER_PRD":
+            nombre = "Comparación CER-PRD"
+            opciones = info["Opciones"]
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread, evitar_extra=["_PRD"])
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "comparacion_CLD_PRD":
+            nombre = "Comparación CLD-PRD"
+            opciones = info["Opciones"]
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread, evitar_extra=["_CLD","_PRD"])
                 if proceso:
                     for llave, valor in dic_archivos_reporte.items():
                         lista_generar.append([llave, i, valor])
@@ -6701,8 +6842,9 @@ def generar_archivos_reporte(reporte, info, thread):
             pass
     return lista_generar, opciones
 
-def generar_reporte(reporte, info, thread):
+def generar_reporte(reporte, info, thread, opciones_add=None):
     info_reporte = None
+    opciones_apoyo = None
     match reporte:
         #Reportes comerciales
         case "generar_reporte_comercial_sector_consumo_mensual":
@@ -6722,6 +6864,39 @@ def generar_reporte(reporte, info, thread):
             for valor in info["Archivos"]:
                 dic = {valor[0]:valor[2]}
                 reporte_comercial_sector_consumo(dic, valor[1], informar=True, codigo_DANE=codigo_DANE, total=sumatoria, valor_facturado=valor_facturado, facturas=facturas, thread=thread)
+        case "generar_reporte_comercial_sector_consumo_anual":
+            opciones = info["Opciones"]
+            sumatoria = False
+            if "sumatoria" in opciones:
+                sumatoria = opciones["sumatoria"]
+            valor_facturado = False
+            if "valor_facturado" in opciones:
+                valor_facturado = opciones["valor_facturado"]
+            facturas = False
+            if "facturas" in opciones:
+                facturas = opciones["facturas"]
+            codigo_DANE = None
+            if "codigo_DANE" in opciones:
+                codigo_DANE = opciones["codigo_DANE"]
+            for valor in info["Archivos"]:
+                dic = {valor[0]:valor[2]}
+                info_reporte = valor[1]
+                opciones_apoyo = opciones
+                reporte_comercial_sector_consumo(dic, valor[1], informar=True, codigo_DANE=codigo_DANE, total=sumatoria, valor_facturado=valor_facturado, facturas=facturas, thread=thread)
+        case "generar_reporte_comercial_sector_consumo_anual_union":
+            reporte = "_reporte_consumo.csv"
+            if "sumatoria" in opciones_add:
+                reporte = reporte.replace(".csv", "_sumatoria.csv")
+            if "codigo_DANE" in opciones_add:
+                v_codigo_DANE_texto = codigo_DANE_texto(opciones_add["codigo_DANE"])
+                if len(v_codigo_DANE_texto):
+                    v_codigo_DANE_texto = v_codigo_DANE_texto+".csv"
+                    reporte = reporte.replace(".csv", "_"+v_codigo_DANE_texto)
+            proceso,dic_archivos_anual = generar_archivos_extra_anual(info, reporte, ["_reporte_consumo", reporte.replace(".csv","")])
+            if proceso:
+                v_fecha_anterior = fecha_siguiente(info["fecha_personalizada"][0][0], info["fecha_personalizada"][0][1])
+                info["fecha_personalizada"][0] = v_fecha_anterior
+                union_archivos_mensuales_anual_reporte_consumo(dic_archivos_anual, info, informar=True, thread=thread, subsidio=False)
         case "generar_reporte_comercial_sector_consumo_subsidio_mensual":
             opciones = info["Opciones"]
             sumatoria = False
@@ -6739,6 +6914,37 @@ def generar_reporte(reporte, info, thread):
             for valor in info["Archivos"]:
                 dic = {valor[0]:valor[2]}
                 reporte_comercial_sector_consumo(dic, valor[1], informar=True, codigo_DANE=codigo_DANE, total=sumatoria, valor_facturado=valor_facturado, facturas=facturas, thread=thread, subsidio=True)
+        case "generar_reporte_comercial_sector_consumo_subsidio_anual":
+            opciones = info["Opciones"]
+            sumatoria = False
+            if "sumatoria" in opciones:
+                sumatoria = opciones["sumatoria"]
+            valor_facturado = False
+            if "valor_facturado" in opciones:
+                valor_facturado = opciones["valor_facturado"]
+            facturas = False
+            if "facturas" in opciones:
+                facturas = opciones["facturas"]
+            codigo_DANE = None
+            if "codigo_DANE" in opciones:
+                codigo_DANE = opciones["codigo_DANE"]
+            for valor in info["Archivos"]:
+                dic = {valor[0]:valor[2]}
+                info_reporte = valor[1]
+                opciones_apoyo = opciones
+                reporte_comercial_sector_consumo(dic, valor[1], informar=True, codigo_DANE=codigo_DANE, total=sumatoria, valor_facturado=valor_facturado, facturas=facturas, thread=thread, subsidio=True)
+        case "generar_reporte_comercial_sector_consumo_subsidio_anual_union":
+            reporte = "_reporte_consumo_subsidio.csv"
+            if "sumatoria" in opciones_add:
+                reporte = reporte.replace(".csv", "_sumatoria.csv")
+            if "codigo_DANE" in opciones_add:
+                v_codigo_DANE_texto = codigo_DANE_texto(opciones_add["codigo_DANE"])
+                if len(v_codigo_DANE_texto):
+                    v_codigo_DANE_texto = v_codigo_DANE_texto+".csv"
+                    reporte = reporte.replace(".csv", "_"+v_codigo_DANE_texto)
+            proceso,dic_archivos_anual = generar_archivos_extra_anual(info, reporte, ["_reporte_consumo", reporte.replace(".csv",""), "_subsidio"])
+            if proceso:
+                union_archivos_mensuales_anual_reporte_consumo(dic_archivos_anual, info, informar=True, thread=thread, subsidio=True)
         case "generar_reporte_compensaciones_mensual":
             opciones = info["Opciones"]
             inventario = False
@@ -6787,6 +6993,34 @@ def generar_reporte(reporte, info, thread):
             for valor in info["Archivos"]:
                 dic = {valor[0]:valor[2]}
                 reporte_SH(dic, valor[1], informar=True, codigo_DANE=[11001000], thread=thread)
+        case "generar_comparacion_CER_CLD_PRD":
+            for valor in info["Archivos"]:
+                dic = {valor[0]:valor[2]}
+                reporte_comparacion_prd_cld_cer(dic, valor[1], informar=True, thread=thread)
+        case "generar_comparacion_CER_CLD":
+            opciones = info["Opciones"]
+            cantidad_filas = cantidad_datos_estilo_excel
+            if "cantidad_filas" in opciones:
+                cantidad_filas = opciones["cantidad_filas"]
+            for valor in info["Archivos"]:
+                dic = {valor[0]:valor[2]}
+                reporte_comparacion_SAP(dic, valor[1], True, cantidad_filas, "GRC1_", "_CLD", thread=thread)
+        case "generar_comparacion_CER_PRD":
+            opciones = info["Opciones"]
+            cantidad_filas = cantidad_datos_estilo_excel
+            if "cantidad_filas" in opciones:
+                cantidad_filas = opciones["cantidad_filas"]
+            for valor in info["Archivos"]:
+                dic = {valor[0]:valor[2]}
+                reporte_comparacion_SAP(dic, valor[1], True, cantidad_filas, "GRC1_", "_PRD", thread=thread)
+        case "generar_comparacion_CLD_PRD":
+            opciones = info["Opciones"]
+            cantidad_filas = cantidad_datos_estilo_excel
+            if "cantidad_filas" in opciones:
+                cantidad_filas = opciones["cantidad_filas"]
+            for valor in info["Archivos"]:
+                dic = {valor[0]:valor[2]}
+                reporte_comparacion_SAP(dic, valor[1], True, cantidad_filas, "_PRD", "_CLD", thread=thread)
         #Reportes tarifarios
         case "generar_reportes_tarifarios_mensual":
             for valor in info["Archivos"]:
@@ -6855,7 +7089,7 @@ def generar_reporte(reporte, info, thread):
                 union_archivos_mensuales_anual(dic_archivos_anual, info, informar=True, thread=thread)
         case _:
             pass
-    return info_reporte
+    return info_reporte, opciones_apoyo
 
 class Envio_mensajes(QThread):
     message_sent = pyqtSignal(str, str)
@@ -6935,36 +7169,66 @@ class Envio_mensajes(QThread):
                         valor = True
                         dic_info["Archivos"] = lista_generar
                         dic_info["Opciones"] = opciones
+                case "generar_reporte_comercial_sector_consumo_mensual":
+                    if self.info:
+                        generar_reporte(self.estado, self.info, self)
+                case "reporte_comercial_sector_consumo_anual":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                        dic_info["Opciones"] = opciones
+                case "generar_reporte_comercial_sector_consumo_anual":
+                    if self.info:
+                        info_reporte, opciones_apoyo = generar_reporte(self.estado, self.info, self)
+                        dic_info["Reporte"] = info_reporte
+                        dic_info["Opciones"] = opciones_apoyo
+                        valor = True
+                case "generar_reporte_comercial_sector_consumo_anual_union":
+                    if self.info:
+                        generar_reporte(self.estado, self.info["Reporte"], self, self.info["Opciones"])
                 case "reporte_comercial_sector_consumo_subsidio_mensual":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
                         valor = True
                         dic_info["Archivos"] = lista_generar
                         dic_info["Opciones"] = opciones
+                case "generar_reporte_comercial_sector_consumo_subsidio_mensual":
+                    if self.info:
+                        generar_reporte(self.estado, self.info, self)
+                case "reporte_comercial_sector_consumo_subsidio_anual":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                        dic_info["Opciones"] = opciones
+                case "generar_reporte_comercial_sector_consumo_subsidio_anual":
+                    if self.info:
+                        info_reporte, opciones_apoyo = generar_reporte(self.estado, self.info, self)
+                        dic_info["Reporte"] = info_reporte
+                        dic_info["Opciones"] = opciones_apoyo
+                        valor = True
+                case "generar_reporte_comercial_sector_consumo_subsidio_anual_union":
+                    if self.info:
+                        generar_reporte(self.estado, self.info["Reporte"], self, self.info["Opciones"])
                 case "reporte_compensaciones_mensual":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
                         valor = True
                         dic_info["Archivos"] = lista_generar
                         dic_info["Opciones"] = opciones
+                case "generar_reporte_compensaciones_mensual":
+                    if self.info:
+                        generar_reporte(self.estado, self.info, self)
                 case "reporte_compensaciones_anual":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
                         valor = True
                         dic_info["Archivos"] = lista_generar
                         dic_info["Opciones"] = opciones
-                case "generar_reporte_comercial_sector_consumo_mensual":
-                    if self.info:
-                        generar_reporte(self.estado, self.info, self)
-                case "generar_reporte_comercial_sector_consumo_subsidio_mensual":
-                    if self.info:
-                        generar_reporte(self.estado, self.info, self)
-                case "generar_reporte_compensaciones_mensual":
-                    if self.info:
-                        generar_reporte(self.estado, self.info, self)
                 case "generar_reporte_compensaciones_anual":
                     if self.info:
-                        info_reporte = generar_reporte(self.estado, self.info, self)
+                        info_reporte, opciones_apoyo = generar_reporte(self.estado, self.info, self)
                         dic_info["Reporte"] = info_reporte
                         valor = True
                 case "generar_reporte_compensaciones_anual_union":
@@ -6985,7 +7249,7 @@ class Envio_mensajes(QThread):
                         dic_info["Archivos"] = lista_generar
                 case "generar_desviaciones_significativas_anual":
                     if self.info:
-                        info_reporte = generar_reporte(self.estado, self.info, self)
+                        info_reporte, opciones_apoyo = generar_reporte(self.estado, self.info, self)
                         dic_info["Reporte"] = info_reporte
                         valor = True
                 case "generar_desviaciones_significativas_anual_union":
@@ -7009,6 +7273,42 @@ class Envio_mensajes(QThread):
                 case "generar_reporte_SH":
                     if self.info:
                         generar_reporte(self.estado, self.info, self)
+                case "comparacion_CER_CLD_PRD":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                        dic_info["Opciones"] = opciones
+                case "generar_comparacion_CER_CLD_PRD":
+                    if self.info:
+                        generar_reporte(self.estado, self.info, self)
+                case "comparacion_CER_CLD":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                        dic_info["Opciones"] = opciones
+                case "generar_comparacion_CER_CLD":
+                    if self.info:
+                        generar_reporte(self.estado, self.info, self)
+                case "comparacion_CER_PRD":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                        dic_info["Opciones"] = opciones
+                case "generar_comparacion_CER_PRD":
+                    if self.info:
+                        generar_reporte(self.estado, self.info, self)
+                case "comparacion_CLD_PRD":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                        dic_info["Opciones"] = opciones
+                case "generar_comparacion_CLD_PRD":
+                    if self.info:
+                        generar_reporte(self.estado, self.info, self)
                 #Reportes tarifarios
                 case "reportes_tarifarios_mensual":
                     if self.info:
@@ -7027,7 +7327,7 @@ class Envio_mensajes(QThread):
                         dic_info["Opciones"] = opciones
                 case "generar_reportes_tarifarios_anual":
                     if self.info:
-                        info_reporte = generar_reporte(self.estado, self.info, self)
+                        info_reporte, opciones_apoyo = generar_reporte(self.estado, self.info, self)
                         dic_info["Reporte"] = info_reporte
                         valor = True
                 case "generar_reportes_tarifarios_anual_union":
@@ -7051,7 +7351,7 @@ class Envio_mensajes(QThread):
                         dic_info["Opciones"] = opciones
                 case "generar_reporte_indicadores_anual":
                     if self.info:
-                        info_reporte = generar_reporte(self.estado, self.info, self)
+                        info_reporte, opciones_apoyo = generar_reporte(self.estado, self.info, self)
                         dic_info["Reporte"] = info_reporte
                         valor = True
                 case "generar_reporte_indicadores_anual_union":
@@ -7074,7 +7374,7 @@ class Envio_mensajes(QThread):
                         dic_info["Opciones"] = opciones
                 case "generar_reporte_suspensiones_anual":
                     if self.info:
-                        info_reporte = generar_reporte(self.estado, self.info, self)
+                        info_reporte, opciones_apoyo = generar_reporte(self.estado, self.info, self)
                         dic_info["Reporte"] = info_reporte
                         valor = True
                 case "generar_reporte_suspensiones_anual_union":
@@ -7097,7 +7397,7 @@ class Envio_mensajes(QThread):
                         dic_info["Opciones"] = opciones
                 case "generar_reporte_IRST_anual":
                     if self.info:
-                        info_reporte = generar_reporte(self.estado, self.info, self)
+                        info_reporte, opciones_apoyo = generar_reporte(self.estado, self.info, self)
                         dic_info["Reporte"] = info_reporte
                         valor = True
                 case "generar_reporte_IRST_anual_union":

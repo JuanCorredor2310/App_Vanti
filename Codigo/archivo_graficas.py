@@ -53,6 +53,7 @@ grupo_vanti = "Grupo Vanti"
 dic_nom_eventos = {"CONTROLADO" : "Controlados",
                     "NO CONTROLADO" : "No Controlados"}
 dic_colores = leer_archivos_json(ruta_constantes+"colores.json")["datos"]
+dic_valores = leer_archivos_json(ruta_constantes+"valores_anuales.json")["datos"]
 dic_mercados = leer_archivos_json(ruta_constantes+"mercado_relevante_resumen.json")
 empresa_indicador_SUI = leer_archivos_json(ruta_constantes+"empresa_indicador_SUI.json")["datos"]
 dic_filiales = leer_archivos_json(ruta_constantes+"tabla_empresa.json")["datos"]
@@ -71,9 +72,9 @@ dic_industrias_grupos = leer_archivos_json(ruta_constantes+"sector_consumo_indus
 ruta_fuente = ruta_fuentes+"Muli.ttf"
 ruta_fuente_negrilla = ruta_fuentes+"Muli-Bold.ttf"
 custom_font = FontProperties(fname=ruta_fuente)
-porcentaje_ISRT = 100
-limite_facturas = 4.04
-meta_subsidios = 1.4
+porcentaje_ISRT = int(dic_valores["IRST"])
+limite_facturas = float(dic_valores["limite_facturas"])
+meta_subsidios = float(dic_valores["meta_subsidios"])
 
 def acortar_nombre(nombre, cantidad=6):
     lista_nombre = nombre.split("\\")
@@ -197,12 +198,12 @@ def grafica_barras_trimestre_reclamos(archivo, thread=None):
                 for i in range(len(lista_periodos)):
                     ax.bar(x[i], valores[i], color=colors[i])
                 for i in range(len(lista_periodos)):
-                    ax.text(x[i], valores[i] + 0.15, conversion_decimales(f"{valores[i]}%"), ha='center', va='bottom', fontsize=74, color=colors[0])
+                    ax.text(x[i], valores[i] + 0.15, conversion_decimales(f"{valores[i]}%"), ha='center', va='bottom', fontsize=82, color=colors[0])
                 ax.tick_params(axis='x', colors=dic_colores["azul_v"],labelsize=58)
                 ax.tick_params(axis='y', colors=dic_colores["azul_v"],size=0)
                 for spine in ax.spines.values():
                     spine.set_visible(False)
-                ax.text(x=-0.9, y=limite_facturas+0.1, s = conversion_decimales(f'{limite_facturas} %'), color=dic_colores["azul_v"], fontsize=74)
+                ax.text(x=-0.9, y=limite_facturas+0.1, s = conversion_decimales(f'{limite_facturas} %'), color=dic_colores["azul_v"], fontsize=78)
                 ax.axhline(xmin=-0.4, xmax=2, y=limite_facturas, linestyle='--', color=dic_colores["azul_v"], label=f'Límite regulatorio',linewidth=8)
                 ax.legend(bbox_to_anchor=(0.5, -0.095), loc='upper center',
                             borderaxespad=0.0, fontsize=36, labelcolor=dic_colores["azul_v"])
@@ -303,7 +304,6 @@ def grafica_matriz_requerimientos(archivo, thread=None):
             df = pd.read_csv(n_archivo, sep=",", encoding="utf-8-sig")
             df['Porcentaje_entidad'] = df['Porcentaje_entidad'].str.replace(" %", "").astype(float)
             labels = list(df["Categoria_entidad"])
-            print(labels)
             try:
                 indice = labels.index("Entidades gubernamentales")
                 labels[indice] = "Entidades gov."
@@ -499,8 +499,8 @@ def grafica_pie_tipo_usuario(archivo, fecha, thread=None):
                 labels = list(df_filtro["Tipo de usuario"])
                 sizes = list(df_filtro[llave])
                 plt.figure(figsize=(10,7))
-                plt.pie(sizes, autopct=lambda p : conversion_decimales('{:.2f} M'.format(p * sum(sizes) / 100000000)),
-                        colors=lista_colores[pos], textprops={'fontsize': 33,'color':'white'},
+                plt.pie(sizes, autopct=lambda p : conversion_decimales('{:.1f} M'.format(p * sum(sizes) / 100000000)),
+                        colors=lista_colores[pos], textprops={'fontsize': 40,'color':'white'},
                         wedgeprops={'linewidth': 4, 'edgecolor': 'none'})
                 plt.legend(bbox_to_anchor=(0.5, 0.01), loc='upper center',
                                         ncol=3, borderaxespad=0.0, fontsize=24, labels=labels)
