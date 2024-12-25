@@ -185,6 +185,19 @@ def meses_anio_actual(anio, mes):
     meses = [(anio, i) for i in range(1, mes + 1)]
     return meses
 
+def agregar_meses_anteriores(seleccionar_reporte):
+    if seleccionar_reporte["meses"]:
+        mes = seleccionar_reporte["meses"][0]
+        seleccionar_reporte["meses"] = None
+        anio = seleccionar_reporte["anios"][0]
+        seleccionar_reporte["anios"] = None
+        seleccionar_reporte["fecha_personalizada"] = [fecha_anterior_rango(anio, mes),(anio,mes)]
+    elif seleccionar_reporte["fecha_personalizada"]:
+        anio = seleccionar_reporte["fecha_personalizada"][0][0]
+        mes = seleccionar_reporte["fecha_personalizada"][0][1]
+        seleccionar_reporte["fecha_personalizada"][0] = fecha_anterior_rango(anio, mes)
+    return seleccionar_reporte
+
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Manejo DataFrames
 # * -------------------------------------------------------------------------------------------------------
@@ -1608,8 +1621,8 @@ def reporte_comercial_sector_consumo(dic_archivos, seleccionar_reporte, informar
             lista_nombre[-5] = "05. REPORTES_GENERADOS_APLICATIVO"
             lista_nombre.pop(-2)
             nuevo_nombre = lista_a_texto(lista_nombre,"\\")
-            if total:
-                df_total_suma, proceso = generar_sumatoria_df(df_total, subsidio, codigo_DANE)
+            if total and not codigo_DANE:
+                df_total_suma, proceso = generar_sumatoria_df(df_total)
                 if proceso:
                     df_total = df_total_suma.copy()
                     nuevo_nombre = nuevo_nombre.replace(".csv","_sumatoria.csv")
@@ -2229,7 +2242,7 @@ def reporte_comparacion_SAP(dic_archivos, seleccionar_reporte, informar, cantida
                     else:
                         print(f"Se necesitan al menos 2 archivos para generar la comparación entre reportes comerciales GRC1")
 
-def generar_sumatoria_df(df, subsidio, codigo_DANE):
+def generar_sumatoria_df(df):
     columnas = list(df.columns)
     lista_df = []
     lista_filiales = list(df["Filial"].unique())
@@ -2348,7 +2361,7 @@ def dif_numerica_listas(lista_actual, lista_anterior):
     else:
         return lista_diferencia
 
-def apoyo_reporte_usuarios_filial(lista_archivos,informar,filial,almacenar_excel=True, usuarios_unicos=True):
+def apoyo_reporte_usuarios_filial(lista_archivos,informar,filial,almacenar_excel=True, usuarios_unicos=True, thread=None):
     proceso_GRTT2 = False
     proceso_GRC1 = False
     for archivo in lista_archivos:
@@ -2419,7 +2432,7 @@ def apoyo_reporte_usuarios_filial(lista_archivos,informar,filial,almacenar_excel
             lista_nombre = nombre.split("\\")
             lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
             nombre = lista_a_texto(lista_nombre,"\\")
-            almacenar_df_csv_y_excel(df_NIU_GRTT2_GRC1, nombre.replace("_resumen","_inventario_suscriptores_activos"), almacenar_excel=False)
+            almacenar_df_csv_y_excel(df_NIU_GRTT2_GRC1, nombre.replace("_resumen","_inventario_suscriptores_activos"), almacenar_excel=False, thread=thread)
         nombre = nombre.replace("_resumen","_inventario_suscriptores_sector_consumo")
         dic_dataframe = dict(sorted(dic_dataframe.items()))
         dic_dataframe_texto = {}
@@ -2432,7 +2445,7 @@ def apoyo_reporte_usuarios_filial(lista_archivos,informar,filial,almacenar_excel
         df_filial_resumen["NIT"] = dic_nit[dic_filiales[filial]]
         df_filial_resumen["Mes_reportado"] = mes_reportado
         df_filial_resumen["Anio_reportado"] = anio_reportado
-        almacenar_df_csv_y_excel(df_filial_resumen, nombre)
+        almacenar_df_csv_y_excel(df_filial_resumen, nombre, thread=thread)
         return df_filial_resumen, nombre
     else:
         return None,None
@@ -2443,7 +2456,7 @@ def generar_listas_fechas(lista_fechas):
         lista_final.append((lista_fechas[i-1],lista_fechas[i]))
     return lista_final
 
-def encontrar_errores_inventario_suscriptores(dic_archivos, seleccionar_reporte):
+def encontrar_errores_inventario_suscriptores(dic_archivos, seleccionar_reporte, thread=None):
     lista_fechas = generar_listas_fechas(list(dic_archivos.keys()))
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for union in lista_fechas:
@@ -2454,6 +2467,7 @@ def encontrar_errores_inventario_suscriptores(dic_archivos, seleccionar_reporte)
             for archivo in dic_archivos[union[0]]:
                 if "GRTT2" in archivo and "SAP" not in archivo and filial in archivo:
                     lista_archivos_filial.append(archivo)
+                    print(archivo)
             if len(lista_archivos_filial):
                 proceso_GRTT2 = True
             for archivo in dic_archivos[union[1]]:
@@ -2462,9 +2476,12 @@ def encontrar_errores_inventario_suscriptores(dic_archivos, seleccionar_reporte)
             if len(lista_archivos_filial) == 2:
                 proceso_GRTT2SAP = True
             if proceso_GRTT2SAP and proceso_GRTT2:
-                df1,nombre = apoyo_encontrar_errores_inventario_suscriptores(lista_archivos_filial,filial, union[0])
+                apoyo_encontrar_errores_inventario_suscriptores(lista_archivos_filial,filial, union[0], thread=thread)
             else:
-                print(f"No es posible generar el reporte. Deben existir los archivos de los periodos {union[0]} y {union[1]}")
+                if thread:
+                    thread.message_sent.emit(f"No es posible generar el reporte. Deben existir los archivos de los periodos {union[0]} y {union[1]}", "red")
+                else:
+                    print(f"No es posible generar el reporte. Deben existir los archivos de los periodos {union[0]} y {union[1]}")
 
 def unir_archivos_csv(arc_1, arc_2, nombre):
     lista_arc_1 = lectura_dataframe_chunk(arc_1)
@@ -2485,17 +2502,19 @@ def unir_archivos_csv(arc_1, arc_2, nombre):
     except BaseException:
         return False
 
-def corregir_errores_inventario_suscriptores(dic_archivos, seleccionar_reporte):
+def corregir_errores_inventario_suscriptores(dic_archivos, seleccionar_reporte, thread=None):
     lista_fechas = generar_listas_fechas(list(dic_archivos.keys()))
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for union in lista_fechas:
         lista_archivos_filial = []
         for filial in lista_filiales_archivo:
+            print(filial)
             proceso_GRTT2 = False
             proceso_GRTT2SAP = False
             for archivo in dic_archivos[union[0]]:
                 if "GRTT2" in archivo and "SAP" not in archivo and filial in archivo:
                     lista_archivos_filial.append(archivo)
+                    print(archivo)
             if len(lista_archivos_filial):
                 proceso_GRTT2 = True
             for archivo in dic_archivos[union[1]]:
@@ -2504,16 +2523,22 @@ def corregir_errores_inventario_suscriptores(dic_archivos, seleccionar_reporte):
                     n2 = archivo.replace("_resumen","_error")
                     n3 = archivo.replace("_resumen","_apoyo_error")
                     if os.path.exists(n1) and os.path.exists(n2):
+                        print(n1)
+                        print(n2)
+                        print(n3)
                         proceso = unir_archivos_csv(n1, n2, n3)
                         if proceso:
                             lista_archivos_filial.append(n3)
             if len(lista_archivos_filial) == 2:
                 proceso_GRTT2SAP = True
             if proceso_GRTT2SAP and proceso_GRTT2:
-                df1,nombre = apoyo_encontrar_errores_inventario_suscriptores(lista_archivos_filial,filial, union[0])
+                apoyo_encontrar_errores_inventario_suscriptores(lista_archivos_filial,filial, union[0], thread=thread)
                 eliminar_archivos([n3])
             else:
-                print(f"No es posible corregir los errores. Deben existir los archivos (_resumen.csv, _completo.csv, _error.csv) de los periodos {union[0]} y {union[1]}\nLos archivos deben cumplir con la estructura de certificación del GRTT2")
+                if thread:
+                    thread.message_sent.emit(f"No es posible corregir los errores. Deben existir los archivos (_resumen.csv, _completo.csv, _error.csv) de los periodos {union[0]} y {union[1]}\nLos archivos deben cumplir con la estructura de certificación del GRTT2", "red")
+                else:
+                    print(f"No es posible corregir los errores. Deben existir los archivos (_resumen.csv, _completo.csv, _error.csv) de los periodos {union[0]} y {union[1]}\nLos archivos deben cumplir con la estructura de certificación del GRTT2")
 
 def listas_iguales(lista_1, lista_2):
     if len(lista_1) == len(lista_2):
@@ -2574,7 +2599,7 @@ def errores_lista(lista, indicador_SUI_filial, dic_filial_mercado, dic_filial_DA
         lista.append("")
     return lista
 
-def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fecha):
+def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fecha, thread=None):
     if len(lista_archivos) == 2:
         filas_minimas = ["NIU","ID_Comercializador","ID_Mercado"]
         columnas_GRTT2 = leer_archivos_json(ruta_constantes+"/GRTT2.json")["seleccionados"]
@@ -2603,7 +2628,7 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
         dic_NIU_previo = {}
         lista_aceptado = []
         if lista_df_SAP and lista_df_previo:
-            lista_df_catastro = []
+            #lista_df_catastro = []
             for df in lista_df_SAP:
                 df = df.reset_index(drop=True)
                 columnas = list(df.columns)
@@ -2650,8 +2675,8 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                 df['Informacion_predial_actualizada'] = df['Cedula_Catastral'].apply(
                     lambda x: 2 if len(x) == 30 else
                             1 if len(x) == 21 else 4)
-                """df_catastro = df[df["Informacion_predial_actualizada"]==4]
-                lista_df_catastro.append(df_catastro)"""
+                #df_catastro = df[df["Informacion_predial_actualizada"]==4]
+                #lista_df_catastro.append(df_catastro)
                 df['Cedula_Catastral'] = np.where(df['Informacion_predial_actualizada'] == 4, 0, df['Cedula_Catastral'])
                 df["Fecha_ajuste"] = inicio_mes_str
                 if "STS_Regularizacion" in columnas:
@@ -2734,11 +2759,11 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                             dic_error[col].append(df_error)
                     df = df_filter.copy()
                 lista_aceptado.append(df)
-            """lista_archivo = archivo_SAP.split("\\")
-            df_SAP_catastro = pd.concat(lista_df_catastro, ignore_index=True)
-            lista_archivo[-1] = lista_archivo[-1].replace("_resumen","_ajuste_catastro")
-            nombre_catastro = lista_a_texto(lista_archivo, "\\")
-            almacenar_df_csv_y_excel(df_SAP_catastro, nombre_catastro, almacenar_excel=False)"""
+            #lista_archivo = archivo_SAP.split("\\")
+            #df_SAP_catastro = pd.concat(lista_df_catastro, ignore_index=True)
+            #lista_archivo[-1] = lista_archivo[-1].replace("_resumen","_ajuste_catastro")
+            #nombre_catastro = lista_a_texto(lista_archivo, "\\")
+            #almacenar_df_csv_y_excel(df_SAP_catastro, nombre_catastro, almacenar_excel=False)
             df_SAP_preliminar = pd.concat(lista_aceptado, ignore_index=True)
             df_SAP_preliminar = df_SAP_preliminar[columnas_GRTT2]
             df_SAP_preliminar["Tipo_usuario"] = pd.to_numeric(df_SAP_preliminar["Tipo_usuario"], errors='coerce').fillna(0).astype(int)
@@ -2785,8 +2810,8 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                     df_unido_2 = df_unido_2[columnas_minimas]
                     largo = len(df_unido_2)
                     total += largo
-                    if largo > 300:
-                        df_unido_2 = df_unido_2.head(300)
+                    if largo > 150:
+                        df_unido_2 = df_unido_2.head(150)
                     if largo == 1:
                         texto = f"1 error en la columna {col}."
                     else:
@@ -2797,11 +2822,14 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                 nombre_error = lista_a_texto(lista_archivo, "\\").replace("_resumen","").replace("_apoyo_error","")
                 nombre_error_doc = nombre_error.replace(".csv",".docx")
                 nombre_error_pdf = nombre_error.replace(".csv",".pdf")
-                op = mod_8.almacenar_errores(dic_error_2, filial, indicador_SUI[filial], mes, anio, nombre_error_doc, total, "GRTT2", "")
+                op = mod_8.almacenar_errores(dic_error_2, filial, indicador_SUI[filial], mes, anio, nombre_error_doc, total, "GRTT2", "", thread=thread)
                 if op:
-                    informar_archivo_creado(nombre_error_pdf, True)
+                    informar_archivo_creado(nombre_error_pdf, True, thread=thread)
                 else:
-                    print(f"No es posible acceder al archivo {acortar_nombre(nombre_error_pdf)}")
+                    if thread:
+                        thread.message_sent.emit(f"No es posible acceder al archivo {acortar_nombre(nombre_error_pdf)}", "red")
+                    else:
+                        print(f"No es posible acceder al archivo {acortar_nombre(nombre_error_pdf)}")
                 df_error = pd.concat(lista_df_error, ignore_index=True)
                 columnas = list(df_error.columns)
                 columnas.append("Columna_error")
@@ -2810,7 +2838,7 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                     lista_errores.append(errores_lista(df_error.iloc[i].tolist(), indicador_SUI_filial, dic_filial_mercado, dic_filial_DANE))
                 df_error_col = pd.DataFrame(lista_errores, columns=columnas)
                 nombre = archivo_SAP.replace("_resumen","_error").replace("_apoyo_error","_error")
-                almacenar_df_csv_y_excel(df_error_col, nombre, almacenar_excel=False)
+                almacenar_df_csv_y_excel(df_error_col, nombre, almacenar_excel=False, thread=thread)
             lista_cambios = []
             lista_nuevos = []
             lista_completo = []
@@ -2827,16 +2855,16 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                     lista_nuevos.append(lista_sap)
             df_completo = pd.DataFrame(lista_completo, columns=columnas_GRTT2)
             nombre = archivo_SAP.replace("_resumen","_completo").replace("_apoyo_error","_completo")
-            almacenar_df_csv_y_excel(df_completo, nombre, almacenar_excel=False)
+            almacenar_df_csv_y_excel(df_completo, nombre, almacenar_excel=False, thread=thread)
             df_procesado = pd.DataFrame(lista_cambios, columns=columnas_GRTT2)
             nombre = archivo_SAP.replace("_resumen","_procesado").replace("_apoyo_error","_procesado")
-            almacenar_df_csv_y_excel(df_procesado, nombre, almacenar_excel=False)
+            almacenar_df_csv_y_excel(df_procesado, nombre, almacenar_excel=False, thread=thread)
             df_nuevo = pd.DataFrame(lista_nuevos, columns=columnas_GRTT2)
             nombre = archivo_SAP.replace("_resumen","_nuevo").replace("_apoyo_error","_nuevo")
-            almacenar_df_csv_y_excel(df_nuevo, nombre, almacenar_excel=False)
+            almacenar_df_csv_y_excel(df_nuevo, nombre, almacenar_excel=False, thread=thread)
     return None, None
 
-def reporte_usuarios_filial(dic_archivos, seleccionar_reporte, informar, almacenar_excel=True, usuarios_unicos=True):
+def reporte_usuarios_filial(dic_archivos, seleccionar_reporte, informar, almacenar_excel=True, usuarios_unicos=True, thread=None):
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for fecha, lista_archivos in dic_archivos.items():
         lista_df_filiales = []
@@ -2846,7 +2874,7 @@ def reporte_usuarios_filial(dic_archivos, seleccionar_reporte, informar, almacen
                 if filial in archivo:
                     lista_archivos_filial.append(archivo)
             if len(lista_archivos_filial):
-                df1,nombre = apoyo_reporte_usuarios_filial(lista_archivos_filial,informar,filial, usuarios_unicos=usuarios_unicos)
+                df1,nombre = apoyo_reporte_usuarios_filial(lista_archivos_filial,informar,filial, usuarios_unicos=usuarios_unicos, thread=thread)
                 if nombre:
                     lista_df_filiales.append(df1)
         if len(lista_archivos_filial) > 0 and len(lista_filiales_archivo) == 4:
@@ -2856,14 +2884,7 @@ def reporte_usuarios_filial(dic_archivos, seleccionar_reporte, informar, almacen
             lista_nombre.pop(-2)
             lista_nombre[-4] = "05. REPORTES_GENERADOS_APLICATIVO"
             nuevo_nombre = lista_a_texto(lista_nombre,"\\")
-            df_total.to_csv(nuevo_nombre, index=False, encoding="utf-8-sig")
-            if informar:
-                informar_archivo_creado(nuevo_nombre, True)
-            df1 = leer_dataframe_utf_8(nuevo_nombre)
-            if almacenar_excel:
-                almacenar = mod_5.almacenar_csv_en_excel(df1,nuevo_nombre.replace(".csv",".xlsx"),"Datos")
-                if informar and almacenar:
-                    informar_archivo_creado(nuevo_nombre.replace(".csv",".xlsx"), True)
+            almacenar_df_csv_y_excel(df_total, nuevo_nombre, almacenar_excel=almacenar_excel, thread=thread)
 
 def apoyo_generar_reporte_compensacion_mensual(lista_archivos,informar,filial,inventario,thread=None):
     proceso1 = False
@@ -4124,7 +4145,7 @@ def generar_reporte_desviaciones_mensual(dic_archivos, seleccionar_reporte, info
                 nombre = nuevo_nombre.replace(".csv", "_metricas_categorias.csv")
                 almacenar_df_csv_y_excel(df_metricas_categoria, nombre, thread=thread)
 
-def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, almacenar_excel=True):
+def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, almacenar_excel=True, thread=None):
     proceso_GRC1 = False
     proceso_GRC2 = False
     proceso_GRTT2 = False
@@ -4313,7 +4334,7 @@ def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, alma
         lista_nombre = nombre_arc.split("\\")
         lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
         nombre = lista_a_texto(lista_nombre,"\\",False).replace("_resumen","_usuarios_unicos_facturacion")
-        almacenar_df_csv_y_excel(df1, nombre, almacenar_excel=False)
+        almacenar_df_csv_y_excel(df1, nombre, almacenar_excel=False, thread=thread)
         dic_reporte_facturacion = {"Clasificacion_usuarios":[],
                                     "Sector_consumo":[],
                                     "Cantidad_NIU_Unicos":[],
@@ -4344,7 +4365,7 @@ def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, alma
         lista_nombre = nombre_arc.split("\\")
         lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
         nombre_1 = lista_a_texto(lista_nombre,"\\",False).replace("_resumen","_reporte_facturacion")
-        almacenar_df_csv_y_excel(df2, nombre_1)
+        almacenar_df_csv_y_excel(df2, nombre_1, thread=thread)
     dic_df = {"Clasificacion_usuarios":[],
                 "Cantidad_usuarios_unicos":[],
                 "Consumo_m3":[],
@@ -4376,10 +4397,10 @@ def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, alma
         lista_nombre = nombre_arc.split("\\")
         lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
         nombre_2 = lista_a_texto(lista_nombre,"\\",False).replace("_resumen","_usuarios_unicos")
-        almacenar_df_csv_y_excel(df, nombre_2)
+        almacenar_df_csv_y_excel(df, nombre_2, thread=thread)
     return df, nombre_2, df2, nombre_1
 
-def reporte_usuarios_unicos_mensual(dic_archivos, seleccionar_reporte, informar, almacenar_excel=True):
+def reporte_usuarios_unicos_mensual(dic_archivos, seleccionar_reporte, informar, almacenar_excel=True, thread=None):
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for fecha, lista_archivos in dic_archivos.items():
         lista_df_filiales_1 = []
@@ -4390,31 +4411,32 @@ def reporte_usuarios_unicos_mensual(dic_archivos, seleccionar_reporte, informar,
                 if filial in archivo:
                     lista_archivos_filial.append(archivo)
             if len(lista_archivos_filial):
-                df1,nombre_1,df2,nombre_2 = apoyo_reporte_usuarios_unicos_mensual(lista_archivos_filial,informar,filial, almacenar_excel)
+                df1,nombre_1,df2,nombre_2 = apoyo_reporte_usuarios_unicos_mensual(lista_archivos_filial,informar,filial, almacenar_excel, thread=thread)
                 if nombre_1:
                     lista_df_filiales_1.append(df1)
                 if nombre_2:
                     lista_df_filiales_2.append(df2)
-        if len(lista_df_filiales_2) > 0 and len(lista_filiales_archivo) == 4:
-            df_total = pd.concat(lista_df_filiales_2, ignore_index=True)
-            df_total = generar_suma_df_filiales(df_total, ["Clasificacion_usuarios","Sector_consumo"],["Cantidad_facturas_emitidas","Consumo_m3",
-                                                            "Valor_consumo_facturado","Valor_total_facturado"])
-            lista_nombre = nombre_2.split("\\")
-            lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
-            lista_nombre[-5] = "05. REPORTES_GENERADOS_APLICATIVO"
-            lista_nombre.pop(-2)
-            nuevo_nombre = lista_a_texto(lista_nombre,"\\")
-            almacenar_df_csv_y_excel(df_total, nuevo_nombre)
-        if len(lista_df_filiales_1) > 0 and len(lista_filiales_archivo) == 4:
-            df_total = pd.concat(lista_df_filiales_1, ignore_index=True)
-            df_total = generar_suma_df_filiales(df_total,["Clasificacion_usuarios"],["Cantidad_facturas_emitidas",
-                                                            "Consumo_m3","Valor_consumo_facturado","Valor_total_facturado", "Cantidad_usuarios_unicos"])
-            lista_nombre = nombre_1.split("\\")
-            lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
-            lista_nombre[-5] = "05. REPORTES_GENERADOS_APLICATIVO"
-            lista_nombre.pop(-2)
-            nuevo_nombre = lista_a_texto(lista_nombre,"\\")
-            almacenar_df_csv_y_excel(df_total, nuevo_nombre)
+        if len(lista_filiales_archivo) == 4:
+            if len(lista_df_filiales_2):
+                df_total = pd.concat(lista_df_filiales_2, ignore_index=True)
+                df_total = generar_suma_df_filiales(df_total, ["Clasificacion_usuarios","Sector_consumo"],["Cantidad_facturas_emitidas","Consumo_m3",
+                                                                "Valor_consumo_facturado","Valor_total_facturado"])
+                lista_nombre = nombre_2.split("\\")
+                lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
+                lista_nombre[-5] = "05. REPORTES_GENERADOS_APLICATIVO"
+                lista_nombre.pop(-2)
+                nuevo_nombre = lista_a_texto(lista_nombre,"\\")
+                almacenar_df_csv_y_excel(df_total, nuevo_nombre, thread=thread)
+            if len(lista_df_filiales_1):
+                df_total = pd.concat(lista_df_filiales_1, ignore_index=True)
+                df_total = generar_suma_df_filiales(df_total,["Clasificacion_usuarios"],["Cantidad_facturas_emitidas",
+                                                                "Consumo_m3","Valor_consumo_facturado","Valor_total_facturado", "Cantidad_usuarios_unicos"])
+                lista_nombre = nombre_1.split("\\")
+                lista_nombre[-1] = lista_a_texto(lista_nombre[-1].split("_")[1:],"_")
+                lista_nombre[-5] = "05. REPORTES_GENERADOS_APLICATIVO"
+                lista_nombre.pop(-2)
+                nuevo_nombre = lista_a_texto(lista_nombre,"\\")
+                almacenar_df_csv_y_excel(df_total, nuevo_nombre, thread=thread)
 
 def reporte_comportamiento_patrimonial(fi,ff,listas_unidas):
     nombre = "info_trimestral"
@@ -6337,6 +6359,7 @@ def generar_grafias_DB(lista_anual, reporte, thread=None):
                 elif i == 9:
                     thread.message_sent.emit("Gráficas indicadores técnicos (IPLI, IO, IRST-EG)", "orange")
                     dic_metricas = mod_6.grafica_barras_indicador_tecnico(archivo, dic_metricas, thread=thread)
+        thread.message_sent.emit("Gráficas reclamos por facturación", "orange")
         fi,ff,listas_unidas = eleccion_rango_trimestral([(fi_1, fi_2),(ff_1, ff_2)])
         archivo = reporte_info_reclamos(fi,ff,listas_unidas, dashboard=True, texto_fecha=texto_fecha, thread=thread)
         if archivo:
@@ -6650,6 +6673,86 @@ def generar_archivos_reporte(reporte, info, thread):
             for i in info["Reportes"]:
                 mostrar_info_reporte(i, thread)
                 proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread, evitar_extra=["_CLD","_PRD"])
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "comprobar_info_GRTT2":
+            nombre = "Comprobar de calidad de la información para el reporte GRTT2"
+            opciones = info["Opciones"]
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(agregar_meses_anteriores(i), regenerar, thread, evitar_extra=["SAP"])
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "corregir_errores_GRTT2":
+            nombre = "Corregir errores en la información para el reporte GRTT2"
+            opciones = info["Opciones"]
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(agregar_meses_anteriores(i), regenerar, thread, evitar_extra=["SAP"])
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "generar_info_GRTT2":
+            nombre = "Generar información para el reporte GRTT2"
+            opciones = info["Opciones"]
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread)
+                if proceso:
+                    for llave, valor in dic_archivos_reporte.items():
+                        lista_generar.append([llave, i, valor])
+            if thread and len(lista_generar):
+                thread.message_sent.emit(f" ", "white")
+                thread.message_sent.emit(f"Archivos disponibles para: {nombre} ", "white")
+                for elemento in lista_generar:
+                    thread.message_sent.emit(elemento[0], "white")
+                    for elemento_1 in elemento[2]:
+                        thread.message_sent.emit(acortar_nombre(elemento_1), "white")
+        case "generar_info_usuarios_R_NR":
+            nombre = "Generar información adicional de usuarios regulados / no regulados"
+            opciones = info["Opciones"]
+            regenerar = False
+            if "regenerar" in opciones:
+                if opciones["regenerar"]:
+                    regenerar = True
+            for i in info["Reportes"]:
+                mostrar_info_reporte(i, thread)
+                proceso,dic_archivos_reporte = generar_archivos_extra(i, regenerar, thread)
                 if proceso:
                     for llave, valor in dic_archivos_reporte.items():
                         lista_generar.append([llave, i, valor])
@@ -7021,6 +7124,32 @@ def generar_reporte(reporte, info, thread, opciones_add=None):
             for valor in info["Archivos"]:
                 dic = {valor[0]:valor[2]}
                 reporte_comparacion_SAP(dic, valor[1], True, cantidad_filas, "_PRD", "_CLD", thread=thread)
+        case "generar_comprobar_info_GRTT2":
+            for i in range(0, len(info["Archivos"]), 2):
+                valor_1 = info["Archivos"][i]
+                valor_2 = info["Archivos"][i+1]
+                dic = {valor_1[0]:valor_1[2],
+                        valor_2[0]:valor_2[2]}
+                encontrar_errores_inventario_suscriptores(dic, valor_1[1], thread=thread)
+        case "generar_corregir_errores_GRTT2":
+            for i in range(0, len(info["Archivos"]), 2):
+                valor_1 = info["Archivos"][i]
+                valor_2 = info["Archivos"][i+1]
+                dic = {valor_1[0]:valor_1[2],
+                        valor_2[0]:valor_2[2]}
+                corregir_errores_inventario_suscriptores(dic, valor_1[1], thread=thread)
+        case "generar_generar_info_GRTT2":
+            opciones = info["Opciones"]
+            usuarios_unicos = False
+            if "usuarios_activos" in opciones:
+                usuarios_unicos = opciones["usuarios_activos"]
+            for valor in info["Archivos"]:
+                dic = {valor[0]:valor[2]}
+                reporte_usuarios_filial(dic, valor[1], True, usuarios_unicos=usuarios_unicos, thread=thread)
+        case "generar_generar_info_usuarios_R_NR":
+            for valor in info["Archivos"]:
+                dic = {valor[0]:valor[2]}
+                reporte_usuarios_unicos_mensual(dic, valor[1], True, thread=thread)
         #Reportes tarifarios
         case "generar_reportes_tarifarios_mensual":
             for valor in info["Archivos"]:
@@ -7185,7 +7314,7 @@ class Envio_mensajes(QThread):
                         dic_info["Opciones"] = opciones_apoyo
                         valor = True
                 case "generar_reporte_comercial_sector_consumo_anual_union":
-                    if self.info:
+                    if self.info and self.info["Reporte"]:
                         generar_reporte(self.estado, self.info["Reporte"], self, self.info["Opciones"])
                 case "reporte_comercial_sector_consumo_subsidio_mensual":
                     if self.info:
@@ -7209,7 +7338,7 @@ class Envio_mensajes(QThread):
                         dic_info["Opciones"] = opciones_apoyo
                         valor = True
                 case "generar_reporte_comercial_sector_consumo_subsidio_anual_union":
-                    if self.info:
+                    if self.info and self.info["Reporte"]:
                         generar_reporte(self.estado, self.info["Reporte"], self, self.info["Opciones"])
                 case "reporte_compensaciones_mensual":
                     if self.info:
@@ -7232,7 +7361,7 @@ class Envio_mensajes(QThread):
                         dic_info["Reporte"] = info_reporte
                         valor = True
                 case "generar_reporte_compensaciones_anual_union":
-                    if self.info:
+                    if self.info and self.info["Reporte"]:
                         generar_reporte(self.estado, self.info["Reporte"], self)
                 case "desviaciones_significativas_mensual":
                     if self.info:
@@ -7253,7 +7382,7 @@ class Envio_mensajes(QThread):
                         dic_info["Reporte"] = info_reporte
                         valor = True
                 case "generar_desviaciones_significativas_anual_union":
-                    if self.info:
+                    if self.info and self.info["Reporte"]:
                         generar_reporte(self.estado, self.info["Reporte"], self)
                 case "reporte_DANE_mensual":
                     if self.info:
@@ -7309,6 +7438,42 @@ class Envio_mensajes(QThread):
                 case "generar_comparacion_CLD_PRD":
                     if self.info:
                         generar_reporte(self.estado, self.info, self)
+                case "comprobar_info_GRTT2":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                        dic_info["Opciones"] = opciones
+                case "generar_comprobar_info_GRTT2":
+                    if self.info:
+                        generar_reporte(self.estado, self.info, self)
+                case "corregir_errores_GRTT2":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                        dic_info["Opciones"] = opciones
+                case "generar_corregir_errores_GRTT2":
+                    if self.info:
+                        generar_reporte(self.estado, self.info, self)
+                case "generar_info_GRTT2":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                        dic_info["Opciones"] = opciones
+                case "generar_generar_info_GRTT2":
+                    if self.info:
+                        generar_reporte(self.estado, self.info, self)
+                case "generar_info_usuarios_R_NR":
+                    if self.info:
+                        lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
+                        valor = True
+                        dic_info["Archivos"] = lista_generar
+                        dic_info["Opciones"] = opciones
+                case "generar_generar_info_usuarios_R_NR":
+                    if self.info:
+                        generar_reporte(self.estado, self.info, self)
                 #Reportes tarifarios
                 case "reportes_tarifarios_mensual":
                     if self.info:
@@ -7331,7 +7496,7 @@ class Envio_mensajes(QThread):
                         dic_info["Reporte"] = info_reporte
                         valor = True
                 case "generar_reportes_tarifarios_anual_union":
-                    if self.info:
+                    if self.info and self.info["Reporte"]:
                         generar_reporte(self.estado, self.info["Reporte"], self)
                 #Reportes técnicos
                 case "reporte_indicadores_mensual":
@@ -7355,7 +7520,7 @@ class Envio_mensajes(QThread):
                         dic_info["Reporte"] = info_reporte
                         valor = True
                 case "generar_reporte_indicadores_anual_union":
-                    if self.info:
+                    if self.info and self.info["Reporte"]:
                         generar_reporte(self.estado, self.info["Reporte"], self)
                 case "reporte_suspensiones_mensual":
                     if self.info:
@@ -7378,7 +7543,7 @@ class Envio_mensajes(QThread):
                         dic_info["Reporte"] = info_reporte
                         valor = True
                 case "generar_reporte_suspensiones_anual_union":
-                    if self.info:
+                    if self.info and self.info["Reporte"]:
                         generar_reporte(self.estado, self.info["Reporte"], self)
                 case "reporte_IRST_mensual":
                     if self.info:
@@ -7401,7 +7566,7 @@ class Envio_mensajes(QThread):
                         dic_info["Reporte"] = info_reporte
                         valor = True
                 case "generar_reporte_IRST_anual_union":
-                    if self.info:
+                    if self.info and self.info["Reporte"]:
                         generar_reporte(self.estado, self.info["Reporte"], self)
                 #KPIs
                 case "cumplimientos_regulatorios":
@@ -7430,6 +7595,8 @@ class Envio_mensajes(QThread):
                 case "generar_dashboard":
                     v_fecha_anterior = fecha_siguiente(self.info["Reporte"]["fecha_personalizada"][0][0], self.info["Reporte"]["fecha_personalizada"][0][1])
                     self.info["Reporte"]["fecha_personalizada"][0] = (v_fecha_anterior[0], v_fecha_anterior[1])
+                    t = " "*17+"\t"*4
+                    self.message_sent.emit(f"{t} Inicio generación compilado anual de reportes regulatorios", "orange")
                     lista_anual = archivos_dashboard(self.info["archivos"], self.info["Reporte"], thread=self)
                     dashboard = True
                     t = " "*17+"\t"*6

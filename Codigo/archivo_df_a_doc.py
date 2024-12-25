@@ -51,7 +51,13 @@ def almacenar_errores(dic_errores, filial, c_filial, mes, anio, nombre, largo, n
         section.right_margin = Inches(0.5)
 
         parrafo = doc.add_paragraph()
-        parrafo.add_run(f"Errores encontrados para el reporte {num} de Desviaciones Significativas {clasi}").bold = True
+        num_1 = "Desviaciones Significativas"
+        if num == "GRTT2":
+            num_1 = "Inventario de Suscriptores"
+        else:
+            num_1 = "Desviaciones Significativas"
+            clasi = f"({clasi})"
+        parrafo.add_run(f"Errores encontrados para el reporte de {num_1} {clasi}").bold = True
         parrafo = doc.add_paragraph()
         parrafo.add_run(f"{filial} ({c_filial}) para {mes}-{anio}").bold = True
 

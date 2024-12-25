@@ -552,6 +552,9 @@ def menu_reportes_comerciales(app, window, central_widget, dimensiones, estado=N
         elif texto == "comparacion_CER_CLD_PRD":
             estado = texto
             estado,info = menu_CLD_PRD(app, window, central_widget, dimensiones, estado, info, estado_anterior="menu_reportes_comerciales")
+        elif texto == "calidad_informacion":
+            estado = texto
+            estado,info = menu_comercial_calidad_info(app, window, central_widget, dimensiones, estado, info, estado_anterior="menu_reportes_comerciales")
         else:
             estado,info = menu_inicial(app, window, central_widget, dimensiones)
     image_button.clicked.connect(lambda:on_button_clicked("volver"))
@@ -791,7 +794,7 @@ def menu_KPIs(app, window, central_widget, dimensiones, estado=None, info={}):
     event_loop.exec_()
     return estado,info
 
-def menu_CLD_PRD(app, window, central_widget, dimensiones, estado=None, info={}, estado_anterior=None): 
+def menu_CLD_PRD(app, window, central_widget, dimensiones, estado=None, info={}, estado_anterior=None):
     screen_width = dimensiones[0]
     titulo = "Menú selección de comparación"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=50)
@@ -865,6 +868,87 @@ def menu_CLD_PRD(app, window, central_widget, dimensiones, estado=None, info={},
     boton_2.clicked.connect(lambda:on_button_clicked("comparacion_CER_CLD"))
     boton_3.clicked.connect(lambda:on_button_clicked("comparacion_CER_PRD"))
     boton_4.clicked.connect(lambda:on_button_clicked("comparacion_CLD_PRD"))
+    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto))
+    event_loop.exec_()
+    return estado,info
+
+def menu_comercial_calidad_info(app, window, central_widget, dimensiones, estado=None, info={}, estado_anterior=None):
+    screen_width = dimensiones[0]
+    titulo = "Menú comprobación de"
+    titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=50)
+    x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
+    titulo_espacios.move(x, 40)
+    mostrar_label(titulo_espacios)
+    titulo = "calidad de la información (comercial)"
+    titulo_espacios_1 = crear_label(titulo, central_widget, font="bold", font_size=45)
+    x = round((screen_width-titulo_espacios_1.sizeHint().width())*0.5)
+    titulo_espacios_1.move(x, 180)
+    mostrar_label(titulo_espacios_1)
+    image_button = QPushButton("", central_widget)
+    pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    icon = QIcon(pixmap)
+    image_button.setIcon(icon)
+    image_button.setIconSize(pixmap.size())
+    image_button.move(20,20)
+    mostrar_label(image_button)
+    image_button_1 = QPushButton("", central_widget)
+    pixmap_1 = QPixmap(ruta_imagenes+"lupa.png")
+    icon_1 = QIcon(pixmap_1)
+    image_button_1.setIcon(icon_1)
+    image_button_1.setIconSize(QSize(80, 80))  # Ajusta el tamaño del ícono
+    image_button_1.setFixedSize(150, 150)
+    x = round((screen_width-(image_button_1.sizeHint().width()))*0.95)
+    image_button_1.move(x,5)
+    mostrar_label(image_button_1)
+    dic_texto = {"Comprobación de información para inventario de suscriptores":"Análisis del informe GRTT2 para comprobar la calidad de la información (generación de información a certificar)",
+                "Correción de errores para inventario de suscriptores":"Cargue del archivo \'_error.csv\' para corregir los errores encontrados en en el informe GRTT2",
+                "Generar información para inventario de suscriptores":"Generación de información para el inventario de suscriptores como \'NIU\',\'Codigo_DANE\',\'Direccion\',\'Cedula_Catastral\',\'Estrato\',\'Longitud\',\'Latitud\',\'Estado\'",
+                "Generar información de facturación para usuarios regulados / no regulados":"Generación de información de facturación para usuarios regulados / no regulados como \'NIU\', \'Cantidad_facturas\', \'Consumo\', \'Valor_consumo_facturado\', \'Valor_total_facturado\', \'Codigo_DANE\', \'Sector_consumo\'"}
+    boton_1 = crear_boton("Comprobación de info.\npara inventario de suscriptores", central_widget)
+    boton_2 = crear_boton("Corrección de errores\npara inventario de suscriptores", central_widget)
+    boton_3 = crear_boton("Generar info. para\ninventario de suscriptores", central_widget)
+    boton_4 = crear_boton("Generar info.para\nusuarios regulados / no regulados", central_widget)
+    botones = [boton_1, boton_2, boton_3, boton_4]
+    max_width = max([boton.sizeHint().width() for boton in botones])+20
+    for boton in botones:
+        boton.setFixedWidth(max_width)
+    x = round(((screen_width*0.5)-max_width)*0.5)
+    boton_1.move(x,550)
+    boton_1.setParent(central_widget)
+    mostrar_label(boton_1)
+    boton_2.move(x,850)
+    boton_2.setParent(central_widget)
+    mostrar_label(boton_2)
+    x = round((((screen_width*0.5)-max_width)*0.5)+(screen_width*0.5))
+    boton_3.move(x,550)
+    boton_3.setParent(central_widget)
+    mostrar_label(boton_3)
+    boton_4.move(x,850)
+    boton_4.setParent(central_widget)
+    mostrar_label(boton_4)
+    event_loop = QEventLoop()
+    def on_button_clicked(texto):
+        nonlocal estado, info
+        estado = texto
+        event_loop.quit()
+        esconder_label(titulo_espacios)
+        esconder_label(titulo_espacios_1)
+        esconder_label(image_button)
+        esconder_label(boton_1)
+        esconder_label(boton_2)
+        esconder_label(boton_3)
+        esconder_label(boton_4)
+        esconder_label(image_button_1)
+        if texto == "volver":
+            estado,info = menu_inicial(app, window, central_widget, dimensiones)
+        else:
+            estado = texto
+            estado,info = menu_seleccion(app, window, central_widget, dimensiones, estado=estado, info=info, estado_anterior="menu_comercial_calidad_info", incluir_anual=False)
+    image_button.clicked.connect(lambda:on_button_clicked("volver"))
+    boton_1.clicked.connect(lambda:on_button_clicked("comprobar_info_GRTT2"))
+    boton_2.clicked.connect(lambda:on_button_clicked("corregir_errores_GRTT2"))
+    boton_3.clicked.connect(lambda:on_button_clicked("generar_info_GRTT2"))
+    boton_4.clicked.connect(lambda:on_button_clicked("generar_info_usuarios_R_NR"))
     image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto))
     event_loop.exec_()
     return estado,info
@@ -1140,6 +1224,8 @@ def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=Non
                     estado,info = menu_edicion_archivos(app, window, central_widget, dimensiones, estado=estado, info=info)
                 elif estado_anterior == "menu_CLD_PRD":
                     estado,info = menu_CLD_PRD(app, window, central_widget, dimensiones, estado=estado, info=info)
+                elif estado_anterior == "menu_comercial_calidad_info":
+                    estado,info = menu_comercial_calidad_info(app, window, central_widget, dimensiones, estado=estado, info=info)
                 elif "reportes_tarifarios" in estado:
                     estado,info = menu_inicial(app, window, central_widget, dimensiones)
                 elif any(texto in estado for texto in ("reporte_IRST", "reporte_suspensiones", "reporte_indicadores")):
@@ -1156,6 +1242,12 @@ def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=Non
                     estado, info = opciones_adicionales(app, window, central_widget, dimensiones, estado_anterior="menu_seleccion", estado=estado, info=info, opciones=opciones)
                 elif estado == "comparacion_CER_CLD" or estado == "comparacion_CER_PRD" or estado == "comparacion_CLD_PRD":
                     opciones = {"regenerar":True, "cantidad_filas":True}
+                    estado, info = opciones_adicionales(app, window, central_widget, dimensiones, estado_anterior="menu_seleccion", estado=estado, info=info, opciones=opciones)
+                elif estado == "comprobar_info_GRTT2" or estado == "corregir_errores_GRTT2" or estado == "generar_info_usuarios_R_NR":
+                    opciones = {"regenerar":True}
+                    estado, info = opciones_adicionales(app, window, central_widget, dimensiones, estado_anterior="menu_seleccion", estado=estado, info=info, opciones=opciones)
+                elif estado == "generar_info_GRTT2":
+                    opciones = {"regenerar":True, "usuarios_activos":True}
                     estado, info = opciones_adicionales(app, window, central_widget, dimensiones, estado_anterior="menu_seleccion", estado=estado, info=info, opciones=opciones)
                 else:
                     if anual and "anual" not in estado:
