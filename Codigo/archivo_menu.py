@@ -3018,7 +3018,7 @@ def formato_seleccionar_reporte(dic_info, estado):
         case "generar_info_usuarios_R_NR":
             ubi = ["Reportes Nuevo SUI"]
             tipo = ["Comercial"]
-            clasificacion = ["GRC1","GRC2","GRCTT2"]
+            clasificacion = ["GRC1","GRC2","GRTT2"]
             filial = []
             if "Filial" in dic_info:
                 if dic_info["Filial"]["Todas"][2]:

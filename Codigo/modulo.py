@@ -556,13 +556,13 @@ def buscar_formato(archivo):
     else:
         return False
 
-def conversion_archivos_lista(lista_archivos, ext_original, ext_final, informar=False, lista_fallidos=[]):
+def conversion_archivos_lista(lista_archivos, ext_original, ext_final, informar=False, lista_fallidos=[], thread=None):
     for archivo in lista_archivos:
         op = conversion_archivos(archivo, ext_original, ext_final)
-        if op == True:
+        if op:
             if informar:
-                informar_archivo_creado(archivo.replace(ext_original, ext_final), informar)
-        elif op == False:
+                informar_archivo_creado(archivo.replace(ext_original, ext_final), informar, thread=thread)
+        else:
             lista_fallidos.append(archivo)
     return lista_fallidos
 
@@ -1680,6 +1680,10 @@ def apoyo_reporte_SH(lista_archivos_filial, codigo_DANE, thread=None):
                     warnings.simplefilter("ignore", category=FutureWarning)
                     df = df.replace([np.inf, -np.inf], np.nan).dropna(subset=['Codigo_DANE'])
                 df["Codigo_DANE"] = df["Codigo_DANE"].astype(int)
+                df["Codigo_DANE"] = df["Codigo_DANE"].fillna(0).astype(int)
+                df["Codigo_DANE"] = df["Codigo_DANE"].astype(str).replace("0", "").replace("nan", "")
+                df["Codigo_DANE"] = df["Codigo_DANE"].apply(completar_codigo_DANE)
+                df["Codigo_DANE"] = df["Codigo_DANE"].astype(int)
                 df_codigo_DANE = df[df["Codigo_DANE"] == ele_codigo_DANE].reset_index(drop=True)
                 for j in range(len(df_codigo_DANE)):
                     v_NIU = df["NIU"][j]
@@ -2387,7 +2391,7 @@ def apoyo_reporte_usuarios_filial(lista_archivos,informar,filial,almacenar_excel
                             if int(df["Estrato"][j]) not in dic_dataframe:
                                 dic_dataframe[int(df["Estrato"][j])] = 0
                             dic_dataframe[int(df["Estrato"][j])] += 1
-                        except KeyError:
+                        except BaseException:
                             lista_estrato_texto.append("")
                         valor = df["NIU"][j]
                         estado = df["Estado"][j]
@@ -2506,15 +2510,13 @@ def corregir_errores_inventario_suscriptores(dic_archivos, seleccionar_reporte, 
     lista_fechas = generar_listas_fechas(list(dic_archivos.keys()))
     lista_filiales_archivo = seleccionar_reporte["filial"]
     for union in lista_fechas:
-        lista_archivos_filial = []
         for filial in lista_filiales_archivo:
-            print(filial)
+            lista_archivos_filial = []
             proceso_GRTT2 = False
             proceso_GRTT2SAP = False
             for archivo in dic_archivos[union[0]]:
                 if "GRTT2" in archivo and "SAP" not in archivo and filial in archivo:
                     lista_archivos_filial.append(archivo)
-                    print(archivo)
             if len(lista_archivos_filial):
                 proceso_GRTT2 = True
             for archivo in dic_archivos[union[1]]:
@@ -2523,9 +2525,6 @@ def corregir_errores_inventario_suscriptores(dic_archivos, seleccionar_reporte, 
                     n2 = archivo.replace("_resumen","_error")
                     n3 = archivo.replace("_resumen","_apoyo_error")
                     if os.path.exists(n1) and os.path.exists(n2):
-                        print(n1)
-                        print(n2)
-                        print(n3)
                         proceso = unir_archivos_csv(n1, n2, n3)
                         if proceso:
                             lista_archivos_filial.append(n3)
@@ -2551,14 +2550,14 @@ def listas_iguales(lista_1, lista_2):
         return False,lista_1
 
 def convertir_fecha(fecha):
-    fecha_str = str(fecha)
-    if len(fecha_str) == 8:
+    if fecha == "0":
+        return ""
+    else:
+        fecha_str = str(fecha).zfill(8)
         dia = fecha_str[0:2]
         mes = fecha_str[2:4]
         anio = fecha_str[4:]
         return f"{dia}-{mes}-{anio}"
-    else:
-        return ""
 
 def errores_lista(lista, indicador_SUI_filial, dic_filial_mercado, dic_filial_DANE):
     columnas_error = []
@@ -2783,9 +2782,10 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                 df["Codigo_DANE"] = df["Codigo_DANE"].apply(completar_codigo_DANE)
                 df["Cedula_Catastral"] = df["Cedula_Catastral"].apply(lambda x: int(Decimal(x)) if pd.notna(x) and str(x).replace('.', '', 1).isdigit() else Decimal(0))
                 df["Cedula_Catastral"] = df["Cedula_Catastral"].astype(str)
+                df["Fecha_ajuste"] = df["Fecha_ajuste"].fillna(0).astype(int)
                 df['Fecha_ajuste'] = df['Fecha_ajuste'].astype(str).replace('-', "").replace('/', '').replace('_', '')
-                df["Fecha_ajuste"] = df["Fecha_ajuste"].apply(lambda x: '0' + x if len(x) == 7 else x)
                 df['Fecha_ajuste'] = df['Fecha_ajuste'].apply(convertir_fecha)
+                df['Fecha_ajuste'] = pd.to_datetime(df['Fecha_ajuste'], errors='coerce', dayfirst=True).dt.strftime('%d-%m-%Y').fillna('')
                 for i in range(len(df)):
                     niu = df["NIU"][i]
                     if niu > 0:
@@ -2801,9 +2801,10 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                         columnas_minimas.append(col)
                     columnas_minimas.append("Columna_error")
                     df_unido = pd.concat(lista_df, ignore_index=True)
+                    df_unido["Fecha_ajuste"] = df_unido["Fecha_ajuste"].fillna(0).astype(int)
                     df_unido['Fecha_ajuste'] = df_unido['Fecha_ajuste'].astype(str).replace('-', "").replace('/', '').replace('_', '')
-                    df_unido["Fecha_ajuste"] = df_unido["Fecha_ajuste"].apply(lambda x: '0' + x if len(x) == 7 else x)
                     df_unido['Fecha_ajuste'] = df_unido['Fecha_ajuste'].apply(convertir_fecha)
+                    df_unido['Fecha_ajuste'] = pd.to_datetime(df_unido['Fecha_ajuste'], errors='coerce', dayfirst=True).dt.strftime('%d-%m-%Y').fillna('')
                     lista_df_error.append(df_unido)
                     df_unido_2 = df_unido.copy()
                     df_unido_2["Columna_error"] = col
@@ -3269,7 +3270,10 @@ def completar_codigo_DANE_000(valor):
     return valor
 
 def completar_codigo_DANE(valor):
-    return valor.zfill(8)
+    if len(valor):
+        return valor.zfill(8)
+    else:
+        return ""
 
 def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,filas_minimas,reporte,dic_reporte,dic_reporte_empresa,informar=True, thread=None):
     lista_reporte = []
@@ -3308,13 +3312,10 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                 dic_reporte[indicador_SUI_filial] += len(df)
                 columnas = list(df.columns)[:-2]
                 df = df[columnas]
-                df["FECHA_VISITA"] = df["FECHA_VISITA"].fillna("").astype(str)
-                df['FECHA_VISITA'] = df['FECHA_VISITA'].astype(str).replace('-', "").replace('/', '').replace('_', '').replace("NaN","").replace("nan","")
-                df["FECHA_VISITA"] = pd.to_numeric(df["FECHA_VISITA"], errors='coerce').fillna(0).astype(int)
-                df['FECHA_VISITA'] = df['FECHA_VISITA'].astype(str).replace('0', "")
-                df["FECHA_VISITA"] = df["FECHA_VISITA"].apply(lambda x: '0' + x if len(x) == 7 else x)
+                df["FECHA_VISITA"] = df["FECHA_VISITA"].fillna(0).astype(int)
+                df['FECHA_VISITA'] = df['FECHA_VISITA'].astype(str).replace('-', "").replace('/', '').replace('_', '')
                 df['FECHA_VISITA'] = df['FECHA_VISITA'].apply(convertir_fecha)
-                df['FECHA_VISITA'] = pd.to_datetime(df['FECHA_VISITA'], errors='coerce', dayfirst=True).dt.strftime('%d-%m-%Y')
+                df['FECHA_VISITA'] = pd.to_datetime(df['FECHA_VISITA'], errors='coerce', dayfirst=True).dt.strftime('%d-%m-%Y').fillna('')
                 mask = pd.Series([True] * len(df))
                 for col in columnas:
                     if col == 'SERVICIO':
@@ -3734,13 +3735,10 @@ def apoyo_generar_reporte_desviaciones_mensual_DS58(lista_archivos,filial,fecha,
                 df = pd.concat(lista_df, ignore_index=True)
                 columnas = list(df.columns)[:-2]
                 df = df[columnas]
-                df["FECHA_VISITA"] = df["FECHA_VISITA"].fillna("").astype(str)
-                df['FECHA_VISITA'] = df['FECHA_VISITA'].astype(str).replace('-', "").replace('/', '').replace('_', '').replace("NaN","").replace("nan","")
-                df["FECHA_VISITA"] = pd.to_numeric(df["FECHA_VISITA"], errors='coerce').fillna(0).astype(int)
-                df['FECHA_VISITA'] = df['FECHA_VISITA'].astype(str).replace('0', "")
-                df["FECHA_VISITA"] = df["FECHA_VISITA"].apply(lambda x: '0' + x if len(x) == 7 else x)
+                df["FECHA_VISITA"] = df["FECHA_VISITA"].fillna(0).astype(int)
+                df['FECHA_VISITA'] = df['FECHA_VISITA'].astype(str).replace('-', "").replace('/', '').replace('_', '')
                 df['FECHA_VISITA'] = df['FECHA_VISITA'].apply(convertir_fecha)
-                df['FECHA_VISITA'] = pd.to_datetime(df['FECHA_VISITA'], errors='coerce', dayfirst=True).dt.strftime('%d-%m-%Y')
+                df['FECHA_VISITA'] = pd.to_datetime(df['FECHA_VISITA'], errors='coerce', dayfirst=True).dt.strftime('%d-%m-%Y').fillna('')
                 mask = pd.Series([True] * len(df))
                 for col in columnas:
                     if col == 'SERVICIO':
@@ -4153,51 +4151,45 @@ def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, alma
     nombre_2 = None
     df = pd.DataFrame()
     df2 = pd.DataFrame()
-    lista_archivos_exitosos = []
     for archivo in lista_archivos:
         if "GRC1" in archivo:
             lista_df = lectura_dataframe_chunk(archivo)
             if lista_df:
                 proceso_GRC1 = True
                 nombre_GRC1 = archivo
-                lista_archivos_exitosos.append(archivo)
                 mes_reportado = lista_df[0]["Mes_reportado"][0]
                 anio_reportado = lista_df[0]["Anio_reportado"][0]
                 dic_reg = {}
                 lista_reg = [0,0,0] #m3, Valor_total_facturado, Valor_consumo_facturado
                 dic_reg_factura = {}
                 for df in lista_df:
+                    df["ID_factura"] = df["ID_factura"].astype(str)
+                    df["NIU"] = df["NIU"].fillna(0).astype(int)
+                    df["Consumo"] = df["Consumo"].fillna(0).astype(int)
+                    df["Valor_total_facturado"] = df["Valor_total_facturado"].fillna(0).astype(float)
+                    df["Facturacion_consumo"] = df["Facturacion_consumo"].fillna(0).astype(float)
                     for i in range(len(df)):
                         try:
                             valor = int(df["NIU"][i])
-                            if valor not in dic_reg:
+                            if valor not in dic_reg and valor > 0:
                                 dic_reg[valor] = [valor,0,0,0,0,None,None] #NIU,Cantidad_facturas,Consumo,Valor_consumo_facturado,Valor_total_facturado,Codigo_DANE,Sector_consumo
-                            dic_reg[valor][1] += 1
                             factura = str(df["ID_factura"][i]).upper().strip()
                             if factura[0] == "F":
+                                dic_reg[valor][1] += 1
                                 if factura not in dic_reg_factura:
                                     dic_reg_factura[factura] = True
-                            try:
-                                valor_1 = float(df["Consumo"][i])
-                                if not math.isnan(valor_1) and valor_1 > 0:
-                                    lista_reg[0] += valor_1
-                                    dic_reg[valor][2] += valor_1
-                            except BaseException:
-                                pass
-                            try:
-                                valor_1 = float(df["Valor_total_facturado"][i])
-                                if not math.isnan(valor_1) and valor_1 > 0:
-                                    lista_reg[1] += valor_1
-                                    dic_reg[valor][4] += valor_1
-                            except BaseException:
-                                pass
-                            try:
-                                valor_1 = float(df["Facturacion_consumo"][i])
-                                if not math.isnan(valor_1) and valor_1 > 0:
-                                    lista_reg[2] += valor_1
-                                    dic_reg[valor][3] += valor_1
-                            except BaseException:
-                                pass
+                            valor_1 = int(df["Consumo"][i])
+                            if valor_1 > 0:
+                                lista_reg[0] += valor_1
+                                dic_reg[valor][2] += valor_1
+                            valor_2 = float(df["Valor_total_facturado"][i])
+                            if valor_2 > 0:
+                                lista_reg[1] += valor_2
+                                dic_reg[valor][4] += valor_2
+                            valor_3 = float(df["Facturacion_consumo"][i])
+                            if valor_3 > 0:
+                                lista_reg[2] += valor_3
+                                dic_reg[valor][3] += valor_3
                         except BaseException:
                             pass
         elif "GRC2" in archivo:
@@ -4207,79 +4199,65 @@ def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, alma
                 nombre_GRC2 = archivo
                 mes_reportado = lista_df[0]["Mes_reportado"][0]
                 anio_reportado = lista_df[0]["Anio_reportado"][0]
-                lista_archivos_exitosos.append(archivo)
                 dic_no_reg = {}
                 lista_no_reg = [0,0,0] #m3, Valor_total_facturado, Valor_consumo_facturado
                 dic_no_reg_factura = {}
                 for df in lista_df:
+                    df["Codigo_DANE"] = df["Codigo_DANE"].fillna(0).astype(int)
+                    df["Codigo_DANE"] = df["Codigo_DANE"].astype(str).replace("0", "").replace("nan", "")
+                    df["Codigo_DANE"] = df["Codigo_DANE"].apply(completar_codigo_DANE)
+                    df["NIU"] = df["NIU"].fillna(0).astype(int)
+                    df["Sector_consumo"] = df["Sector_consumo"].fillna(0).astype(int)
+                    df["ID_Factura"] = df["ID_Factura"].astype(str)
+                    df["Volumen"] = df["Volumen"].fillna(0).astype(int)
+                    df["Valor_total_facturado"] = df["Valor_total_facturado"].fillna(0).astype(float)
+                    df["Facturacion_por_demanda_volumen"] = df["Facturacion_por_demanda_volumen"].fillna(0).astype(float)
                     for i in range(len(df)):
                         try:
                             valor = int(df["NIU"][i])
                             if valor not in dic_no_reg:
                                 dic_no_reg[valor] = [valor,0,0,0,0,None,None] #NIU,Cantidad_facturas,Consumo,Valor_consumo_facturado,Valor_total_facturado,Codigo_DANE,Sector_consumo
-                            dic_no_reg[valor][1] += 1
                             dic_no_reg[valor][5] = df["Codigo_DANE"][i]
-                            try:
-                                valor_1 = int(df["Sector_consumo"][i])
-                                try:
-                                    valor_1 = tabla_11["datos"][str(valor_1)]
-                                    dic_no_reg[valor][6] =valor_1
-                                except KeyError:
-                                    dic_no_reg[valor][6] = ""
-                            except ValueError:
-                                dic_no_reg[valor][6] = ""
-                            except TypeError:
-                                dic_no_reg[valor][6] = ""
                             factura = str(df["ID_Factura"][i]).upper().strip()
                             if factura[0] == "F":
+                                dic_no_reg[valor][1] += 1
                                 if factura not in dic_no_reg_factura:
                                     dic_no_reg_factura[factura] = True
+                            valor_1 = int(df["Sector_consumo"][i])
                             try:
-                                valor_1 = float(df["Volumen"][i])
-                                if not math.isnan(valor_1) and valor_1 > 0:
-                                    lista_no_reg[0] += valor_1
-                                    dic_no_reg[valor][2] += valor_1
-                            except ValueError:
-                                pass
-                            except TypeError:
-                                pass
-                            try:
-                                valor_1 = float(df["Valor_total_facturado"][i])
-                                if not math.isnan(valor_1) and valor_1 > 0:
-                                    lista_no_reg[1] += valor_1
-                                    dic_no_reg[valor][4] += valor_1
-                            except ValueError:
-                                pass
-                            except TypeError:
-                                pass
-                            try:
-                                valor_1 = float(df["Facturacion_por_demanda_volumen"][i])
-                                if not math.isnan(valor_1) and valor_1 > 0:
-                                    lista_no_reg[2] += valor_1
-                                    dic_no_reg[valor][3] += valor_1
-                            except ValueError:
-                                pass
-                            except TypeError:
-                                pass
-                        except ValueError:
-                            pass
-                        except TypeError:
+                                valor_1 = tabla_11["datos"][str(valor_1)]
+                                dic_no_reg[valor][6] = valor_1
+                            except KeyError:
+                                dic_no_reg[valor][6] = ""
+                            valor_2 = int(df["Volumen"][i])
+                            if valor_2 > 0:
+                                lista_no_reg[0] += valor_2
+                                dic_no_reg[valor][2] += valor_2
+                            valor_3 = float(df["Valor_total_facturado"][i])
+                            if valor_3 > 0:
+                                lista_no_reg[1] += valor_3
+                                dic_no_reg[valor][4] += valor_3
+                            valor_4 = float(df["Facturacion_por_demanda_volumen"][i])
+                            if valor_4 > 0:
+                                lista_no_reg[2] += valor_4
+                                dic_no_reg[valor][3] += valor_4
+                        except BaseException:
                             pass
         elif "GRTT2" in archivo:
             lista_df = lectura_dataframe_chunk(archivo)
             if lista_df:
+                proceso_GRTT2 = True
                 dic_GRTT2 = {}
                 for df in lista_df:
                     df["Estrato"] = df["Estrato"].fillna(0).astype(int)
-                    df["Estado"] = df["Estado"].fillna(0).astype(int)
+                    df["Codigo_DANE"] = df["Codigo_DANE"].fillna(0).astype(int)
+                    df["Codigo_DANE"] = df["Codigo_DANE"].astype(str).replace("0", "").replace("nan", "")
+                    df["Codigo_DANE"] = df["Codigo_DANE"].apply(completar_codigo_DANE)
+                    df["NIU"] = df["NIU"].fillna(0).astype(int)
                     for i in range(len(df)):
-                        try:
-                            valor = int(df["NIU"][i])
-                            if valor not in dic_GRTT2:
-                                dic_GRTT2[valor] = [df["Codigo_DANE"][i], df["Estrato"][i]]
-                        except BaseException:
-                            pass
-                proceso_GRTT2 = True
+                        valor = int(df["NIU"][i])
+                        if valor not in dic_GRTT2:
+                            dic_GRTT2[valor] = [df["Codigo_DANE"][i], df["Estrato"][i]] #Código DANE, Sector de consumo
     dic_NIU_factura = {"Clasificacion_usuario":[],
                     "NIU":[],
                     "Consumo_m3":[],
@@ -4297,11 +4275,9 @@ def apoyo_reporte_usuarios_unicos_mensual(lista_archivos, informar, filial, alma
                     try:
                         valor_1 = tabla_3["datos"][str(valor_1)]
                         dic_reg[v_NIU][6] = valor_1
-                    except KeyError:
+                    except BaseException:
                         dic_reg[v_NIU][6] = ""
-                except ValueError:
-                    dic_reg[v_NIU][6] = ""
-                except TypeError:
+                except BaseException:
                     dic_reg[v_NIU][6] = ""
             else:
                 dic_reg[v_NIU][5] = ""
@@ -4512,7 +4488,12 @@ def reporte_info_reclamos(fi,ff,listas_unidas, dashboard=False, texto_fecha=None
                 df_filtro = df_filtro.reset_index(drop=True)
                 lista_porcentaje = []
                 for j in range(len(df_filtro)):
-                    lista_porcentaje.append(str(round((df_filtro['Numero_Facturas_Expedidas'][j]/df_filtro['Numero_Reclamos_Facturacion'][j])*10000,2))+" %")
+                    valor_f_1 = df_filtro['Numero_Facturas_Expedidas'][j]
+                    valor_f_2 = df_filtro['Numero_Reclamos_Facturacion'][j]
+                    if valor_f_2 and valor_f_1:
+                        lista_porcentaje.append(str(round((valor_f_1/valor_f_2)*10000,2))+" %")
+                    else:
+                        lista_porcentaje.append("0.00 %")
                 df_filtro["Porcentaje_reclamos_fact_10000"] = lista_porcentaje
                 lista_df.append(df_filtro)
             df_total = pd.concat(lista_df, ignore_index=True)
@@ -5669,8 +5650,8 @@ def almacenar_archivos_2(ruta_guardar_archivos, thread):
             ubi = i
     lista_fallidos = []
     lista_fallidos = conversion_archivos_CSV(lista_archivos, lista_fallidos=lista_fallidos)
-    lista_fallidos = conversion_archivos_lista(lista_archivos, "TXT", "txt", informar=True, lista_fallidos=lista_fallidos)
-    lista_fallidos = conversion_archivos_lista(lista_archivos, "txt", "csv", informar=True, lista_fallidos=lista_fallidos)
+    lista_fallidos = conversion_archivos_lista(lista_archivos, "TXT", "txt", informar=True, lista_fallidos=lista_fallidos, thread=thread)
+    lista_fallidos = conversion_archivos_lista(lista_archivos, "txt", "csv", informar=True, lista_fallidos=lista_fallidos, thread=thread)
     lista_fallidos = evaluar_archivos_prueba(lista_archivos, lista_fallidos=lista_fallidos)
     lista_fallidos = list(set(lista_fallidos))
     lista_archivos = busqueda_archivos_tipo(ruta_guardar_archivos, lista_fallidos=lista_fallidos)
@@ -6528,6 +6509,7 @@ def generar_archivos_reporte(reporte, info, thread):
         case "desviaciones_significativas_mensual":
             nombre = "Reporte desviaciones significativas mensual"
             regenerar = False
+            opciones = info["Opciones"]
             if "regenerar" in opciones:
                 if opciones["regenerar"]:
                     regenerar = True
@@ -6547,6 +6529,7 @@ def generar_archivos_reporte(reporte, info, thread):
         case "desviaciones_significativas_anual":
             nombre = "Reporte desviaciones significativas anual"
             regenerar = False
+            opciones = info["Opciones"]
             if "regenerar" in opciones:
                 if opciones["regenerar"]:
                     regenerar = True
@@ -7295,182 +7278,203 @@ class Envio_mensajes(QThread):
                 case "reporte_comercial_sector_consumo_mensual":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
-                        dic_info["Opciones"] = opciones
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
+                            dic_info["Opciones"] = opciones
                 case "generar_reporte_comercial_sector_consumo_mensual":
                     if self.info:
                         generar_reporte(self.estado, self.info, self)
                 case "reporte_comercial_sector_consumo_anual":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
-                        dic_info["Opciones"] = opciones
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
+                            dic_info["Opciones"] = opciones
                 case "generar_reporte_comercial_sector_consumo_anual":
                     if self.info:
                         info_reporte, opciones_apoyo = generar_reporte(self.estado, self.info, self)
-                        dic_info["Reporte"] = info_reporte
-                        dic_info["Opciones"] = opciones_apoyo
-                        valor = True
+                        if info_reporte:
+                            dic_info["Reporte"] = info_reporte
+                            dic_info["Opciones"] = opciones_apoyo
+                            valor = True
                 case "generar_reporte_comercial_sector_consumo_anual_union":
                     if self.info and self.info["Reporte"]:
                         generar_reporte(self.estado, self.info["Reporte"], self, self.info["Opciones"])
                 case "reporte_comercial_sector_consumo_subsidio_mensual":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
-                        dic_info["Opciones"] = opciones
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
+                            dic_info["Opciones"] = opciones
                 case "generar_reporte_comercial_sector_consumo_subsidio_mensual":
                     if self.info:
                         generar_reporte(self.estado, self.info, self)
                 case "reporte_comercial_sector_consumo_subsidio_anual":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
-                        dic_info["Opciones"] = opciones
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
+                            dic_info["Opciones"] = opciones
                 case "generar_reporte_comercial_sector_consumo_subsidio_anual":
                     if self.info:
                         info_reporte, opciones_apoyo = generar_reporte(self.estado, self.info, self)
-                        dic_info["Reporte"] = info_reporte
-                        dic_info["Opciones"] = opciones_apoyo
-                        valor = True
+                        if info_reporte:
+                            dic_info["Reporte"] = info_reporte
+                            dic_info["Opciones"] = opciones_apoyo
+                            valor = True
                 case "generar_reporte_comercial_sector_consumo_subsidio_anual_union":
                     if self.info and self.info["Reporte"]:
                         generar_reporte(self.estado, self.info["Reporte"], self, self.info["Opciones"])
                 case "reporte_compensaciones_mensual":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
-                        dic_info["Opciones"] = opciones
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
+                            dic_info["Opciones"] = opciones
                 case "generar_reporte_compensaciones_mensual":
                     if self.info:
                         generar_reporte(self.estado, self.info, self)
                 case "reporte_compensaciones_anual":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
-                        dic_info["Opciones"] = opciones
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
+                            dic_info["Opciones"] = opciones
                 case "generar_reporte_compensaciones_anual":
                     if self.info:
                         info_reporte, opciones_apoyo = generar_reporte(self.estado, self.info, self)
-                        dic_info["Reporte"] = info_reporte
-                        valor = True
+                        if info_reporte:
+                            dic_info["Reporte"] = info_reporte
+                            valor = True
                 case "generar_reporte_compensaciones_anual_union":
-                    if self.info and self.info["Reporte"]:
-                        generar_reporte(self.estado, self.info["Reporte"], self)
+                    generar_reporte(self.estado, self.info["Reporte"], self)
                 case "desviaciones_significativas_mensual":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
                 case "generar_desviaciones_significativas_mensual":
                     if self.info:
                         generar_reporte(self.estado, self.info, self)
                 case "desviaciones_significativas_anual":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
                 case "generar_desviaciones_significativas_anual":
                     if self.info:
                         info_reporte, opciones_apoyo = generar_reporte(self.estado, self.info, self)
-                        dic_info["Reporte"] = info_reporte
-                        valor = True
+                        if info_reporte:
+                            dic_info["Reporte"] = info_reporte
+                            valor = True
                 case "generar_desviaciones_significativas_anual_union":
                     if self.info and self.info["Reporte"]:
                         generar_reporte(self.estado, self.info["Reporte"], self)
                 case "reporte_DANE_mensual":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
-                        dic_info["Opciones"] = opciones
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
+                            dic_info["Opciones"] = opciones
                 case "generar_reporte_DANE_mensual":
                     if self.info:
                         generar_reporte(self.estado, self.info, self)
                 case "reporte_SH":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
-                        dic_info["Opciones"] = opciones
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
+                            dic_info["Opciones"] = opciones
                 case "generar_reporte_SH":
                     if self.info:
                         generar_reporte(self.estado, self.info, self)
                 case "comparacion_CER_CLD_PRD":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
-                        dic_info["Opciones"] = opciones
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
+                            dic_info["Opciones"] = opciones
                 case "generar_comparacion_CER_CLD_PRD":
                     if self.info:
                         generar_reporte(self.estado, self.info, self)
                 case "comparacion_CER_CLD":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
-                        dic_info["Opciones"] = opciones
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
+                            dic_info["Opciones"] = opciones
                 case "generar_comparacion_CER_CLD":
                     if self.info:
                         generar_reporte(self.estado, self.info, self)
                 case "comparacion_CER_PRD":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
-                        dic_info["Opciones"] = opciones
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
+                            dic_info["Opciones"] = opciones
                 case "generar_comparacion_CER_PRD":
                     if self.info:
                         generar_reporte(self.estado, self.info, self)
                 case "comparacion_CLD_PRD":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
-                        dic_info["Opciones"] = opciones
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
+                            dic_info["Opciones"] = opciones
                 case "generar_comparacion_CLD_PRD":
                     if self.info:
                         generar_reporte(self.estado, self.info, self)
                 case "comprobar_info_GRTT2":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
-                        dic_info["Opciones"] = opciones
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
+                            dic_info["Opciones"] = opciones
                 case "generar_comprobar_info_GRTT2":
                     if self.info:
                         generar_reporte(self.estado, self.info, self)
                 case "corregir_errores_GRTT2":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
-                        dic_info["Opciones"] = opciones
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
+                            dic_info["Opciones"] = opciones
                 case "generar_corregir_errores_GRTT2":
                     if self.info:
                         generar_reporte(self.estado, self.info, self)
                 case "generar_info_GRTT2":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
-                        dic_info["Opciones"] = opciones
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
+                            dic_info["Opciones"] = opciones
                 case "generar_generar_info_GRTT2":
                     if self.info:
                         generar_reporte(self.estado, self.info, self)
                 case "generar_info_usuarios_R_NR":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
-                        dic_info["Opciones"] = opciones
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
+                            dic_info["Opciones"] = opciones
                 case "generar_generar_info_usuarios_R_NR":
                     if self.info:
                         generar_reporte(self.estado, self.info, self)
@@ -7478,23 +7482,26 @@ class Envio_mensajes(QThread):
                 case "reportes_tarifarios_mensual":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
-                        dic_info["Opciones"] = opciones
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
+                            dic_info["Opciones"] = opciones
                 case "generar_reportes_tarifarios_mensual":
                     if self.info:
                         generar_reporte(self.estado, self.info, self)
                 case "reportes_tarifarios_anual":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
-                        dic_info["Opciones"] = opciones
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
+                            dic_info["Opciones"] = opciones
                 case "generar_reportes_tarifarios_anual":
                     if self.info:
                         info_reporte, opciones_apoyo = generar_reporte(self.estado, self.info, self)
-                        dic_info["Reporte"] = info_reporte
-                        valor = True
+                        if info_reporte:
+                            dic_info["Reporte"] = info_reporte
+                            valor = True
                 case "generar_reportes_tarifarios_anual_union":
                     if self.info and self.info["Reporte"]:
                         generar_reporte(self.estado, self.info["Reporte"], self)
@@ -7502,69 +7509,78 @@ class Envio_mensajes(QThread):
                 case "reporte_indicadores_mensual":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
-                        dic_info["Opciones"] = opciones
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
+                            dic_info["Opciones"] = opciones
                 case "generar_reporte_indicadores_mensual":
                     if self.info:
                         generar_reporte(self.estado, self.info, self)
                 case "reporte_indicadores_anual":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
-                        dic_info["Opciones"] = opciones
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
+                            dic_info["Opciones"] = opciones
                 case "generar_reporte_indicadores_anual":
                     if self.info:
                         info_reporte, opciones_apoyo = generar_reporte(self.estado, self.info, self)
-                        dic_info["Reporte"] = info_reporte
-                        valor = True
+                        if info_reporte:
+                            dic_info["Reporte"] = info_reporte
+                            valor = True
                 case "generar_reporte_indicadores_anual_union":
                     if self.info and self.info["Reporte"]:
                         generar_reporte(self.estado, self.info["Reporte"], self)
                 case "reporte_suspensiones_mensual":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
-                        dic_info["Opciones"] = opciones
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
+                            dic_info["Opciones"] = opciones
                 case "generar_reporte_suspensiones_mensual":
                     if self.info:
                         generar_reporte(self.estado, self.info, self)
                 case "reporte_suspensiones_anual":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
-                        dic_info["Opciones"] = opciones
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
+                            dic_info["Opciones"] = opciones
                 case "generar_reporte_suspensiones_anual":
                     if self.info:
                         info_reporte, opciones_apoyo = generar_reporte(self.estado, self.info, self)
-                        dic_info["Reporte"] = info_reporte
-                        valor = True
+                        if info_reporte:
+                            dic_info["Reporte"] = info_reporte
+                            valor = True
                 case "generar_reporte_suspensiones_anual_union":
                     if self.info and self.info["Reporte"]:
                         generar_reporte(self.estado, self.info["Reporte"], self)
                 case "reporte_IRST_mensual":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
-                        dic_info["Opciones"] = opciones
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
+                            dic_info["Opciones"] = opciones
                 case "generar_reporte_IRST_mensual":
                     if self.info:
                         generar_reporte(self.estado, self.info, self)
                 case "reporte_IRST_anual":
                     if self.info:
                         lista_generar, opciones = generar_archivos_reporte(self.estado, self.info, self)
-                        valor = True
-                        dic_info["Archivos"] = lista_generar
-                        dic_info["Opciones"] = opciones
+                        if len(lista_generar):
+                            valor = True
+                            dic_info["Archivos"] = lista_generar
+                            dic_info["Opciones"] = opciones
                 case "generar_reporte_IRST_anual":
                     if self.info:
                         info_reporte, opciones_apoyo = generar_reporte(self.estado, self.info, self)
-                        dic_info["Reporte"] = info_reporte
-                        valor = True
+                        if info_reporte:
+                            dic_info["Reporte"] = info_reporte
+                            valor = True
                 case "generar_reporte_IRST_anual_union":
                     if self.info and self.info["Reporte"]:
                         generar_reporte(self.estado, self.info["Reporte"], self)

@@ -1268,7 +1268,8 @@ def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=Non
                         opciones = {"regenerar":True, "inventario":True}
                         estado, info = opciones_adicionales(app, window, central_widget, dimensiones, estado_anterior="menu_seleccion", estado=estado, info=info, opciones=opciones)
                     elif "desviaciones_significativas" in estado:
-                        pass
+                        opciones = {"regenerar":True}
+                        estado, info = opciones_adicionales(app, window, central_widget, dimensiones, estado_anterior="menu_seleccion", estado=estado, info=info, opciones=opciones)
                     elif "reporte_DANE" in estado:
                         opciones = {"regenerar":True, "codigo_DANE":True}
                         estado, info = opciones_adicionales(app, window, central_widget, dimensiones, estado_anterior="menu_seleccion", estado=estado, info=info, opciones=opciones)
