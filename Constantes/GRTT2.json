@@ -5,7 +5,7 @@
         "ID_Comercializador": "ID Comercializador",
         "ID_Mercado": "ID Mercado",
         "Codigo_DANE": "C\u00f3digo DANE",
-        "Ubicacion": "Ubicaci\u00f3n",
+        "Ubicaci\u00f3n": "Ubicaci\u00f3n",
         "Direccion": "Direcci\u00f3n",
         "Informacion_predial_actualizada": "Informaci\u00f3n Predial Actualizada",
         "Cedula_Catastral": "C\u00e9dula Catastral",
@@ -22,7 +22,7 @@
         "ID_Comercializador",
         "ID_Mercado",
         "Codigo_DANE",
-        "Ubicacion",
+        "Ubicaci\u00f3n",
         "Direccion",
         "Informacion_predial_actualizada",
         "Cedula_Catastral",
@@ -34,9 +34,11 @@
         "Longitud",
         "Latitud"
     ],
-    "generales_hora": [],
+    "generales_hora": [
+        "DES"
+    ],
     "generales_fecha": [
-        "Fecha ajuste"
+        "Fecha_ajuste"
     ],
     "seleccionados": [
         "NIU",
@@ -44,7 +46,7 @@
         "ID_Comercializador",
         "ID_Mercado",
         "Codigo_DANE",
-        "Ubicacion",
+        "Ubicaci\u00f3n",
         "Direccion",
         "Informacion_predial_actualizada",
         "Cedula_Catastral",
@@ -55,5 +57,5 @@
         "Estado",
         "Fecha_ajuste"
     ],
-    "cantidad_columnas": 15
+    "cantidad_columnas": 16
 }

@@ -2,8 +2,7 @@ import os
 import sys
 import time
 import subprocess
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
+from datetime import datetime, timedelta
 import ruta_principal as mod_rp
 global ruta_principal, ruta_codigo, ruta_constantes, ruta_nuevo_sui, ruta_archivos, ruta_guardar_archivos, ruta_fuentes
 ruta_principal = mod_rp.v_ruta_principal()
@@ -49,10 +48,20 @@ cantidad_datos_estilo_excel = 80000
 fecha_actual = datetime.now()
 anio_actual = fecha_actual.year
 fecha_actual_texto = f"{fecha_actual.day} de {lista_meses[int(fecha_actual.month)-1]} del {anio_actual}"
-dia_corte, mes_corte, anio_corte = ((datetime.now() - relativedelta(months=2) + relativedelta(months=1)).replace(day=1) - relativedelta(days=1)).day, ((datetime.now() - relativedelta(months=2) + relativedelta(months=1)).replace(day=1) - relativedelta(days=1)).month, ((datetime.now() - relativedelta(months=2) + relativedelta(months=1)).replace(day=1) - relativedelta(days=1)).year
-fecha_corte_tupla = (dia_corte,mes_corte,anio_corte)
-dia_corte, mes_corte, anio_corte = (fecha_actual.replace(month=1, day=1) - relativedelta(days=1)).day, (fecha_actual.replace(month=1, day=1) - relativedelta(days=1)).month, (fecha_actual.replace(month=1, day=1) - relativedelta(days=1)).year
-fecha_anio_anterior_tupla = (dia_corte,mes_corte,anio_corte)
+mes_2_meses_atras = (fecha_actual.month - 2) % 12 or 12
+anio_2_meses_atras = fecha_actual.year + (fecha_actual.month - 2) // 12
+primer_dia_mes_siguiente = datetime(anio_2_meses_atras, mes_2_meses_atras, 1) + timedelta(days=32)
+ultimo_dia_mes_anterior = (primer_dia_mes_siguiente - timedelta(days=primer_dia_mes_siguiente.day))
+dia_corte = ultimo_dia_mes_anterior.day
+mes_corte = ultimo_dia_mes_anterior.month
+anio_corte = ultimo_dia_mes_anterior.year
+fecha_corte_tupla = (dia_corte, mes_corte, anio_corte)
+primer_dia_anio_actual = datetime(fecha_actual.year, 1, 1)
+ultimo_dia_anio_anterior = primer_dia_anio_actual - timedelta(days=1)
+dia_corte = ultimo_dia_anio_anterior.day
+mes_corte = ultimo_dia_anio_anterior.month
+anio_corte = ultimo_dia_anio_anterior.year
+fecha_anio_anterior_tupla = (dia_corte, mes_corte, anio_corte)
 lista_archivo_desviaciones = ["DS56","DS57","DS58"]
 ruta_fuente = ruta_fuentes + "Muli.ttf"
 ruta_fuente_negrilla = ruta_fuentes + "Muli-Bold.ttf"
@@ -3520,6 +3529,3 @@ if __name__ == "__main__":
 
 # TODO Documento:
     #Incluir tiempo estimado promedio por mes para la documentación de explicación (Pruebas de tiempo con otros dispositivos)
-
-# TODO Opcionales:
-    # Creación doc unión GRC1/GRTT2 y/o GRC2

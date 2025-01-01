@@ -573,7 +573,7 @@ def conversion_archivos(archivo, ext_original, ext_final):
             return True
         else:
             return False
-    return None
+    return True
 
 def cambiar_formato_dataframe(df, dic_reporte):
     df.columns = list(dic_reporte["generales"].keys())
@@ -690,13 +690,16 @@ def evaluar_archivos_prueba(lista_archivos, lista_fallidos):
             lista_fallidos.append(archivo)
     return lista_fallidos
 
-def retirar_archivos_fallidos(lista_archivos, lista_fallidos):
+def retirar_archivos_fallidos(lista_archivos, lista_fallidos, thread=None):
     lista_archivos_final = []
     for archivo in lista_archivos:
         if archivo not in lista_fallidos:
             lista_archivos_final.append(archivo)
         else:
-            print(f"\nArchivo {acortar_nombre(archivo)} posee errores en la lectura de información. Revisar el archivo\n")
+            if thread:
+                thread.message_sent.emit(f"nArchivo {acortar_nombre(archivo)} posee errores en la lectura de información. Revisar el archivo", "red")
+            else:
+                print(f"\nArchivo {acortar_nombre(archivo)} posee errores en la lectura de información. Revisar el archivo\n")
     return lista_archivos_final
 
 def cantidad_minima_info_archivo(lista_archivos):
@@ -730,7 +733,7 @@ def comprobar_info_nombre_archivo(ext_archivo):
                 return False
     return True
 
-def archivos_aceptados_constantes(lista_archivos, informar=True):
+def archivos_aceptados_constantes(lista_archivos, informar=True, thread=None):
     try:
         with open(ruta_constantes+"Aceptados.txt", 'r') as archivo:
             lineas = archivo.readlines()
@@ -747,7 +750,7 @@ def archivos_aceptados_constantes(lista_archivos, informar=True):
                 try:
                     shutil.move(archivo, ruta_constantes+"\\"+nombre_archivo)
                     if informar:
-                        informar_archivo_creado(ruta_constantes+"\\"+nombre_archivo, informar)
+                        informar_archivo_creado(ruta_constantes+"\\"+nombre_archivo, informar, thread=thread)
                 except FileNotFoundError:
                     pass
                 except PermissionError:
@@ -4538,7 +4541,10 @@ def generar_porcentaje_matriz_requerimientos(dashboard=False, texto_fecha=None, 
     nombre = "Matriz requerimientos"
     hoja = "BD"
     archivo = ruta_constantes+"\\"+f"{nombre}.xlsm"
-    anio_actual = fecha_actual.year
+    anio_actual_copia = fecha_actual.year
+    mes_actual_copia = fecha_actual.month
+    if mes_actual_copia <= 1:
+        anio_actual_copia -= 1
     if os.path.exists(archivo):
         df, proceso = mod_5.lectura_hoja_xlsx(archivo, hoja)
         if proceso:
@@ -4558,7 +4564,7 @@ def generar_porcentaje_matriz_requerimientos(dashboard=False, texto_fecha=None, 
                 df['fecha_de_recibido'].fillna("").astype(str).apply(lambda x: x.replace(" 00:00:00", "").strip()))
             df['fecha_de_recibido'] = (
                 df['fecha_de_recibido'].apply(convertir_fecha_2))
-            df_filtrado = df[df['fecha_de_recibido'].dt.year == anio_actual]
+            df_filtrado = df[df['fecha_de_recibido'].dt.year == anio_actual_copia]
             largo = len(df_filtrado)
             lista_elementos = list(df["entidad"].unique())
             dic_entidad = {}
@@ -4580,7 +4586,7 @@ def generar_porcentaje_matriz_requerimientos(dashboard=False, texto_fecha=None, 
                 dic["Categoria_entidad"].append(llave)
                 dic["Cantidad"].append(valor)
                 dic["Porcentaje_entidad"].append(str(porcentaje)+" %")
-                dic["Anio"].append(anio_actual)
+                dic["Anio"].append(anio_actual_copia)
             df = pd.DataFrame(dic)
             if not dashboard:
                 lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Cumplimientos_Regulatorios"]
@@ -5640,7 +5646,7 @@ def obtener_categoria(info):
     return None
 
 def almacenar_archivos_2(ruta_guardar_archivos, thread):
-    archivos_aceptados_constantes(busqueda_archivos_tipo(ruta_guardar_archivos))
+    archivos_aceptados_constantes(busqueda_archivos_tipo(ruta_guardar_archivos), thread=thread)
     lista_archivos = busqueda_archivos_tipo(ruta_guardar_archivos)
     lista_archivos = archivos_tipo_csv_txt(lista_archivos)
     lista_carpetas = buscar_carpetas(ruta_nuevo_sui)
@@ -5650,12 +5656,12 @@ def almacenar_archivos_2(ruta_guardar_archivos, thread):
             ubi = i
     lista_fallidos = []
     lista_fallidos = conversion_archivos_CSV(lista_archivos, lista_fallidos=lista_fallidos)
-    lista_fallidos = conversion_archivos_lista(lista_archivos, "TXT", "txt", informar=True, lista_fallidos=lista_fallidos, thread=thread)
-    lista_fallidos = conversion_archivos_lista(lista_archivos, "txt", "csv", informar=True, lista_fallidos=lista_fallidos, thread=thread)
+    lista_fallidos = conversion_archivos_lista(lista_archivos, "TXT", "txt", informar=False, lista_fallidos=lista_fallidos, thread=thread)
+    lista_fallidos = conversion_archivos_lista(lista_archivos, "txt", "csv", informar=False, lista_fallidos=lista_fallidos, thread=thread)
     lista_fallidos = evaluar_archivos_prueba(lista_archivos, lista_fallidos=lista_fallidos)
     lista_fallidos = list(set(lista_fallidos))
     lista_archivos = busqueda_archivos_tipo(ruta_guardar_archivos, lista_fallidos=lista_fallidos)
-    lista_archivos = retirar_archivos_fallidos(lista_archivos, lista_fallidos)
+    lista_archivos = retirar_archivos_fallidos(lista_archivos, lista_fallidos, thread=thread)
     lista_archivos = cantidad_minima_info_archivo(lista_archivos)
     for archivo in lista_archivos:
         bool_DS = False

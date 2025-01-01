@@ -1,11 +1,9 @@
-import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QDialog, QPushButton, QScrollArea, QLineEdit
 from PyQt5.QtGui import QPalette, QColor, QFont, QFontDatabase, QPixmap, QIcon
 from PyQt5.QtCore import QEventLoop, QSize
 import ruta_principal as mod_rp
 import json
-import time
-from datetime import datetime, timedelta
+from datetime import datetime
 
 global ruta_principal, ruta_codigo, ruta_constantes, rutanuevo_sui, ruta_archivos, ruta_fuentes, ruta_imagenes, fuente_texto, azul_vanti, dic_colores, nombre_aplicativo, lista_anios, dic_meses, lista_meses, lista_trimestres,reportes_disponibles,fecha_actual,lista_carpetas_extra,dic_DANE_nombres,dic_DANE_nombres_inicio
 global ruta_fuente, grupo_vanti,ruta_fuente_negrilla
@@ -429,13 +427,13 @@ def menu_edicion_archivos(app, window, central_widget, dimensiones, estado=None,
             estado, info = seleccionar_carpetas(app, window, central_widget, dimensiones, estado=estado, estado_anterior="menu_edicion_archivos")
         elif texto == "archivos_estandar":
             estado = texto
-            estado, info = menu_seleccion(app, window, central_widget, dimensiones, estado=estado, estado_anterior="menu_edicion_archivos")
+            estado, info = menu_seleccion(app, window, central_widget, dimensiones, estado=estado, estado_anterior="menu_edicion_archivos", c_meses=12)
         elif texto == "archivos_resumen":
             estado = texto
-            estado, info = menu_seleccion(app, window, central_widget, dimensiones, estado=estado, estado_anterior="menu_edicion_archivos")
+            estado, info = menu_seleccion(app, window, central_widget, dimensiones, estado=estado, estado_anterior="menu_edicion_archivos, c_meses=12")
         elif texto == "archivos_existentes":
             estado = texto
-            estado, info = menu_seleccion(app, window, central_widget, dimensiones, estado=estado, estado_anterior="menu_edicion_archivos")
+            estado, info = menu_seleccion(app, window, central_widget, dimensiones, estado=estado, estado_anterior="menu_edicion_archivos", c_meses=12)
         elif texto == "reportes_existentes":
             estado = texto
             estado, info = menu_dashboard(app, window, central_widget, dimensiones, estado=estado, estado_anterior="menu_edicion_archivos")
@@ -548,7 +546,7 @@ def menu_reportes_comerciales(app, window, central_widget, dimensiones, estado=N
             estado,info = menu_seleccion(app, window, central_widget, dimensiones, "menu_reportes_comerciales", estado, info, incluir_anual=False)
         elif texto == "reporte_SH":
             estado = texto
-            estado,info = seleccionar_periodo(app, window, central_widget, dimensiones, estado, info, "menu_reportes_comerciales", incluir_anual=False)
+            estado,info = seleccionar_periodo(app, window, central_widget, dimensiones, estado, info, "menu_reportes_comerciales", incluir_anual=False, c_meses=12)
         elif texto == "comparacion_CER_CLD_PRD":
             estado = texto
             estado,info = menu_CLD_PRD(app, window, central_widget, dimensiones, estado, info, estado_anterior="menu_reportes_comerciales")
@@ -1252,8 +1250,10 @@ def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=Non
                 else:
                     if anual and "anual" not in estado:
                         estado += "_anual"
-                    elif "mensual" not in estado:
+                        estado = estado.replace("_mensual", "")
+                    elif "mensual" not in estado and "anual" not in estado:
                         estado += "_mensual"
+                        estado = estado.replace("_anual", "")
                     if "reporte_comercial_sector_consumo" in estado:
                         opciones = {"regenerar":True, "codigo_DANE":True, "valor_facturado":True, "facturas":True}
                         if dic_botones_filiales["Todas"][0].text() == "X":
@@ -2033,7 +2033,7 @@ def seleccionar_reporte_categoria(app, window, central_widget, dimensiones, esta
                 elif estado == "convertir_archivos":
                     info["Reporte"] = dic_reportes
                     info["Categoria"] = dic_categorias
-                    estado, info = seleccionar_periodo(app, window, central_widget, dimensiones, estado, info, estado_anterior="seleccionar_reporte_categoria")
+                    estado, info = seleccionar_periodo(app, window, central_widget, dimensiones, estado, info, estado_anterior="seleccionar_reporte_categoria", c_meses=12)
                 elif estado == "archivos_estandar" or estado == "archivos_resumen" or estado == "archivos_existentes" or estado == "reportes_existentes":
                     info["Reporte"] = dic_reportes
                     info["Categoria"] = dic_categorias
@@ -2050,7 +2050,8 @@ def seleccionar_reporte_categoria(app, window, central_widget, dimensiones, esta
     event_loop.exec_()
     return estado,info
 
-def seleccionar_periodo(app, window, central_widget, dimensiones, estado=None, info={}, estado_anterior="", incluir_anual=True):
+def seleccionar_periodo(app, window, central_widget, dimensiones, estado=None, info={}, estado_anterior="", incluir_anual=True, c_meses=12):
+    c_meses -= 1
     screen_width = dimensiones[0]
     titulo = "Selección de periodo"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=60)
@@ -2142,7 +2143,7 @@ def seleccionar_periodo(app, window, central_widget, dimensiones, estado=None, i
                         valor[2].setText("X")
                         valor[1] = True
                         contador += 1
-                    if contador > 12:
+                    if contador > c_meses:
                         cambio = False
     def cambiar_botones_fecha(llave):
         nonlocal dic_fechas
@@ -2177,7 +2178,7 @@ def seleccionar_periodo(app, window, central_widget, dimensiones, estado=None, i
                     valor[2].setText("X")
                     valor[1] = True
                     contador += 1
-                if contador > 12:
+                if contador > c_meses:
                     cambio = False
     def limpiar_botones(boton):
         if incluir_anual:
