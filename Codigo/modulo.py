@@ -4766,7 +4766,7 @@ def contribuciones_MME(dashboard=False, texto_fecha=None, thread=None):
         lista_df = lectura_dataframe_chunk(archivo_csv)
         if lista_df:
             df = pd.concat(lista_df, ignore_index=True)
-            lista = ["Fecha","Mes","Anio","Filial","Causado","Causado_acumulado","Pagado","Deuda","Promedio","KPI"]
+            lista = ["Mes","Anio","Filial","Causado","Causado_acumulado","Pagado","Deuda","Promedio","KPI"]
             df.columns = lista
             df_filtro = df[(df["Filial"]=="GRUPO")]
             if len(df_filtro):
@@ -6378,6 +6378,7 @@ def generar_grafias_DB(lista_anual, reporte, thread=None):
         mes_corte = f"{lista_meses[int(fecha_corte_tupla[1])-1]}-{fecha_corte_tupla[2]}"
         t = " "*17+"\t"*6
         thread.message_sent.emit(f"{t} Inicio generación slides", "orange")
+        time.sleep(0.1)
         mod_7.crear_slides(lista_a_texto(archivo.split("\\")[:-2],"\\"),v_fecha_anterior,texto_fecha_completo,
                         fecha_corte, texto_fecha, dic_metricas, mes_corte, fecha_corte_anterior,periodo,
                         thread=thread)
