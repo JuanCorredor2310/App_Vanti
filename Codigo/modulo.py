@@ -2474,7 +2474,6 @@ def encontrar_errores_inventario_suscriptores(dic_archivos, seleccionar_reporte,
             for archivo in dic_archivos[union[0]]:
                 if "GRTT2" in archivo and "SAP" not in archivo and filial in archivo:
                     lista_archivos_filial.append(archivo)
-                    print(archivo)
             if len(lista_archivos_filial):
                 proceso_GRTT2 = True
             for archivo in dic_archivos[union[1]]:
@@ -2553,6 +2552,7 @@ def listas_iguales(lista_1, lista_2):
         return False,lista_1
 
 def convertir_fecha(fecha):
+    fecha = str(fecha)
     if fecha == "0":
         return ""
     else:
@@ -2609,11 +2609,11 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
         archivo_SAP = lista_archivos[1]
         dic_error = {}
         lista_df_SAP = lectura_dataframe_chunk(archivo_SAP)
+        lista_df_previo = lectura_dataframe_chunk(archivo_previo)
         columnas_SAP = list(lista_df_SAP[0].columns)[:-2]
         indicador_SUI_filial = indicador_SUI[filial]
         dic_filial_mercado = mercado_relevante_id[str(indicador_SUI_filial)]
         dic_filial_DANE = mercado_relevante_DANE[str(indicador_SUI_filial)]
-        lista_ubi = ["C","U","R"]
         fecha = fecha.split(" - ")
         mes = fecha[1]
         anio = fecha[0]
@@ -2631,10 +2631,13 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
         lista_aceptado = []
         if lista_df_SAP and lista_df_previo:
             #lista_df_catastro = []
-            for df in lista_df_SAP:
+            for i in range(len(lista_df_SAP)):
+                df = lista_df_SAP[i].copy()
                 df = df.reset_index(drop=True)
                 columnas = list(df.columns)
                 df["NIU"] = pd.to_numeric(df["NIU"], errors='coerce').fillna(0).astype(int)
+                if "Codigo_SAP" in columnas:
+                    df["Codigo_SAP"] = pd.to_numeric(df["Codigo_SAP"], errors='coerce').fillna(0).astype(int)
                 df["Tipo_usuario"] = pd.to_numeric(df["Tipo_usuario"], errors='coerce').fillna(0).astype(int)
                 df["ID_Comercializador"] = pd.to_numeric(df["ID_Comercializador"], errors='coerce').fillna(0).astype(int)
                 df["ID_Comercializador"] = df["ID_Comercializador"].astype(str)
@@ -2785,8 +2788,8 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                 df["Codigo_DANE"] = df["Codigo_DANE"].apply(completar_codigo_DANE)
                 df["Cedula_Catastral"] = df["Cedula_Catastral"].apply(lambda x: int(Decimal(x)) if pd.notna(x) and str(x).replace('.', '', 1).isdigit() else Decimal(0))
                 df["Cedula_Catastral"] = df["Cedula_Catastral"].astype(str)
-                df["Fecha_ajuste"] = df["Fecha_ajuste"].fillna(0).astype(int)
                 df['Fecha_ajuste'] = df['Fecha_ajuste'].astype(str).replace('-', "").replace('/', '').replace('_', '')
+                df["Fecha_ajuste"] = df["Fecha_ajuste"].fillna(0).astype(int)
                 df['Fecha_ajuste'] = df['Fecha_ajuste'].apply(convertir_fecha)
                 df['Fecha_ajuste'] = pd.to_datetime(df['Fecha_ajuste'], errors='coerce', dayfirst=True).dt.strftime('%d-%m-%Y').fillna('')
                 for i in range(len(df)):
@@ -2804,9 +2807,6 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                         columnas_minimas.append(col)
                     columnas_minimas.append("Columna_error")
                     df_unido = pd.concat(lista_df, ignore_index=True)
-                    df_unido["Fecha_ajuste"] = df_unido["Fecha_ajuste"].fillna(0).astype(int)
-                    df_unido['Fecha_ajuste'] = df_unido['Fecha_ajuste'].astype(str).replace('-', "").replace('/', '').replace('_', '')
-                    df_unido['Fecha_ajuste'] = df_unido['Fecha_ajuste'].apply(convertir_fecha)
                     df_unido['Fecha_ajuste'] = pd.to_datetime(df_unido['Fecha_ajuste'], errors='coerce', dayfirst=True).dt.strftime('%d-%m-%Y').fillna('')
                     lista_df_error.append(df_unido)
                     df_unido_2 = df_unido.copy()
@@ -2866,7 +2866,6 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
             df_nuevo = pd.DataFrame(lista_nuevos, columns=columnas_GRTT2)
             nombre = archivo_SAP.replace("_resumen","_nuevo").replace("_apoyo_error","_nuevo")
             almacenar_df_csv_y_excel(df_nuevo, nombre, almacenar_excel=False, thread=thread)
-    return None, None
 
 def reporte_usuarios_filial(dic_archivos, seleccionar_reporte, informar, almacenar_excel=True, usuarios_unicos=True, thread=None):
     lista_filiales_archivo = seleccionar_reporte["filial"]
@@ -3315,8 +3314,8 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                 dic_reporte[indicador_SUI_filial] += len(df)
                 columnas = list(df.columns)[:-2]
                 df = df[columnas]
-                df["FECHA_VISITA"] = df["FECHA_VISITA"].fillna(0).astype(int)
                 df['FECHA_VISITA'] = df['FECHA_VISITA'].astype(str).replace('-', "").replace('/', '').replace('_', '')
+                df["FECHA_VISITA"] = df["FECHA_VISITA"].fillna(0).astype(int)
                 df['FECHA_VISITA'] = df['FECHA_VISITA'].apply(convertir_fecha)
                 df['FECHA_VISITA'] = pd.to_datetime(df['FECHA_VISITA'], errors='coerce', dayfirst=True).dt.strftime('%d-%m-%Y').fillna('')
                 mask = pd.Series([True] * len(df))
@@ -5360,9 +5359,12 @@ def generar_porcentaje_cumplimientos_regulatorios(dashboard=False, texto_fecha=N
     if os.path.exists(archivo):
         df, proceso = mod_5.lectura_hoja_xlsx(archivo, nombre)
         if proceso:
-            anio_actual = fecha_actual.year
+            anio_actual_copia = fecha_actual.year
+            mes_actual_copia = fecha_actual.month
+            if mes_actual_copia <= 1:
+                anio_actual_copia -= 1
             df['Fecha_establecida'] = pd.to_datetime("1899-12-30") + pd.to_timedelta(df['Fecha establecida'], unit="D")
-            df = df.loc[df['Fecha_establecida'].dt.year == int(anio_actual)]
+            df = df.loc[df['Fecha_establecida'].dt.year == int(anio_actual_copia)]
             lista_estado = list(df["Estado Certificado"].unique())
             lista_filiales = list(df["Empresa"].unique())
             largo = len(df)
@@ -5385,9 +5387,9 @@ def generar_porcentaje_cumplimientos_regulatorios(dashboard=False, texto_fecha=N
                 dic_df["Cantidad_reportes"].append(len(df_estado))
                 dic_df["Porcentaje_cumplimiento"].append(str(round((len(df_estado)/largo)*100,2))+" %")
             df_porcentaje = pd.DataFrame(dic_df)
-            df_porcentaje["Anio"] = anio_actual
+            df_porcentaje["Anio"] = anio_actual_copia
             if not dashboard:
-                lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", str(anio_actual), "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Cumplimientos_Regulatorios"]
+                lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", str(anio_actual_copia), "REPORTES_GENERADOS_APLICATIVO", "Compilado", "Cumplimientos_Regulatorios"]
                 nuevo_nombre = encontrar_ubi_archivo(lista_ubi, "porcentaje_cumplimientos_regulatorios")
                 lista_nombre = nuevo_nombre.split("\\")
                 ext = lista_nombre[-1]

@@ -249,7 +249,7 @@ def velocimetro_cumplimientos_regulatorios(archivo, fecha, thread=None):
                 for estado in lista_estado:
                     df_estado = df_filial[df_filial["Estado"]==estado].reset_index(drop=True)
                     porcentaje = round(df_estado["Porcentaje_cumplimiento"].sum(),2)
-                    dic_cantidad_reportes[estado] = estado+" ("+str(df_estado["Cantidad_reportes"].sum())+" - "+str(porcentaje)+" %)"
+                    dic_cantidad_reportes[estado] = conversion_decimales(estado+" ("+str(df_estado["Cantidad_reportes"].sum())+" - "+str(porcentaje)+" %)")
                     dic_df[estado] = porcentaje
                 ordenadas_llaves = sorted(dic_df, key=lambda x: lista.index(x))
                 dic_df = {k: dic_df[k] for k in ordenadas_llaves}
@@ -261,23 +261,24 @@ def velocimetro_cumplimientos_regulatorios(archivo, fecha, thread=None):
                 labels = list(data.keys())
                 fig, ax = plt.subplots(figsize=(10, 8), subplot_kw={'projection': 'polar'})
                 start = 0
-                for i, value in enumerate(values):
+                for i in range(len(values)):
+                    value = values[i]
                     end = start + (value / 100) * np.pi
                     ax.barh(1, end - start, left=start, height=0.5, color=colors[i],edgecolor='none')
-                    mid_angle = (start + end)  # Ángulo medio de cada sección
+                    mid_angle = (start + end)
                     if value < 30:
-                        ax.text(mid_angle*0.5, 1.8, f'{value}%', ha='center', va='center', fontsize=18, color=colors[i])
+                        ax.text(mid_angle*0.5, 1.8, f'{conversion_decimales(f"{value}%")}', ha='center', va='center', fontsize=18, color=colors[i])
                     else:
-                        ax.text(mid_angle*0.5, 1.5, f'{value}%', ha='center', va='center', fontsize=18, color=colors[i])
+                        ax.text(mid_angle*0.5, 1.5, f'{conversion_decimales(f"{value}%")}', ha='center', va='center', fontsize=18, color=colors[i])
                     start = end
                 ax.set_yticklabels([])
                 ax.set_xticks([])
                 ax.spines['polar'].set_visible(False)
-                ax.xaxis.set_visible(False)  # Hacer que el eje X no sea visible
+                ax.xaxis.set_visible(False)
                 ax.yaxis.set_visible(False)
                 legend_handles = [plt.Line2D([0], [0], marker='o', color='w', label=str(labels[i]),
                                                     markerfacecolor=colors[i], markersize=10)
-                                            for i in range(len(colors))]
+                                            for i in range(len(values))]
                 ax.legend(reversed(legend_handles), reversed(labels), loc='lower center', bbox_to_anchor=(0.5, 0.31), fontsize=14, ncol=1)
                 ax.set_ylim(-0.01, 3.2)
                 ax.grid(False)
@@ -293,7 +294,7 @@ def velocimetro_cumplimientos_regulatorios(archivo, fecha, thread=None):
                 imagen_recortada.save(n_imagen)
                 informar_imagen(n_imagen, thread=thread)
     except BaseException:
-            pass
+        pass
 
 def grafica_matriz_requerimientos(archivo, thread=None):
     try:
@@ -1372,7 +1373,7 @@ def grafica_barras_subsidios(archivo, dic_metricas, thread=None):
             plt.savefig(n_imagen, transparent=True)
             plt.close()
             imagen = Image.open(n_imagen)
-            recorte = (280, 180, imagen.width-320, imagen.height)
+            recorte = (240, 180, imagen.width-320, imagen.height)
             imagen_recortada = imagen.crop(recorte)
             imagen_recortada.save(n_imagen)
             informar_imagen(n_imagen, thread=thread)
@@ -1783,8 +1784,7 @@ def metricas_compensacines(archivo, fecha, dic_metricas):
         df_filtro = df[(df["Anio_reportado"]==int(fecha[0]))&(df["Mes_reportado"]==fecha[1])&(df["Filial"]==grupo_vanti)].reset_index(drop=True)
         if len(df_filtro):
             texto_1 = int(df_filtro["Usuarios_compensados"][0])
-            if texto_1 > 1000:
-                texto_1 = conversion_decimales(f"{texto_1/1e3:.3f}")
+            texto_1 = conversion_miles(texto_1)
             dic_metricas["usuarios_compensados"] = texto_1
             texto_1 = round(df_filtro["Valor_compensado"][0])
             texto_1 = conversion_decimales(f"{round(texto_1/1e6,1)} M")
@@ -1820,7 +1820,7 @@ def grafica_deuda_subsidios(archivo, archivo_1, dic_metricas, thread=None):
             texto = conversion_decimales(f"{valor/1e9:.1f} m M")
             dic_metricas["deuda_subsidios"] = texto
             lista_colores = [dic_colores["amarillo_v"],dic_colores["azul_v"]]
-            fig, ax = plt.subplots(figsize=(30,18))
+            fig, ax = plt.subplots(figsize=(32,18))
             ax.fill_between(x, df["Deuda"], color=lista_colores[0], label='Deuda MME')
             ax.fill_between(x, df["Pagado"], color=lista_colores[1], alpha=0.8, label='Girado MME')
             ax.yaxis.set_major_locator(ticker.MaxNLocator(nbins=5))
@@ -1839,7 +1839,7 @@ def grafica_deuda_subsidios(archivo, archivo_1, dic_metricas, thread=None):
             plt.savefig(archivo_copia, transparent=True)
             plt.close()
             imagen = Image.open(archivo_copia)
-            recorte = (110, 120, imagen.width-220, imagen.height)
+            recorte = (60, 120, imagen.width-180, imagen.height)
             imagen_recortada = imagen.crop(recorte)
             imagen_recortada.save(archivo_copia)
             informar_imagen(archivo_copia, thread=thread)

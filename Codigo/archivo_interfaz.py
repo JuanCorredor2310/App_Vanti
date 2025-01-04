@@ -6,7 +6,7 @@ import json
 from datetime import datetime
 
 global ruta_principal, ruta_codigo, ruta_constantes, rutanuevo_sui, ruta_archivos, ruta_fuentes, ruta_imagenes, fuente_texto, azul_vanti, dic_colores, nombre_aplicativo, lista_anios, dic_meses, lista_meses, lista_trimestres,reportes_disponibles,fecha_actual,lista_carpetas_extra,dic_DANE_nombres,dic_DANE_nombres_inicio
-global ruta_fuente, grupo_vanti,ruta_fuente_negrilla
+global ruta_fuente, grupo_vanti, ruta_fuente_negrilla
 ruta_principal = mod_rp.v_ruta_principal()
 ruta_constantes = mod_rp.v_constantes()
 ruta_nuevo_sui = mod_rp.v_nuevo_sui()
@@ -117,23 +117,32 @@ def crear_pantalla_incial():
 
 def pantalla_inicio(app, window, central_widget, dimensiones):
     screen_width = dimensiones[0]
-    app_vanti = crear_label("APP VANTI", central_widget, font="bold", font_size=80)
-    x = round((screen_width-app_vanti.sizeHint().width())*0.5)
+    app_vanti = crear_label("APP VANTI", central_widget, font="bold", font_size=100)
+    x = round((screen_width-app_vanti.sizeHint().width())*0.5)-50
     app_vanti.move(x, 100)
     mostrar_label(app_vanti)
-    titulo_1 = crear_label("Vicepresidencia de Estrategia y Finanzas", central_widget, font_size=20)
+    titulo_1 = crear_label("Vicepresidencia de Estrategia y Finanzas", central_widget, font_size=50)
     x = round((screen_width-titulo_1.sizeHint().width())*0.5)
-    titulo_1.move(x, 550)
+    titulo_1.move(x, 400)
     mostrar_label(titulo_1)
-    titulo_2 = crear_label("Dirección Regulación, Márgenes y Tarifas", central_widget, font_size=30)
+    titulo_2 = crear_label("Dirección Regulación, Márgenes y Tarifas", central_widget, font_size=35)
     x = round((screen_width-titulo_2.sizeHint().width())*0.5)
-    titulo_2.move(x, 380)
+    titulo_2.move(x, 650)
     mostrar_label(titulo_2)
-    button = crear_boton("INICIAR", central_widget, font_size=40, font="bold")
+    button = crear_boton("INICIAR", central_widget, font_size=80, font="bold")
     x = round((screen_width-button.sizeHint().width())*0.5)
-    button.move(x,800)
+    button.move(x,900)
     button.setParent(central_widget)
     mostrar_label(button)
+    image_button = QPushButton("", central_widget)
+    pixmap = QPixmap(ruta_imagenes+"vanti_logo.png")
+    pixmap = pixmap.scaled(155,155, aspectRatioMode=1)
+    icon = QIcon(pixmap)
+    image_button.setIcon(icon)
+    image_button.setIconSize(pixmap.size())
+    image_button.move(1380,180)
+    mostrar_label(image_button)
+
     event_loop = QEventLoop()
     def on_button_clicked():
         event_loop.quit()
@@ -141,6 +150,7 @@ def pantalla_inicio(app, window, central_widget, dimensiones):
         esconder_label(titulo_1)
         esconder_label(titulo_2)
         esconder_label(button)
+        esconder_label(image_button)
     button.clicked.connect(on_button_clicked)
     event_loop.exec_()
 
