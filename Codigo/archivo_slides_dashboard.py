@@ -1,6 +1,6 @@
 import matplotlib.font_manager as font_manager
 import os
-from PIL import Image,ImageDraw,ImageFont
+from PIL import Image, ImageDraw, ImageFont
 import json
 import ruta_principal as mod_rp
 global ruta_principal, ruta_codigo, ruta_constantes, ruta_nuevo_sui, ruta_archivos,ruta_fuentes,ruta_imagenes,fuente_texto,azul_vanti,dic_colores,meta_kpi_sub,dic_ubi_tarifas,dic_distri,dic_colores_distri,dic_ubi_disti

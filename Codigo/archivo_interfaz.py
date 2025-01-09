@@ -157,9 +157,9 @@ def pantalla_inicio(app, window, central_widget, dimensiones):
 def menu_inicial(app, window, central_widget, dimensiones, estado=None, info=None):
     screen_width = dimensiones[0]
     titulo = "INICIO"
-    label_1 = crear_label(titulo, central_widget, font="bold", font_size=80)
+    label_1 = crear_label(titulo, central_widget, font="bold", font_size=100)
     x = round((screen_width-label_1.sizeHint().width())*0.5)
-    label_1.move(x, 50)
+    label_1.move(x, 35)
     mostrar_label(label_1)
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"flecha.png")
@@ -168,17 +168,17 @@ def menu_inicial(app, window, central_widget, dimensiones, estado=None, info=Non
     image_button.setIconSize(pixmap.size())
     image_button.move(20,20)
     mostrar_label(image_button)
-    boton_1 = crear_boton("Configuración inicial", central_widget, font_size=35)
-    boton_2 = crear_boton("Edición de archivos", central_widget, font_size=35)
-    boton_3 = crear_boton("Reportes comerciales", central_widget, font_size=35)
-    boton_4 = crear_boton("Reportes tarifarios", central_widget, font_size=35)
-    boton_5 = crear_boton("Reportes técnicos", central_widget, font_size=35)
-    boton_6 = crear_boton("KPIs", central_widget, font_size=35)
-    boton_7 = crear_boton("Dashboard", central_widget, font_size=50)
+    boton_1 = crear_boton("Configuración inicial", central_widget, font_size=45)
+    boton_2 = crear_boton("Edición de archivos", central_widget, font_size=45)
+    boton_3 = crear_boton("Reportes comerciales", central_widget, font_size=45)
+    boton_4 = crear_boton("Reportes tarifarios", central_widget, font_size=45)
+    boton_5 = crear_boton("Reportes técnicos", central_widget, font_size=45)
+    boton_6 = crear_boton("KPIs", central_widget, font_size=45)
+    boton_7 = crear_boton("Dashboard", central_widget, font_size=70)
     botones = [boton_1, boton_2, boton_3, boton_4, boton_5, boton_6, boton_7]
     max_width = max([boton.sizeHint().width() for boton in botones])
     for boton in botones:
-        boton.setFixedWidth(max_width+65)
+        boton.setFixedWidth(max_width+60)
     x = round(((screen_width*0.5)-max_width)*0.5)
     boton_1.move(x,400)
     boton_1.setParent(central_widget)
@@ -212,6 +212,15 @@ def menu_inicial(app, window, central_widget, dimensiones, estado=None, info=Non
     x = round((screen_width-(image_button_1.sizeHint().width()))*0.95)
     image_button_1.move(x,5)
     mostrar_label(image_button_1)
+    image_button_2 = QPushButton("", central_widget)
+    pixmap = QPixmap(ruta_imagenes+"vanti_logo.png")
+    pixmap = pixmap.scaled(140,140, aspectRatioMode=1)
+    icon = QIcon(pixmap)
+    image_button_2.setIcon(icon)
+    image_button_2.setIconSize(pixmap.size())
+    image_button_2.move(1260,115)
+    mostrar_label(image_button_2)
+
     dic_texto = {"Configuración inicial":"Configuración del aplicativo. Recomendado si no existen las carpetas o archivos necesarios en el dispositivo",
                 "Edición de archivos":"Almacenamiento, manipulación o estandarización de archivos",
                 "Reportes comerciales":"Actividades con reportes comerciales como información por sectores de consumo, información por sectores de consumo subsidiadios,\ncompensaciones, desviaciones significativas, reporte DANE, reporte Secretaria de Hacienda de Bogotá D.C.\nComprobación de la calidad de la información o comparación entre archivos de certificación, calidad (CLD) y/o producción (PRD)",
@@ -226,6 +235,7 @@ def menu_inicial(app, window, central_widget, dimensiones, estado=None, info=Non
         esconder_label(label_1)
         esconder_label(image_button)
         esconder_label(image_button_1)
+        esconder_label(image_button_2)
         esconder_label(boton_1)
         esconder_label(boton_2)
         esconder_label(boton_3)
@@ -1637,7 +1647,7 @@ def opciones_adicionales_dashboard(app, window, central_widget, dimensiones, est
     titulo_espacios.move(x, 10)
     titulo_espacios.setParent(central_widget)
     mostrar_label(titulo_espacios)
-    titulo_espacios_1 = crear_label(f"Dashboard ({fecha_personalizada[0][1][:3]}/{fecha_personalizada[0][0]} - {fecha_personalizada[1][0]}/{fecha_personalizada[1][1][:3]})", central_widget, font="bold", font_size=45)
+    titulo_espacios_1 = crear_label(f"Dashboard ({fecha_personalizada[0][1][:3]}/{fecha_personalizada[0][0]} - {fecha_personalizada[1][1][:3]}/{fecha_personalizada[1][0]})", central_widget, font="bold", font_size=45)
     x = round((screen_width-titulo_espacios_1.sizeHint().width())*0.5)
     titulo_espacios_1.move(x, 150)
     titulo_espacios_1.setParent(central_widget)
@@ -2818,9 +2828,3 @@ def ventana_secundaria(central_widget, titulo, dic_texto, lista=True):
     ventana_layout.addWidget(scroll_area)
     ventana.setLayout(ventana_layout)
     ventana.exec_()
-
-"""
-regenerar=False, codigo_DANE=False, valor_facturado=False, cantidad_filas=False, mostrar_archivos=False, inventario=False,
-                    calcular_tiempo=True, reportes_mensuales=False, texto_regenerar = "_form_estandar, _resumen", texto_regenerar_mensuales="",
-                    usuarios_activos=False, sumatoria=False, reporte_consumo_anual=False, facturas=False
-"""

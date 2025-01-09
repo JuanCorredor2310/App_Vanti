@@ -138,7 +138,7 @@ def agrupar_archivos(seleccionar_reporte, lista_archivos, formato_app=False):
         for elemento in lista_fechas:
             anio = elemento[0]
             mes = elemento[1]
-            fecha = anio+" - "+mes
+            fecha = f"{anio} - {mes}"
             dic_archivos[fecha] = {}
             dic_archivos_tamanio[fecha] = {}
             for llave in seleccionar_reporte:
@@ -154,7 +154,7 @@ def agrupar_archivos(seleccionar_reporte, lista_archivos, formato_app=False):
     else:
         anio = seleccionar_reporte["anios"][0]
         mes = seleccionar_reporte["meses"][0]
-        fecha = anio+" - "+mes
+        fecha = f"{anio} - {mes}"
         dic_archivos[fecha] = {}
         dic_archivos_tamanio[fecha] = {}
         for llave in seleccionar_reporte:
@@ -192,7 +192,7 @@ def agrupar_archivos_anual(seleccionar_reporte, lista_archivos, reportes_app=Fal
     for elemento in lista_fechas:
         anio = elemento[0]
         mes = elemento[1]
-        fecha = anio+" - "+mes
+        fecha = f"{anio} - {mes}"
         dic_archivos[fecha] = []
         dic_archivos_tamanio[fecha] = []
         for archivo in lista_archivos:

@@ -525,6 +525,25 @@ def encontrar_codificacion(archivo):
             pass
     return None
 
+def encontrar_codificacion_2(archivo):
+    lista_codificaciones = []
+    lista_codificaciones.append(elegir_codificacion(archivo))
+    lista_codificaciones.extend(['utf-8-sig','utf-8','iso-8859-1','latin-1','utf-16','utf-16-be','utf-32','ascii','windows-1252','iso-8859-2','iso-8859-5','koi8-r','big5','gb2312',
+                                    'shift-jis','euc-jp','mac_roman','utf-7','cp437','cp850','ibm866','tis-620'])
+    for elemento in lista_codificaciones:
+        try:
+            with open(archivo, 'r', encoding=elemento) as file:
+                sample = file.read(5000)
+                dialect = csv.Sniffer().sniff(sample)
+                return elemento
+        except UnicodeDecodeError:
+            pass
+        except UnicodeError:
+            pass
+        except csv.Error:
+            pass
+    return None
+
 def cambio_archivo(ruta, ext_original, ext_final):
     dialect = encontrar_codificacion(ruta)
     if dialect:
@@ -596,6 +615,23 @@ def informar_archivo_creado(nombre,valor,thread=None):
         else:
             print(f"\nArchivo {texto} creado\n")
 
+def modificar_csv(input_file, output_file):
+    codificacion = encontrar_codificacion_2(input_file)
+    if codificacion:
+        with open(input_file, 'r', newline='', encoding=codificacion) as infile:
+            reader = csv.reader(infile)
+            rows = []
+            for row in reader:
+                modified_row = []
+                for cell in row:
+                    modified_cell = cell.replace(',', '.').replace(';', ',')
+                    modified_row.append(modified_cell)
+                rows.append(modified_row)
+        with open(output_file, 'w', newline='', encoding='utf-8') as outfile:
+            writer = csv.writer(outfile)
+            writer.writerows(rows)
+
+
 def estandarizacion_archivos(lista_archivos, informar, thread=None):
     dic_reporte = None
     for archivo in lista_archivos:
@@ -619,8 +655,8 @@ def estandarizacion_archivos(lista_archivos, informar, thread=None):
                 else:
                     v_nombre_archivo_json_reporte = nombre_archivo_json_reporte(archivo)
                     if thread:
-                        thread.message_sent.emit(f"El archivo {acortar_nombre(archivo,3)} no cumple con las columnas del archivo {acortar_nombre(v_nombre_archivo_json_reporte,3)}", "white")
-                        thread.message_sent.emit(f"Revisar el archivo {acortar_nombre(archivo)}", "white")
+                        thread.message_sent.emit(f"El archivo {acortar_nombre(archivo,3)} no cumple con las columnas del archivo {acortar_nombre(v_nombre_archivo_json_reporte,3)}", "red")
+                        thread.message_sent.emit(f"Revisar el archivo {acortar_nombre(archivo)}", "red")
                     else:
                         print(f"\nEl archivo {acortar_nombre(archivo,3)} no cumple con las columnas del archivo {acortar_nombre(v_nombre_archivo_json_reporte,3)}")
                         print(f"Revisar el archivo {acortar_nombre(archivo)}\n")
@@ -2542,14 +2578,24 @@ def corregir_errores_inventario_suscriptores(dic_archivos, seleccionar_reporte, 
                     print(f"No es posible corregir los errores. Deben existir los archivos (_resumen.csv, _completo.csv, _error.csv) de los periodos {union[0]} y {union[1]}\nLos archivos deben cumplir con la estructura de certificación del GRTT2")
 
 def listas_iguales(lista_1, lista_2):
-    if len(lista_1) == len(lista_2):
-        for i in range(1, len(lista_1)-1):
-            if lista_1[i] != lista_2[i]:
-                return True,lista_2
-        return False,lista_1
-
+    l1 = len(lista_1)
+    l2 = len(lista_2)
+    lista_cambios = []
+    if l1 == l2:
+        for i in range(1, l1-1):
+            if i != 11 and i != 12:
+                if lista_1[i] != lista_2[i]:
+                    lista_cambios.append(i)
+            else:
+                if lista_1[i] == "" and lista_2[i] != "":
+                    lista_cambios.append(i+1)
+        texto_cambios = lista_a_texto(lista_cambios, " y ")
+        if len(lista_cambios):
+            return True, lista_2, texto_cambios
+        else:
+            return False, lista_1, texto_cambios
     else:
-        return False,lista_1
+        return False, lista_1, ""
 
 def convertir_fecha(fecha):
     fecha = str(fecha)
@@ -2661,8 +2707,10 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                 df["Altitud"] = pd.to_numeric(df["Altitud"], errors="coerce").fillna(0).astype(int)
                 df["Latitud"] = pd.to_numeric(df["Latitud"], errors="coerce").fillna(-100).astype(float)
                 df["Latitud"] = df["Latitud"].apply(lambda x: -100 if x > 12.462778 or x < -4.225 else x)
+                df["Latitud"] = df["Latitud"].round(15)
                 df["Longitud"] = pd.to_numeric(df["Longitud"], errors="coerce").fillna(-100).astype(float)
                 df["Longitud"] = df["Longitud"].apply(lambda x: -100 if x > -66.848333 or x < -79.006389 else x)
+                df["Longitud"] = df["Longitud"].round(15)
                 df["Latitud"] = df["Latitud"].apply(lambda x: "" if x == -100 else x)
                 df["Longitud"] = df["Longitud"].apply(lambda x: "" if x == -100 else x)
                 with warnings.catch_warnings():
@@ -2671,8 +2719,8 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
                     mask_longitud = df["Longitud"] == ""
                     df.loc[mask_latitud, "Longitud"] = ""
                     df.loc[mask_longitud, "Latitud"] = ""
-                    df.loc[mask_latitud, "Altitud"] = 0
-                    df.loc[mask_longitud, "Altitud"] = 0
+                    #df.loc[mask_latitud, "Altitud"] = 0
+                    #df.loc[mask_longitud, "Altitud"] = 0
                 df["Estado"] = pd.to_numeric(df["Estado"], errors='coerce').fillna(0).astype(int)
                 df["Estado"] = df["Estado"].astype(str)
                 df.loc[(df['Codigo_DANE'] == '11001000') & (df['Cedula_Catastral'].str.len() == 12), 'Cedula_Catastral'] = df.loc[(df['Codigo_DANE'] == '11001000') & (df['Cedula_Catastral'].str.len() == 12), 'Cedula_Catastral'].str.zfill(21)
@@ -2846,17 +2894,22 @@ def apoyo_encontrar_errores_inventario_suscriptores(lista_archivos, filial, fech
             lista_cambios = []
             lista_nuevos = []
             lista_completo = []
+            lista_comparacion = []
             for niu in dic_NIU_SAP:
                 lista_sap = dic_NIU_SAP[niu]
                 if niu in dic_NIU_previo:
-                    op, lista = listas_iguales(dic_NIU_previo[niu], lista_sap)
+                    op, lista, texto_cambios = listas_iguales(dic_NIU_previo[niu], lista_sap)
                     if op:
                         lista_cambios.append(lista)
+                        lista_comparacion.append([niu, texto_cambios])
                     lista_completo.append(lista)
                 else:
                     lista_cambios.append(lista_sap)
                     lista_completo.append(lista_sap)
                     lista_nuevos.append(lista_sap)
+            df_cambios = pd.DataFrame(lista_comparacion, columns=["NIU","Cambios"])
+            nombre = archivo_SAP.replace("_resumen","_cambios").replace("_apoyo_error","_cambios")
+            almacenar_df_csv_y_excel(df_cambios, nombre, almacenar_excel=False, thread=thread)
             df_completo = pd.DataFrame(lista_completo, columns=columnas_GRTT2)
             nombre = archivo_SAP.replace("_resumen","_completo").replace("_apoyo_error","_completo")
             almacenar_df_csv_y_excel(df_completo, nombre, almacenar_excel=False, thread=thread)
@@ -3314,8 +3367,8 @@ def apoyo_generar_reporte_desviaciones_mensual_DS57(lista_archivos,filial,fecha,
                 dic_reporte[indicador_SUI_filial] += len(df)
                 columnas = list(df.columns)[:-2]
                 df = df[columnas]
-                df['FECHA_VISITA'] = df['FECHA_VISITA'].astype(str).replace('-', "").replace('/', '').replace('_', '')
                 df["FECHA_VISITA"] = df["FECHA_VISITA"].fillna(0).astype(int)
+                df['FECHA_VISITA'] = df['FECHA_VISITA'].astype(str).replace('-', "").replace('/', '').replace('_', '')
                 df['FECHA_VISITA'] = df['FECHA_VISITA'].apply(convertir_fecha)
                 df['FECHA_VISITA'] = pd.to_datetime(df['FECHA_VISITA'], errors='coerce', dayfirst=True).dt.strftime('%d-%m-%Y').fillna('')
                 mask = pd.Series([True] * len(df))
@@ -6098,10 +6151,11 @@ def generar_archivos_extra_dashboard(seleccionar_reporte, evitar_extra=[], ext="
 
 def fecha_anterior_rango(anio, mes):
     ubi_mes = lista_meses.index(mes)
+    anio = int(anio)
     if ubi_mes == 0:
         return (str(anio-1), lista_meses[-1])
     else:
-        anio = str(int(anio))
+        anio = str(anio)
         mes = lista_meses[ubi_mes-1]
         return (anio,  mes)
 

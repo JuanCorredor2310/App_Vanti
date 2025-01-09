@@ -1,7 +1,9 @@
 def v_ruta_principal(t=""):
     if t != "":
+        #valor = r"c:\\Aplicativo_Regulacion_Vanti\\"+t
         valor = r"c:\\Aplicativo_Regulacion_Vanti\\"+t
     else:
+        #valor = r"c:\\Aplicativo_Regulacion_Vanti"
         valor = r"c:\\Aplicativo_Regulacion_Vanti"
     return valor
 
