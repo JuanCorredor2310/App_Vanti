@@ -117,6 +117,8 @@ lista_reportes_generados = ["_resumen","_form_estandar", #formatos generales
                             "_inventario_suscriptores","_usuarios_unicos","_reporte_facturacion",#calidad de la información
                             "porcentaje_cumplimientos_regulatorios",
                             "_error","_nuevo","_completo","_procesado"] #formatos regulatorios
+global val_res
+val_res = 0.6
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Uso de librería Geopy
@@ -223,7 +225,7 @@ def elegir_codificacion(archivo):
 def normalizar_texto(texto):
     if isinstance(texto, str):
         texto = unicodedata.normalize('NFKD', texto).encode('ascii', 'ignore').decode('utf-8')
-        texto = texto.replace('ñ', 'n').replace('Ñ', 'N')
+        texto = texto.replace('ñ', 'n').replace('Ñ', 'N').replace("_",'')
     return texto
 
 def eliminar_caracteres_especiales(df):
@@ -7706,7 +7708,8 @@ class Crear_ventana_texto(QDialog):
         self.dic_info = {}
         self.initUI(texto, estado, info)
     def initUI(self, texto, estado, info):
-        self.setGeometry(50, 50, 1700, 1030)
+        self.setGeometry(round(50*val_res), round(50*val_res), round(1700*val_res), round(1030*val_res))
+        #self.setGeometry(50, 50, 1700, 1030)
         self.setStyleSheet("""QWidget { background-color: #030918; border: 5px solid #030918; }""")
         self.setWindowTitle(texto)
         main_layout = QVBoxLayout()
