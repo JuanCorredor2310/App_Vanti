@@ -102,9 +102,9 @@ def crear_pantalla_incial():
     screen_height = screen_size.height()
     dimensiones = (screen_width, screen_height)
     #TODO: Change dimensiones
-    dimensiones = (1360,768)
-    screen_width = dimensiones[0]
-    screen_height = dimensiones[1]
+    #dimensiones = (1360,768)
+    #screen_width = dimensiones[0]
+    #screen_height = dimensiones[1]
 
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"vanti.png")
@@ -126,7 +126,7 @@ def crear_pantalla_incial():
                         QLabel {margin: 20px;}""")
     window.showMaximized()
     #TODO: Change dimensiones
-    window.setGeometry(0, 0, dimensiones[0], dimensiones[1])
+    #window.setGeometry(0, 0, dimensiones[0], dimensiones[1])
     window.show()
     return app, window, central_widget, dimensiones
 

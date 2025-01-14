@@ -19,8 +19,8 @@ import archivo_crear_carpetas as mod_3
 import archivo_busqueda_reportes as mod_4
 import archivo_graficas as mod_6
 import archivo_slides_dashboard as mod_7
-#import archivo_interfaz as mod_9
-import archivo_interfaz_c as mod_9
+import archivo_interfaz as mod_9
+#import archivo_interfaz_c as mod_9
 
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Constantes globales
