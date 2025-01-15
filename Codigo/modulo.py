@@ -1532,7 +1532,7 @@ def apoyo_reporte_comercial_sector_consumo_regulados(lista_archivos, codigo_DANE
             lista_df = lectura_dataframe_chunk(archivo)
             if lista_df:
                 dic_1 = {}
-                dic = {"Cantidad de usuarios":0,"Consumo m3":0,"Valor total facturado":0, "Valor consumo facturado":0,"Cantidad de facturas":0, "Subsidios":0, "Contribuciones":0}
+                dic = {"Cantidad de usuarios":0,"Consumo m3":0,"Valor total facturado":0, "Valor facturación por consumo":0,"Cantidad de facturas":0, "Subsidios":0, "Contribuciones":0}
                 for i in range(len(lista_df)):
                     df = lista_df[i].reset_index(drop=True)
                     for pos in range(len(df)):
@@ -1544,7 +1544,7 @@ def apoyo_reporte_comercial_sector_consumo_regulados(lista_archivos, codigo_DANE
                             factura = str(df["ID_factura"][pos]).upper()
                             subsidio_contribuciones = float(df["Valor_subsidio_contribucion"][pos])
                             dic["Consumo m3"] += consumo
-                            dic["Valor consumo facturado"] += valor_consumo_facturado
+                            dic["Valor facturación por consumo"] += valor_consumo_facturado
                             dic["Valor total facturado"] += valor_total_facturado
                             if factura[0] == "F":
                                 dic["Cantidad de facturas"] += 1
@@ -1571,7 +1571,7 @@ def apoyo_reporte_comercial_sector_consumo_regulados(lista_archivos, codigo_DANE
                     dic["Cantidad de usuarios"] = len(dic_1)
                     if not valor_facturado:
                         del dic["Valor total facturado"]
-                        del dic["Valor consumo facturado"]
+                        del dic["Valor facturación por consumo"]
                     if not subsidio:
                         del dic["Subsidios"]
                         del dic["Contribuciones"]
@@ -2291,7 +2291,7 @@ def generar_sumatoria_df(df):
     columnas = list(df.columns)
     lista_df = []
     lista_filiales = list(df["Filial"].unique())
-    columnas_valores = ["Cantidad de usuarios","Consumo m3","Valor total facturado","Valor consumo facturado",
+    columnas_valores = ["Cantidad de usuarios","Consumo m3","Valor total facturado","Valor facturación por consumo",
                         "Cantidad de facturas","Subsidios","Contribuciones"]
     for filial in lista_filiales:
         df_filial = df[df["Filial"] == filial].reset_index(drop=True)
@@ -5045,6 +5045,43 @@ def cumplimientos_SUI_distribuidoras(thread=None):
             print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
         return None
 
+def generar_info_proyecciones(texto_fecha, thread=None):
+    nombre = "Proyecciones"
+    hoja = "Datos"
+    archivo = ruta_constantes+"\\"+f"{nombre}.xlsx"
+    if os.path.exists(archivo):
+        lista_hojas = mod_5.hojas_disponibles(archivo)
+        proceso = False
+        for i in lista_hojas:
+            if hoja in i:
+                hoja = i
+                proceso = True
+        if proceso:
+            df, proceso = mod_5.lectura_hoja_xlsx(archivo, hoja)
+            if proceso:
+                lista_ubi = [ruta_nuevo_sui, "Reportes Nuevo SUI", "Compilado", "REPORTES_GENERADOS_APLICATIVO", "Compilado", texto_fecha, "Cumplimientos_Regulatorios"]
+                nuevo_nombre = encontrar_ubi_archivo(lista_ubi, f"Proyecciones")
+                almacenar_df_csv_y_excel(df,nuevo_nombre, thread=thread)
+                return nuevo_nombre
+            else:
+                if thread:
+                    thread.message_sent.emit(f"No es posible a acceder al archivo {archivo}.", "red")
+                else:
+                    print(f"No es posible a acceder al archivo {archivo}.")
+                return None
+        else:
+            if thread:
+                thread.message_sent.emit(f"No existe un hoja {hoja} en el archivo {nombre}.xlsx", "red")
+            else:
+                print(f"No existe un hoja {hoja} en el archivo {nombre}.xlsx")
+            return None
+    else:
+        if thread:
+            thread.message_sent.emit(f"No existe el archivo {archivo}. No es posible generar el reporte.", "red")
+        else:
+            print(f"No existe el archivo {archivo}. No es posible generar el reporte.")
+        return None
+
 # * -------------------------------------------------------------------------------------------------------
 # *                                             Reportes Tarifarios
 # * -------------------------------------------------------------------------------------------------------
@@ -6427,6 +6464,9 @@ def generar_grafias_DB(lista_anual, reporte, thread=None):
         dic_distribuidoras = cumplimientos_SUI_distribuidoras(thread=thread)
         if dic_distribuidoras:
             dic_metricas["Cumplimientos_SUI"] = dic_distribuidoras
+        archivo = generar_info_proyecciones(texto_fecha=texto_fecha, thread=thread)
+        if archivo:
+            mod_6.grafica_proyecciones(archivo, thread=thread)
         thread.message_sent.emit("Gráficas matriz de requerimientos", "orange")
         archivo = generar_porcentaje_matriz_requerimientos(dashboard=True, texto_fecha=texto_fecha, thread=thread)
         if archivo:
@@ -7708,8 +7748,8 @@ class Crear_ventana_texto(QDialog):
         self.dic_info = {}
         self.initUI(texto, estado, info)
     def initUI(self, texto, estado, info):
-        self.setGeometry(round(50*val_res), round(50*val_res), round(1700*val_res), round(1030*val_res))
-        #self.setGeometry(50, 50, 1700, 1030)
+        #self.setGeometry(round(50*val_res), round(50*val_res), round(1700*val_res), round(1030*val_res))
+        self.setGeometry(50, 50, 1700, 1030)
         self.setStyleSheet("""QWidget { background-color: #030918; border: 5px solid #030918; }""")
         self.setWindowTitle(texto)
         main_layout = QVBoxLayout()

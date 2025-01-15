@@ -403,6 +403,10 @@ def slide_kpi_sub(ubi, fecha_actual, ubi_carpeta, dic_metricas, c_slide, anio):
     except BaseException:
         return c_slide
 
+def slide_proyecciones(ubi, fecha_corte, ubi_carpeta, dic_metricas, c_slide):
+    pass
+    
+
 def slide_recla_fact(ubi, fecha_actual, ubi_carpeta, c_slide):
     try:
         plantilla = ruta_imagenes+"p13.png"
@@ -683,6 +687,7 @@ def crear_slides(ubi, fecha, fecha_completa, fecha_corte, texto_fecha, dic_metri
     c_slide = slide_compensaciones(ubi, fecha_corte, ubi_carpeta, c_slide, texto_fecha)
     c_slide = slide_AOM(ubi, int(anio)-1, "Dic", fecha_corte, ubi_carpeta, c_slide)
     c_slide = slide_desviaciones(ubi, fecha_corte, ubi_carpeta, c_slide, texto_fecha, dic_metricas)
+    #c_slide = slide_proyecciones(ubi, fecha_corte, ubi_carpeta, dic_metricas, c_slide)
     c_slide = slide_def_2(ubi, fecha_corte, c_slide)
     c_slide = slide_tarifas(ubi, fecha_corte, ubi_carpeta, texto_fecha, dic_metricas, c_slide)
     c_slide = slide_def_3(ubi, fecha_corte, c_slide)

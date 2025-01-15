@@ -276,6 +276,9 @@ def menu_inicial(app, window, central_widget, dimensiones, estado=None, info=Non
     return estado, info
 
 def menu_config_inicial(app, window, central_widget, dimensiones, estado=None, info={}):
+    estado = None
+    info = {}
+
     screen_width = dimensiones[0]
     titulo = "Configuración inicial"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=75)
@@ -365,6 +368,9 @@ def menu_config_inicial(app, window, central_widget, dimensiones, estado=None, i
     return estado, info
 
 def menu_edicion_archivos(app, window, central_widget, dimensiones, estado=None, info={}):
+    estado = None
+    info = {}
+
     screen_width = dimensiones[0]
     titulo = "Edición de archivos"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=75)
@@ -471,6 +477,9 @@ def menu_edicion_archivos(app, window, central_widget, dimensiones, estado=None,
     return estado, info
 
 def menu_reportes_comerciales(app, window, central_widget, dimensiones, estado=None, info={}):
+    estado = None
+    info = {}
+
     screen_width = dimensiones[0]
     titulo = "Reportes comerciales"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=75)
@@ -661,6 +670,9 @@ def menu_reporte_comercial(app, window, central_widget, dimensiones, estado=None
     return estado,info
 
 def menu_reportes_tecnicos(app, window, central_widget, dimensiones, estado=None, info={}):
+    estado = None
+    info = {}
+
     screen_width = dimensiones[0]
     titulo = "Reportes técnicos"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=75)
@@ -729,6 +741,9 @@ def menu_reportes_tecnicos(app, window, central_widget, dimensiones, estado=None
     return estado,info
 
 def menu_KPIs(app, window, central_widget, dimensiones, estado=None, info={}):
+    estado = None
+    info = {}
+
     screen_width = dimensiones[0]
     titulo = "Reportes KPIs"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=75)
@@ -813,6 +828,9 @@ def menu_KPIs(app, window, central_widget, dimensiones, estado=None, info={}):
     return estado,info
 
 def menu_CLD_PRD(app, window, central_widget, dimensiones, estado=None, info={}, estado_anterior=None):
+    estado = None
+    info = {}
+
     screen_width = dimensiones[0]
     titulo = "Menú selección de comparación"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=50)
@@ -891,6 +909,9 @@ def menu_CLD_PRD(app, window, central_widget, dimensiones, estado=None, info={},
     return estado,info
 
 def menu_comercial_calidad_info(app, window, central_widget, dimensiones, estado=None, info={}, estado_anterior=None):
+    estado = None
+    info = {}
+
     screen_width = dimensiones[0]
     titulo = "Menú comprobación de"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=50)
@@ -2384,7 +2405,6 @@ def seleccionar_categoria(app, window, central_widget, dimensiones, estado=None,
         lista_elemento[1].clicked.connect(lambda _, l=elemento: cambiar_botones_reporte(l))
     event_loop.exec_()
     return estado,info
-
 
 def seleccionar_carpetas(app, window, central_widget, dimensiones, estado=None, info={}, estado_anterior=""):
     screen_width = dimensiones[0]

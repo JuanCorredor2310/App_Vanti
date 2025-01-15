@@ -91,7 +91,8 @@ def creacion_directorio_carpetas_principales():
                                 "Septiembre",
                                 "Octubre",
                                 "Noviembre",
-                                "Diciembre"]}
+                                "Diciembre"],
+                        "carpeta_7":["Comercial","Tarifario","Tecnico","Cumplimientos_Regulatorios"]}
         almacenar_json(carpetas_2, ruta_constantes+"carpetas_2.json")
         carpetas_3 = {"carpeta_1":["NUEVO SUI"], # Carpeta general
                         "carpeta_2":["Reportes Nuevo SUI"], # Carpeta principal
