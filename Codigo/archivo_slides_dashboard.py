@@ -403,9 +403,23 @@ def slide_kpi_sub(ubi, fecha_actual, ubi_carpeta, dic_metricas, c_slide, anio):
     except BaseException:
         return c_slide
 
-def slide_proyecciones(ubi, fecha_corte, ubi_carpeta, dic_metricas, c_slide):
-    pass
-    
+def slide_proyecciones(ubi, fecha_actual, ubi_carpeta, c_slide):
+    try:
+        plantilla = ruta_imagenes+"p30.png"
+        if os.path.exists(plantilla):
+            imagen = Image.open(plantilla)
+            dibujo = ImageDraw.Draw(imagen)
+            dibujo.text((760,1025), f"Último corte: {fecha_actual} - {grupo_vanti}", fill=azul_vanti, font=ImageFont.truetype(ruta_fuente, 30))
+            esp = ajustar_coordenadas([(32,150),(1885,950)])
+            ubi_imagen = ubi_carpeta+"\\03. Cumplimientos_Regulatorios\\Imagenes\\"
+            nueva_imagen = ubi_imagen+"Proyecciones.png"
+            print(nueva_imagen)
+            imagen = pegar_imagen(nueva_imagen, imagen, esp)
+            imagen.save(ubi+f"slide_{c_slide}.png")
+            c_slide += 1
+        return c_slide
+    except BaseException:
+        return c_slide
 
 def slide_recla_fact(ubi, fecha_actual, ubi_carpeta, c_slide):
     try:
@@ -687,7 +701,7 @@ def crear_slides(ubi, fecha, fecha_completa, fecha_corte, texto_fecha, dic_metri
     c_slide = slide_compensaciones(ubi, fecha_corte, ubi_carpeta, c_slide, texto_fecha)
     c_slide = slide_AOM(ubi, int(anio)-1, "Dic", fecha_corte, ubi_carpeta, c_slide)
     c_slide = slide_desviaciones(ubi, fecha_corte, ubi_carpeta, c_slide, texto_fecha, dic_metricas)
-    #c_slide = slide_proyecciones(ubi, fecha_corte, ubi_carpeta, dic_metricas, c_slide)
+    c_slide = slide_proyecciones(ubi, fecha_corte, ubi_carpeta, c_slide)
     c_slide = slide_def_2(ubi, fecha_corte, c_slide)
     c_slide = slide_tarifas(ubi, fecha_corte, ubi_carpeta, texto_fecha, dic_metricas, c_slide)
     c_slide = slide_def_3(ubi, fecha_corte, c_slide)

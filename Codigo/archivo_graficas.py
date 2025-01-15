@@ -663,21 +663,18 @@ def grafica_proyecciones(archivo, thread):
             lista_periodos = list(df["Anio"])
             lista_usuarios = list(df["Usuarios"])
             lista_consumo = list(df["Consumo"])
-            print(lista_consumo)
-            print(lista_usuarios)
-            print(lista_periodos)
-            v_min = min(lista_usuarios)
+            v_min = min(lista_usuarios)*0.93
             fig, ax = plt.subplots(figsize=(24, 12))
             x = range(len(lista_periodos))
             line3, = ax.plot(lista_periodos, lista_usuarios, marker='o', label='Usuarios (M)', color=dic_colores["amarillo_v"], alpha=0.6, linewidth=8)
             ax1 = ax.twinx()
-            line2, = ax1.plot(lista_periodos, lista_consumo, marker='o', label='Consumo GN (M m3)', color=dic_colores["azul_v"], alpha=0.3, linewidth=8)
+            line2, = ax1.plot(lista_periodos, lista_consumo, marker='o', label='Consumo GN (M m3)', color=dic_colores["morado_v"], alpha=0.3, linewidth=8)
             for i in range(len(lista_periodos)):
-                v = lista_periodos(i)
+                v = lista_periodos[i]
                 ax.annotate(conversion_decimales(lista_usuarios[i]), xy=(v, v_min), xytext=(0, 10),
                             textcoords='offset points', ha='center', va='bottom', color=dic_colores["amarillo_v"], fontsize=30)
                 ax1.annotate(conversion_decimales(lista_consumo[i]), xy=(v, lista_consumo[i]), xytext=(0, 10),
-                            textcoords='offset points', ha='center', va='bottom', color=dic_colores["azul_v"], fontsize=30)
+                            textcoords='offset points', ha='center', va='bottom', color=dic_colores["morado_v"], fontsize=30)
             ax.tick_params(axis='x', colors=dic_colores["azul_v"],labelsize=15)
             ax.tick_params(axis='y', colors=dic_colores["azul_v"],size=0)
             for spine in ax.spines.values():
@@ -688,24 +685,24 @@ def grafica_proyecciones(archivo, thread):
             ax.set_yticklabels([])
             ax1.set_yticks([])
             ax1.set_yticklabels([])
-            ax.set_xticks(x)
+            ax.set_xticks(lista_periodos)
             ax.tick_params(axis='x')
-            ax.set_xticklabels(lista_periodos, fontsize=24)
+            ax.set_xticklabels(lista_periodos, fontsize=30)
             ax.set_ylabel('Usuarios (M)', color=dic_colores["amarillo_v"], fontsize=42)
             ax.tick_params(axis='y', labelcolor=dic_colores["amarillo_v"])
-            ax1.set_ylabel('Consumo GN (M m3)', color=dic_colores["azul_v"], fontsize=42)
-            ax1.tick_params(axis='y', labelcolor=dic_colores["azul_v"])
-            #ax.set_ylim(v_min1, v_max)
-            #ax1.set_ylim(v_min_ax1, v_max_ax1)
+            ax1.set_ylabel('Consumo GN (M m3)', color=dic_colores["morado_v"], fontsize=42)
+            ax1.tick_params(axis='y', labelcolor=dic_colores["morado_v"])
+            ax.set_ylim(v_min, max(lista_usuarios)*1.05)
+            ax1.set_ylim(v_min, max(lista_consumo)*1.05)
             plt.savefig(nombre, transparent=True)
             plt.close()
-            #imagen = Image.open(nombre)
-            #recorte = (170, 140, imagen.width-150, imagen.height)
-            #imagen_recortada = imagen.crop(recorte)
-            #imagen_recortada.save(nombre)
+            imagen = Image.open(nombre)
+            recorte = (180, 90, imagen.width-150, imagen.height-50)
+            imagen_recortada = imagen.crop(recorte)
+            imagen_recortada.save(nombre)
             informar_imagen(nombre, thread=thread)
-    except BaseException as e:
-        print(f"Error al generar la gráfica de proyecciones: {str(e)}")
+    except BaseException:
+        pass
 
 
 
