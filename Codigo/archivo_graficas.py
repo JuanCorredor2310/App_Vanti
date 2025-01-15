@@ -663,7 +663,7 @@ def grafica_proyecciones(archivo, thread):
             lista_periodos = list(df["Anio"])
             lista_usuarios = list(df["Usuarios"])
             lista_consumo = list(df["Consumo"])
-            v_min = min(lista_usuarios)*0.93
+            v_min = min(lista_usuarios)*0.98
             fig, ax = plt.subplots(figsize=(24, 12))
             x = range(len(lista_periodos))
             line3, = ax.plot(lista_periodos, lista_usuarios, marker='o', label='Usuarios (M)', color=dic_colores["amarillo_v"], alpha=0.6, linewidth=8)
@@ -673,7 +673,7 @@ def grafica_proyecciones(archivo, thread):
                 v = lista_periodos[i]
                 ax.annotate(conversion_decimales(lista_usuarios[i]), xy=(v, v_min), xytext=(0, 10),
                             textcoords='offset points', ha='center', va='bottom', color=dic_colores["amarillo_v"], fontsize=30)
-                ax1.annotate(conversion_decimales(lista_consumo[i]), xy=(v, lista_consumo[i]), xytext=(0, 10),
+                ax1.annotate(conversion_decimales(lista_consumo[i]), xy=(v, lista_consumo[i]*1.05), xytext=(0, 10),
                             textcoords='offset points', ha='center', va='bottom', color=dic_colores["morado_v"], fontsize=30)
             ax.tick_params(axis='x', colors=dic_colores["azul_v"],labelsize=15)
             ax.tick_params(axis='y', colors=dic_colores["azul_v"],size=0)

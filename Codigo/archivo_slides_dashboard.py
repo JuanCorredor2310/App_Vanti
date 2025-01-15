@@ -413,7 +413,6 @@ def slide_proyecciones(ubi, fecha_actual, ubi_carpeta, c_slide):
             esp = ajustar_coordenadas([(32,150),(1885,950)])
             ubi_imagen = ubi_carpeta+"\\03. Cumplimientos_Regulatorios\\Imagenes\\"
             nueva_imagen = ubi_imagen+"Proyecciones.png"
-            print(nueva_imagen)
             imagen = pegar_imagen(nueva_imagen, imagen, esp)
             imagen.save(ubi+f"slide_{c_slide}.png")
             c_slide += 1
