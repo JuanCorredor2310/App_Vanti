@@ -44,7 +44,7 @@ lista_reportes_generados = ["_resumen","_form_estandar", #formatos generales
                             "_indicador_tecnico","_reporte_suspension","_indicador_tecnico_IRST","_indicador_tecnico_IRST_minutos","_indicador_tecnico_IRST_horas", #formatos tecnicos
                             "_inventario_suscriptores","_usuarios_unicos","_reporte_facturacion",#calidad de la información
                             "porcentaje_cumplimientos_regulatorios",
-                            "_error","_nuevo","_completo","_procesado"] #formatos regulatorios
+                            "_error","_nuevo","_completo","_procesado","_cambios","_numero_equipo"] #formatos regulatorios
 cantidad_datos_estilo_excel = 80000
 fecha_actual = datetime.now()
 anio_actual = fecha_actual.year
@@ -2549,6 +2549,22 @@ def formato_seleccionar_reporte(dic_info, estado):
             reporte["meses"] = None
             reporte_copia = formato_reporte(reporte.copy())
             dic_info_reporte["Reporte_anual"] = reporte_copia
+        case "busqueda_carpetas_comprimidas":
+            reporte = {}
+            reporte["ubicacion"] = ["Reportes Nuevo SUI"]
+            reporte["tipo"] = []
+            reporte["clasificacion"] = []
+            for llave, valor in dic_reportes.items():
+                reporte["tipo"].append(llave)
+                for elemento in valor:
+                    reporte["clasificacion"].append(elemento)
+            reporte["filial"] = ["VANTI", "GNCB", "GNCR", "GOR"]
+            reporte["fecha_personalizada"] = [(str(2023),"Enero"),
+                                            (str(anio_actual),"Diciembre")]
+            reporte["anios"] = None
+            reporte["meses"] = None
+            reporte_copia = formato_reporte(reporte.copy())
+            dic_info_reporte["Reporte"] = reporte_copia
         #Reportes comerciales
         case "reporte_comercial_sector_consumo_mensual":
             ubi = ["Reportes Nuevo SUI"]
@@ -3055,6 +3071,36 @@ def formato_seleccionar_reporte(dic_info, estado):
                         opciones[llave] = int(valor)
                     elif valor[0]:
                         opciones[llave] = valor[0]
+        case "generar_info_usuarios_con_equipo":
+            ubi = ["Reportes Nuevo SUI"]
+            tipo = ["Comercial"]
+            clasificacion = ["GRC1","GRC2","GRTT2"]
+            filial = []
+            if "Filial" in dic_info:
+                if dic_info["Filial"]["Todas"][2]:
+                    filial = ["VANTI", "GNCB", "GNCR", "GOR"]
+                else:
+                    for llave, valor in dic_info["Filial"].items():
+                        if valor[2]:
+                            filial.append(llave)
+            if "Fecha" in dic_info:
+                for _, valor in dic_info["Fecha"].items():
+                    reporte = reset_reporte()
+                    if valor[1]:
+                        reporte["anios"] = [valor[0][0]]
+                        reporte["meses"] = [valor[0][1]]
+                        reporte["filial"] = filial
+                        reporte["tipo"] = tipo
+                        reporte["clasificacion"] = clasificacion
+                        reporte["ubicacion"] = ubi
+                        reporte["fecha_personalizada"] = None
+                        lista_seleccionar_reporte.append(formato_reporte(reporte))
+            if "Opciones_adicionales" in dic_info:
+                for llave, valor in dic_info["Opciones_adicionales"].items():
+                    if llave == "cantidad_filas":
+                        opciones[llave] = int(valor)
+                    elif valor[0]:
+                        opciones[llave] = valor[0]
         #Reportes tarifarios
         case "reportes_tarifarios_mensual":
             ubi = ["Reportes Nuevo SUI"]
@@ -3377,6 +3423,10 @@ def activar_funciones(estado, info):
             titulo = "Selección de reportes existentes"
             info = formato_seleccionar_reporte(info, estado)
             estado = mod_1.run_app(titulo, estado, info)
+        case "busqueda_carpetas_comprimidas":
+            titulo = "Búsqueda de carpetas comprimidas (.zip)"
+            info = formato_seleccionar_reporte(info, estado)
+            estado = mod_1.run_app(titulo, estado, info)
         #Reportes comerciales
         case "reporte_comercial_sector_consumo_mensual":
             titulo = "Reporte comercial sector consumo"
@@ -3448,6 +3498,10 @@ def activar_funciones(estado, info):
             estado = mod_1.run_app(titulo, estado, info)
         case "generar_info_usuarios_R_NR":
             titulo = "Generar información adicional de usuarios regulados / no regulados"
+            info = formato_seleccionar_reporte(info, estado)
+            estado = mod_1.run_app(titulo, estado, info)
+        case "generar_info_usuarios_con_equipo":
+            titulo = "Generar información de usuarios con número de equipo"
             info = formato_seleccionar_reporte(info, estado)
             estado = mod_1.run_app(titulo, estado, info)
         #Reportes tarifarios

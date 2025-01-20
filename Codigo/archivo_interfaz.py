@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QDialog, QPushButton, QScrollArea, QLineEdit
 from PyQt5.QtGui import QPalette, QColor, QFont, QFontDatabase, QPixmap, QIcon
-from PyQt5.QtCore import QEventLoop, QSize
+from PyQt5.QtCore import QEventLoop, QSize, Qt
 import ruta_principal as mod_rp
 import json
 from datetime import datetime
@@ -82,6 +82,29 @@ def mostrar_label(label):
 def esconder_label(label):
     label.hide()
 
+def calcular_factor_escala(screen_width, screen_height, base_width=1920, base_height=1200):
+    scale_x = screen_width / base_width
+    scale_y = screen_height / base_height
+    return min(scale_x, scale_y)
+
+def escalar_valor(valor, factor_escala):
+    return round(valor * factor_escala)
+
+def escalar_icono(pixmap, ancho_deseado, alto_deseado, factor_escala):
+    ancho_escalado = escalar_valor(ancho_deseado, factor_escala)
+    alto_escalado = escalar_valor(alto_deseado, factor_escala)
+    return pixmap.scaled(
+        ancho_escalado, 
+        alto_escalado, 
+        aspectRatioMode=1,
+        transformMode=Qt.SmoothTransformation)
+
+def escalar_qsize(size, factor_escala):
+    return QSize(
+        escalar_valor(size.width(), factor_escala),
+        escalar_valor(size.height(), factor_escala)
+    )
+
 def crear_pantalla_incial():
     app = QApplication([])
     app.setWindowIcon(QIcon(ruta_imagenes+"vanti_logo.ico"))
@@ -95,9 +118,13 @@ def crear_pantalla_incial():
     screen_width = screen_size.width()
     screen_height = screen_size.height()
     dimensiones = (screen_width, screen_height)
+
+    factor_escala = calcular_factor_escala(screen_width, screen_height)
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"vanti.png")
-    pixmap = pixmap.scaled(320,80, aspectRatioMode=1)
+    nuevo_ancho = escalar_valor(320, factor_escala)
+    nuevo_alto = escalar_valor(80, factor_escala)
+    pixmap = pixmap.scaled(nuevo_ancho, nuevo_alto, aspectRatioMode=1)
     icon = QIcon(pixmap)
     image_button.setIcon(icon)
     image_button.setIconSize(pixmap.size())
@@ -105,7 +132,7 @@ def crear_pantalla_incial():
     mostrar_label(image_button)
     window.setCentralWidget(central_widget)
     window.setWindowTitle(nombre_aplicativo)
-    window.setGeometry(100, 100, 300, 200)
+    #window.setGeometry(100, 100, 300, 200)
     palette = QPalette()
     palette.setColor(QPalette.Window, QColor(0x03, 0x09, 0x18))
     window.setPalette(palette)
@@ -117,30 +144,34 @@ def crear_pantalla_incial():
 
 def pantalla_inicio(app, window, central_widget, dimensiones):
     screen_width = dimensiones[0]
+    screen_height = dimensiones[1]
+    factor_escala = calcular_factor_escala(screen_width, screen_height)
+
     app_vanti = crear_label("APP VANTI", central_widget, font="bold", font_size=100)
     x = round((screen_width-app_vanti.sizeHint().width())*0.5)-50
-    app_vanti.move(x, 100)
+    app_vanti.move(x, escalar_valor(100, factor_escala))
     mostrar_label(app_vanti)
     titulo_1 = crear_label("Vicepresidencia de Estrategia y Finanzas", central_widget, font_size=50)
     x = round((screen_width-titulo_1.sizeHint().width())*0.5)
-    titulo_1.move(x, 400)
+    titulo_1.move(x, escalar_valor(400, factor_escala))
     mostrar_label(titulo_1)
     titulo_2 = crear_label("Dirección Regulación, Márgenes y Tarifas", central_widget, font_size=35)
     x = round((screen_width-titulo_2.sizeHint().width())*0.5)
-    titulo_2.move(x, 650)
+    titulo_2.move(x, escalar_valor(650, factor_escala))
     mostrar_label(titulo_2)
     button = crear_boton("INICIAR", central_widget, font_size=80, font="bold")
     x = round((screen_width-button.sizeHint().width())*0.5)
-    button.move(x,900)
+    button.move(x,escalar_valor(900, factor_escala))
     button.setParent(central_widget)
     mostrar_label(button)
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"vanti_logo.png")
-    pixmap = pixmap.scaled(155,155, aspectRatioMode=1)
+    logo_size = escalar_valor(155, factor_escala)
+    pixmap = pixmap.scaled(logo_size, logo_size, aspectRatioMode=1)
     icon = QIcon(pixmap)
     image_button.setIcon(icon)
     image_button.setIconSize(pixmap.size())
-    image_button.move(1380,180)
+    image_button.move(escalar_valor(1400, factor_escala),escalar_valor(165, factor_escala))
     mostrar_label(image_button)
 
     event_loop = QEventLoop()
@@ -156,20 +187,30 @@ def pantalla_inicio(app, window, central_widget, dimensiones):
 
 def menu_inicial(app, window, central_widget, dimensiones, estado=None, info=None):
     screen_width = dimensiones[0]
+    screen_height = dimensiones[1]
+    factor_escala = calcular_factor_escala(screen_width, screen_height)
+
     titulo = "INICIO"
     label_1 = crear_label(titulo, central_widget, font="bold", font_size=100)
     x = round((screen_width-label_1.sizeHint().width())*0.5)
-    label_1.move(x, 35)
+    label_1.move(x, escalar_valor(35, factor_escala))
     mostrar_label(label_1)
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    size = escalar_qsize(pixmap.size(), factor_escala)
+    pixmap = pixmap.scaled(
+        size,
+        aspectRatioMode=Qt.KeepAspectRatio,
+        transformMode=Qt.SmoothTransformation
+    )
     icon = QIcon(pixmap)
     image_button.setIcon(icon)
-    image_button.setIconSize(pixmap.size())
-    image_button.move(20,20)
+    image_button.setIconSize(size)
+    long = escalar_valor(20, factor_escala)
+    image_button.move(long,long)
     mostrar_label(image_button)
     boton_1 = crear_boton("Configuración inicial", central_widget, font_size=45)
-    boton_2 = crear_boton("Edición de archivos", central_widget, font_size=45)
+    boton_2 = crear_boton("Herramientas de trabajo", central_widget, font_size=45)
     boton_3 = crear_boton("Reportes comerciales", central_widget, font_size=45)
     boton_4 = crear_boton("Reportes tarifarios", central_widget, font_size=45)
     boton_5 = crear_boton("Reportes técnicos", central_widget, font_size=45)
@@ -180,49 +221,52 @@ def menu_inicial(app, window, central_widget, dimensiones, estado=None, info=Non
     for boton in botones:
         boton.setFixedWidth(max_width+60)
     x = round(((screen_width*0.5)-max_width)*0.5)
-    boton_1.move(x,400)
+    boton_1.move(x,escalar_valor(400, factor_escala))
     boton_1.setParent(central_widget)
     mostrar_label(boton_1)
-    boton_3.move(x,600)
+    boton_3.move(x,escalar_valor(600, factor_escala))
     boton_3.setParent(central_widget)
     mostrar_label(boton_3)
-    boton_5.move(x,800)
+    boton_5.move(x,escalar_valor(800, factor_escala))
     boton_5.setParent(central_widget)
     mostrar_label(boton_5)
     x = round((((screen_width*0.5)-max_width)*0.5)+(screen_width*0.5))
-    boton_2.move(x,400)
+    boton_2.move(x,escalar_valor(400, factor_escala))
     boton_2.setParent(central_widget)
     mostrar_label(boton_2)
-    boton_4.move(x,600)
+    boton_4.move(x,escalar_valor(600, factor_escala))
     boton_4.setParent(central_widget)
     mostrar_label(boton_4)
-    boton_6.move(x,800)
+    boton_6.move(x,escalar_valor(800, factor_escala))
     boton_6.setParent(central_widget)
     mostrar_label(boton_6)
     x = round((((screen_width)-max_width)*0.5))
-    boton_7.move(x,1000)
+    boton_7.move(x,escalar_valor(1000, factor_escala))
     boton_7.setParent(central_widget)
     mostrar_label(boton_7)
     image_button_1 = QPushButton("", central_widget)
     pixmap_1 = QPixmap(ruta_imagenes+"lupa.png")
     icon_1 = QIcon(pixmap_1)
     image_button_1.setIcon(icon_1)
-    image_button_1.setIconSize(QSize(80, 80))  # Ajusta el tamaño del ícono
-    image_button_1.setFixedSize(150, 150)
+    long = escalar_valor(80, factor_escala)
+    image_button_1.setIconSize(QSize(long, long))  # Ajusta el tamaño del ícono
+    long = escalar_valor(150, factor_escala)
+    image_button_1.setFixedSize(long, long)
     x = round((screen_width-(image_button_1.sizeHint().width()))*0.95)
-    image_button_1.move(x,5)
+    image_button_1.move(x,escalar_valor(5, factor_escala))
     mostrar_label(image_button_1)
     image_button_2 = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"vanti_logo.png")
-    pixmap = pixmap.scaled(140,140, aspectRatioMode=1)
+    long = escalar_valor(140, factor_escala)
+    pixmap = pixmap.scaled(long,long, aspectRatioMode=1)
     icon = QIcon(pixmap)
     image_button_2.setIcon(icon)
     image_button_2.setIconSize(pixmap.size())
-    image_button_2.move(1260,115)
+    image_button_2.move(escalar_valor(1260, factor_escala),escalar_valor(115, factor_escala))
     mostrar_label(image_button_2)
 
     dic_texto = {"Configuración inicial":"Configuración del aplicativo. Recomendado si no existen las carpetas o archivos necesarios en el dispositivo",
-                "Edición de archivos":"Almacenamiento, manipulación o estandarización de archivos",
+                "Herramientas de trabajo":"Almacenamiento, manipulación o estandarización de archivos",
                 "Reportes comerciales":"Actividades con reportes comerciales como información por sectores de consumo, información por sectores de consumo subsidiadios,\ncompensaciones, desviaciones significativas, reporte DANE, reporte Secretaria de Hacienda de Bogotá D.C.\nComprobación de la calidad de la información o comparación entre archivos de certificación, calidad (CLD) y/o producción (PRD)",
                 "Reportes tarifarios":"Actividades con reportes tarifarios\n",
                 "Reportes técnicos":"Actividades con reportes técnicos como indicadores técnicos (IPLI,IO,IRST-EG) o\nreporte de suspensiones",
@@ -271,7 +315,7 @@ def menu_inicial(app, window, central_widget, dimensiones, estado=None, info=Non
     boton_5.clicked.connect(lambda:on_button_clicked("reportes_tecnicos"))
     boton_6.clicked.connect(lambda:on_button_clicked("KPIs"))
     boton_7.clicked.connect(lambda:on_button_clicked("dashboard"))
-    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto))
+    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto, dimensiones=dimensiones))
     event_loop.exec_()
     return estado, info
 
@@ -280,26 +324,36 @@ def menu_config_inicial(app, window, central_widget, dimensiones, estado=None, i
     info = {}
 
     screen_width = dimensiones[0]
+    screen_height = dimensiones[1]
+    factor_escala = calcular_factor_escala(screen_width, screen_height)
     titulo = "Configuración inicial"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=75)
     x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
-    titulo_espacios.move(x, 40)
+    titulo_espacios.move(x, escalar_valor(40, factor_escala))
     mostrar_label(titulo_espacios)
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    size = escalar_qsize(pixmap.size(), factor_escala)
+    pixmap = pixmap.scaled(
+        size,
+        aspectRatioMode=Qt.KeepAspectRatio,
+        transformMode=Qt.SmoothTransformation
+    )
     icon = QIcon(pixmap)
     image_button.setIcon(icon)
     image_button.setIconSize(pixmap.size())
-    image_button.move(20,20)
+    image_button.move(escalar_valor(20, factor_escala),escalar_valor(20, factor_escala))
     mostrar_label(image_button)
     image_button_1 = QPushButton("", central_widget)
     pixmap_1 = QPixmap(ruta_imagenes+"lupa.png")
     icon_1 = QIcon(pixmap_1)
     image_button_1.setIcon(icon_1)
-    image_button_1.setIconSize(QSize(80, 80))  # Ajusta el tamaño del ícono
-    image_button_1.setFixedSize(150, 150)
+    long = escalar_valor(80, factor_escala)
+    image_button_1.setIconSize(QSize(long, long))
+    long = escalar_valor(150, factor_escala)
+    image_button_1.setFixedSize(long, long)
     x = round((screen_width-(image_button_1.sizeHint().width()))*0.95)
-    image_button_1.move(x,5)
+    image_button_1.move(x,escalar_valor(5, factor_escala))
     mostrar_label(image_button_1)
     dic_texto = {"Creación de espacio de trabajo":"Creación de las carpetas necesarias para el correcto funcionamiento del aplicativo.\nCreación y/o actualización de constantes como tablas, archivos o imágenes usados por el aplicativo.",
                 "Agregar año actual":"Incluir el año actual a la información generada (archivos y carpetas) por el aplicativo.\nSe debe ejecutar está función al inicio de cada año",
@@ -314,17 +368,17 @@ def menu_config_inicial(app, window, central_widget, dimensiones, estado=None, i
     for boton in botones:
         boton.setFixedWidth(max_width)
     x = round(((screen_width*0.5)-max_width)*0.5)
-    boton_1.move(x,500)
+    boton_1.move(x,escalar_valor(500, factor_escala))
     boton_1.setParent(central_widget)
     mostrar_label(boton_1)
-    boton_3.move(x,800)
+    boton_3.move(x,escalar_valor(800, factor_escala))
     boton_3.setParent(central_widget)
     mostrar_label(boton_3)
     x = round((((screen_width*0.5)-max_width)*0.5)+(screen_width*0.5))
-    boton_2.move(x,500)
+    boton_2.move(x,escalar_valor(500, factor_escala))
     boton_2.setParent(central_widget)
     mostrar_label(boton_2)
-    boton_4.move(x,800)
+    boton_4.move(x,escalar_valor(800, factor_escala))
     boton_4.setParent(central_widget)
     mostrar_label(boton_4)
 
@@ -363,7 +417,7 @@ def menu_config_inicial(app, window, central_widget, dimensiones, estado=None, i
     boton_2.clicked.connect(lambda:on_button_clicked("agregar_anio"))
     boton_3.clicked.connect(lambda:on_button_clicked("editar_reporte"))
     boton_4.clicked.connect(lambda:on_button_clicked("agregar_reporte"))
-    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto))
+    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto,dimensiones=dimensiones))
     event_loop.exec_()
     return estado, info
 
@@ -372,63 +426,77 @@ def menu_edicion_archivos(app, window, central_widget, dimensiones, estado=None,
     info = {}
 
     screen_width = dimensiones[0]
-    titulo = "Edición de archivos"
+    screen_height = dimensiones[1]
+    factor_escala = calcular_factor_escala(screen_width, screen_height)
+    titulo = "Herramientas de trabajo"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=75)
     x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
-    titulo_espacios.move(x, 40)
+    titulo_espacios.move(x, escalar_valor(40, factor_escala))
     mostrar_label(titulo_espacios)
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    size = escalar_qsize(pixmap.size(), factor_escala)
+    pixmap = pixmap.scaled(
+        size,
+        aspectRatioMode=Qt.KeepAspectRatio,
+        transformMode=Qt.SmoothTransformation
+    )
     icon = QIcon(pixmap)
     image_button.setIcon(icon)
     image_button.setIconSize(pixmap.size())
-    image_button.move(20,20)
+    image_button.move(escalar_valor(20, factor_escala),escalar_valor(20, factor_escala))
     mostrar_label(image_button)
     image_button_1 = QPushButton("", central_widget)
     pixmap_1 = QPixmap(ruta_imagenes+"lupa.png")
     icon_1 = QIcon(pixmap_1)
     image_button_1.setIcon(icon_1)
-    image_button_1.setIconSize(QSize(80, 80))  # Ajusta el tamaño del ícono
-    image_button_1.setFixedSize(150, 150)
+    image_button_1.setIconSize(QSize(escalar_valor(80, factor_escala), escalar_valor(80, factor_escala)))  # Ajusta el tamaño del ícono
+    image_button_1.setFixedSize(escalar_valor(150, factor_escala), escalar_valor(150, factor_escala))
     x = round((screen_width-(image_button_1.sizeHint().width()))*0.95)
-    image_button_1.move(x,5)
+    image_button_1.move(x,escalar_valor(5, factor_escala))
     mostrar_label(image_button_1)
     dic_texto = {"Conversión archivos .txt a .csv":"Convesión de archivos .txt a .csv en un ubicación seleccionada",
                 "Almacenar archivos":"Almacenamiento de archivos en la carpeta \'Guardar_archivos\' en el formato del aplicativo\nEl formato necesario es: \'Reporte_Filial_Año_Mes\'",
-                "Estandarización de archivos":"Generación de archivos de tipo _form_estandar.csv\nEstos archivos contienen las columnas escritas según la información del lineamiento y los archivos .json",
+                "Estandarización de cabeceras":"Generación de archivos de tipo _form_estandar.csv\nEstos archivos contienen las columnas escritas según la información del lineamiento y los archivos .json",
                 "Generar archivos resumen":"Generación de archivos de tipo _resumen.csv\nEstos archivos contienen las columnas escritas según la información del lineamiento y los archivos .json",
                 "Revisión de archivos existentes":"Revisión de los archivos disponibles en las carpetas con el fin de conocer la información\nalmacenada y disponible para el procesamiento del aplicativo",
-                "Revisión de reportes existentes":"Revisión de los reportes disponibles y aceptados por el aplicativo según los archivos .json\n"}
+                "Revisión de reportes existentes":"Revisión de los reportes disponibles y aceptados por el aplicativo según los archivos .json\n",
+                "Búsqueda de carpetas comprimidas (.zip)":"Búsqueda de carpetas comprimidas (.zip) en las carpetas de los reportes (NUEVO SUI)\n"}
     boton_1 = crear_boton("Conversión archivos .txt a .csv", central_widget)
     boton_2 = crear_boton("Almacenar archivos", central_widget)
-    boton_3 = crear_boton("Estandarización de archivos", central_widget)
+    boton_3 = crear_boton("Estandarización de cabeceras", central_widget)
     boton_4 = crear_boton("Generar archivos resumen", central_widget)
     boton_5 = crear_boton("Revisión de archivos existentes", central_widget)
     boton_6 = crear_boton("Revisión de reportes existentes", central_widget)
-    botones = [boton_1, boton_2, boton_3, boton_4, boton_5, boton_6]
+    boton_7 = crear_boton("Búsqueda de carpetas comprimidas (.zip)", central_widget)
+    botones = [boton_1, boton_2, boton_3, boton_4, boton_5, boton_6, boton_7]
     max_width = max([boton.sizeHint().width() for boton in botones])
     for boton in botones:
         boton.setFixedWidth(max_width)
     x = round(((screen_width*0.5)-max_width)*0.5)
-    boton_1.move(x,400)
+    boton_1.move(x,escalar_valor(400, factor_escala))
     boton_1.setParent(central_widget)
     mostrar_label(boton_1)
-    boton_3.move(x,600)
+    boton_3.move(x,escalar_valor(600, factor_escala))
     boton_3.setParent(central_widget)
     mostrar_label(boton_3)
-    boton_5.move(x,800)
+    boton_5.move(x,escalar_valor(800, factor_escala))
     boton_5.setParent(central_widget)
     mostrar_label(boton_5)
     x = round((((screen_width*0.5)-max_width)*0.5)+(screen_width*0.5))
-    boton_2.move(x,400)
+    boton_2.move(x,escalar_valor(400, factor_escala))
     boton_2.setParent(central_widget)
     mostrar_label(boton_2)
-    boton_4.move(x,600)
+    boton_4.move(x,escalar_valor(600, factor_escala))
     boton_4.setParent(central_widget)
     mostrar_label(boton_4)
-    boton_6.move(x,800)
+    boton_6.move(x,escalar_valor(800, factor_escala))
     boton_6.setParent(central_widget)
     mostrar_label(boton_6)
+    x = round((screen_width-boton_7.sizeHint().width())*0.5)
+    boton_7.move(x,escalar_valor(1000, factor_escala))
+    boton_7.setParent(central_widget)
+    mostrar_label(boton_7)
 
     event_loop = QEventLoop()
     def on_button_clicked(texto):
@@ -443,6 +511,7 @@ def menu_edicion_archivos(app, window, central_widget, dimensiones, estado=None,
         esconder_label(boton_4)
         esconder_label(boton_5)
         esconder_label(boton_6)
+        esconder_label(boton_7)
         esconder_label(image_button_1)
         if texto == "volver":
             estado, info = menu_inicial(app, window, central_widget, dimensiones)
@@ -463,6 +532,8 @@ def menu_edicion_archivos(app, window, central_widget, dimensiones, estado=None,
         elif texto == "reportes_existentes":
             estado = texto
             estado, info = menu_dashboard(app, window, central_widget, dimensiones, estado=estado, estado_anterior="menu_edicion_archivos")
+        elif texto == "busqueda_carpetas_comprimidas":
+            estado = texto
         else:
             estado, info = menu_inicial(app, window, central_widget, dimensiones)
     image_button.clicked.connect(lambda:on_button_clicked("volver"))
@@ -472,7 +543,8 @@ def menu_edicion_archivos(app, window, central_widget, dimensiones, estado=None,
     boton_4.clicked.connect(lambda:on_button_clicked("archivos_resumen"))
     boton_5.clicked.connect(lambda:on_button_clicked("archivos_existentes"))
     boton_6.clicked.connect(lambda:on_button_clicked("reportes_existentes"))
-    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto))
+    boton_7.clicked.connect(lambda: on_button_clicked("busqueda_carpetas_comprimidas"))
+    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto,dimensiones=dimensiones))
     event_loop.exec_()
     return estado, info
 
@@ -481,26 +553,34 @@ def menu_reportes_comerciales(app, window, central_widget, dimensiones, estado=N
     info = {}
 
     screen_width = dimensiones[0]
+    screen_height = dimensiones[1]
+    factor_escala = calcular_factor_escala(screen_width, screen_height)
     titulo = "Reportes comerciales"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=75)
     x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
-    titulo_espacios.move(x, 40)
+    titulo_espacios.move(x, escalar_valor(40, factor_escala))
     mostrar_label(titulo_espacios)
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    size = escalar_qsize(pixmap.size(), factor_escala)
+    pixmap = pixmap.scaled(
+        size,
+        aspectRatioMode=Qt.KeepAspectRatio,
+        transformMode=Qt.SmoothTransformation
+    )
     icon = QIcon(pixmap)
     image_button.setIcon(icon)
     image_button.setIconSize(pixmap.size())
-    image_button.move(20,20)
+    image_button.move(escalar_valor(20, factor_escala),escalar_valor(20, factor_escala))
     mostrar_label(image_button)
     image_button_1 = QPushButton("", central_widget)
     pixmap_1 = QPixmap(ruta_imagenes+"lupa.png")
     icon_1 = QIcon(pixmap_1)
     image_button_1.setIcon(icon_1)
-    image_button_1.setIconSize(QSize(80, 80))  # Ajusta el tamaño del ícono
-    image_button_1.setFixedSize(150, 150)
+    image_button_1.setIconSize(QSize(escalar_valor(80, factor_escala), escalar_valor(80, factor_escala)))  # Ajusta el tamaño del ícono
+    image_button_1.setFixedSize(escalar_valor(150, factor_escala), escalar_valor(150, factor_escala))
     x = round((screen_width-(image_button_1.sizeHint().width()))*0.95)
-    image_button_1.move(x,5)
+    image_button_1.move(x,escalar_valor(5, factor_escala))
     mostrar_label(image_button_1)
     dic_texto = {"Reporte comercial por sector de consumo":"Reportes comerciales por sector de consumo. La información puede incluir el consumo de GN por cada sector, total de usuarios, filtrar la información por código DANE,\ncantidad total de facturas emitidas, valor facturado por consumo y/o facturación total ",
                 "Reporte comercial para compensaciones":"Reporte comercial para compensaciones. El reporte puede contener los datos del inventario de suscriptores\ncon el fin de obtener información adicional de los usuarios compensados",
@@ -521,27 +601,27 @@ def menu_reportes_comerciales(app, window, central_widget, dimensiones, estado=N
     for boton in botones:
         boton.setFixedWidth(max_width)
     x = round(((screen_width*0.5)-max_width)*0.5)
-    boton_1.move(x,400)
+    boton_1.move(x,escalar_valor(400, factor_escala))
     boton_1.setParent(central_widget)
     mostrar_label(boton_1)
-    boton_3.move(x,600)
+    boton_3.move(x,escalar_valor(600, factor_escala))
     boton_3.setParent(central_widget)
     mostrar_label(boton_3)
-    boton_5.move(x,800)
+    boton_5.move(x,escalar_valor(800, factor_escala))
     boton_5.setParent(central_widget)
     mostrar_label(boton_5)
     x = round((((screen_width*0.5)-max_width)*0.5)+(screen_width*0.5))
-    boton_2.move(x,400)
+    boton_2.move(x,escalar_valor(400, factor_escala))
     boton_2.setParent(central_widget)
     mostrar_label(boton_2)
-    boton_4.move(x,600)
+    boton_4.move(x,escalar_valor(600, factor_escala))
     boton_4.setParent(central_widget)
     mostrar_label(boton_4)
-    boton_6.move(x,800)
+    boton_6.move(x,escalar_valor(800, factor_escala))
     boton_6.setParent(central_widget)
     mostrar_label(boton_6)
     x = round((((screen_width)-max_width)*0.5))
-    boton_7.move(x,1000)
+    boton_7.move(x,escalar_valor(1000, factor_escala))
     boton_7.setParent(central_widget)
     mostrar_label(boton_7)
 
@@ -592,36 +672,43 @@ def menu_reportes_comerciales(app, window, central_widget, dimensiones, estado=N
     boton_5.clicked.connect(lambda:on_button_clicked("reporte_DANE"))
     boton_6.clicked.connect(lambda:on_button_clicked("reporte_SH"))
     boton_7.clicked.connect(lambda:on_button_clicked("comparacion_CER_CLD_PRD"))
-    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto))
+    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto,dimensiones=dimensiones))
     event_loop.exec_()
     return estado,info
 
 def menu_reporte_comercial(app, window, central_widget, dimensiones, estado=None, info={}):
     screen_width = dimensiones[0]
+    screen_height = dimensiones[1]
+    factor_escala = calcular_factor_escala(screen_width, screen_height)
 
     titulo = "Reportes comerciales\npor sector de consumo"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=75)
     x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
-    titulo_espacios.move(x, 40)
+    titulo_espacios.move(x, escalar_valor(40, factor_escala))
     titulo_espacios.setParent(central_widget)
     mostrar_label(titulo_espacios)
 
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    size = escalar_qsize(pixmap.size(), factor_escala)
+    pixmap = pixmap.scaled(
+        size,
+        aspectRatioMode=Qt.KeepAspectRatio,
+        transformMode=Qt.SmoothTransformation
+    )
     icon = QIcon(pixmap)
     image_button.setIcon(icon)
     image_button.setIconSize(pixmap.size())
-    image_button.move(20,20)
+    image_button.move(escalar_valor(20, factor_escala), escalar_valor(20, factor_escala))
     mostrar_label(image_button)
-
     image_button_1 = QPushButton("", central_widget)
     pixmap_1 = QPixmap(ruta_imagenes+"lupa.png")
     icon_1 = QIcon(pixmap_1)
     image_button_1.setIcon(icon_1)
-    image_button_1.setIconSize(QSize(80, 80))
-    image_button_1.setFixedSize(150, 150)
+    image_button_1.setIconSize(QSize(escalar_valor(80, factor_escala), escalar_valor(80, factor_escala)))
+    image_button_1.setFixedSize(escalar_valor(150, factor_escala), escalar_valor(150, factor_escala))
     x = round((screen_width-(image_button_1.sizeHint().width()))*0.95)
-    image_button_1.move(x,5)
+    image_button_1.move(x,escalar_valor(5, factor_escala))
     mostrar_label(image_button_1)
     dic_texto = {"Todos los sectores de consumo":"Reportes comerciales para todos los sectores de consumo. La información puede incluir el consumo de GN por cada sector, total de usuarios,\nfiltrar la información por código DANE, cantidad total de facturas emitidas, valor facturado por consumo y/o facturación total ",
                 "Sectores de consumo con subsidios o contribuciones":"Reportes comerciales para los sectores de consumo con subsidios o contribuciones. La información puede incluir el consumo de GN por cada sector, total de usuarios,\nfiltrar la información por código DANE, cantidad total de facturas emitidas, valor facturado por consumo y/o facturación total "}
@@ -632,11 +719,11 @@ def menu_reporte_comercial(app, window, central_widget, dimensiones, estado=None
     for boton in botones:
         boton.setFixedWidth(max_width)
     x = round(((screen_width*0.5)-max_width)*0.5)
-    boton_1.move(x,700)
+    boton_1.move(x,escalar_valor(700, factor_escala))
     boton_1.setParent(central_widget)
     mostrar_label(boton_1)
     x = round((((screen_width*0.5)-max_width)*0.5)+(screen_width*0.5))
-    boton_2.move(x,700)
+    boton_2.move(x,escalar_valor(700, factor_escala))
     boton_2.setParent(central_widget)
     mostrar_label(boton_2)
 
@@ -665,7 +752,7 @@ def menu_reporte_comercial(app, window, central_widget, dimensiones, estado=None
     image_button.clicked.connect(lambda:on_button_clicked("volver"))
     boton_1.clicked.connect(lambda:on_button_clicked("reporte_comercial_sector_consumo"))
     boton_2.clicked.connect(lambda:on_button_clicked("reporte_comercial_sector_consumo_subsidio"))
-    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto))
+    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto,dimensiones=dimensiones))
     event_loop.exec_()
     return estado,info
 
@@ -674,26 +761,34 @@ def menu_reportes_tecnicos(app, window, central_widget, dimensiones, estado=None
     info = {}
 
     screen_width = dimensiones[0]
+    screen_height = dimensiones[1]
+    factor_escala = calcular_factor_escala(screen_width, screen_height)
     titulo = "Reportes técnicos"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=75)
     x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
-    titulo_espacios.move(x, 40)
+    titulo_espacios.move(x, escalar_valor(40, factor_escala))
     mostrar_label(titulo_espacios)
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    size = escalar_qsize(pixmap.size(), factor_escala)
+    pixmap = pixmap.scaled(
+        size,
+        aspectRatioMode=Qt.KeepAspectRatio,
+        transformMode=Qt.SmoothTransformation
+    )
     icon = QIcon(pixmap)
     image_button.setIcon(icon)
     image_button.setIconSize(pixmap.size())
-    image_button.move(20,20)
+    image_button.move(escalar_valor(20, factor_escala),escalar_valor(20, factor_escala))
     mostrar_label(image_button)
     image_button_1 = QPushButton("", central_widget)
     pixmap_1 = QPixmap(ruta_imagenes+"lupa.png")
     icon_1 = QIcon(pixmap_1)
     image_button_1.setIcon(icon_1)
-    image_button_1.setIconSize(QSize(80, 80))  # Ajusta el tamaño del ícono
-    image_button_1.setFixedSize(150, 150)
+    image_button_1.setIconSize(QSize(escalar_valor(80, factor_escala), escalar_valor(80, factor_escala)))
+    image_button_1.setFixedSize(escalar_valor(150, factor_escala), escalar_valor(150, factor_escala))
     x = round((screen_width-(image_button_1.sizeHint().width()))*0.95)
-    image_button_1.move(x,5)
+    image_button_1.move(x,escalar_valor(5, factor_escala))
     mostrar_label(image_button_1)
     dic_texto = {"Reporte indicadores técnicos":"Reportes de indicadore técnicos. Información disponibles para índice de Presión en Líneas Individuales (IPLI), índice de Odorización (IO)\ne índice de Respuesta a Servicio Técnico - Escape de Gas (IRST-EG)",
                 "Reporte suspensiones":"Reporte de suspensiones realizadas",
@@ -706,13 +801,13 @@ def menu_reportes_tecnicos(app, window, central_widget, dimensiones, estado=None
     for boton in botones:
         boton.setFixedWidth(max_width)
     x = round((((screen_width)-max_width)*0.5))
-    boton_1.move(x,400)
+    boton_1.move(x,escalar_valor(400, factor_escala))
     boton_1.setParent(central_widget)
     mostrar_label(boton_1)
-    boton_2.move(x,600)
+    boton_2.move(x,escalar_valor(600, factor_escala))
     boton_2.setParent(central_widget)
     mostrar_label(boton_2)
-    boton_3.move(x,800)
+    boton_3.move(x,escalar_valor(800, factor_escala))
     boton_3.setParent(central_widget)
     mostrar_label(boton_3)
 
@@ -736,7 +831,7 @@ def menu_reportes_tecnicos(app, window, central_widget, dimensiones, estado=None
     boton_1.clicked.connect(lambda:on_button_clicked("reporte_indicadores"))
     boton_2.clicked.connect(lambda:on_button_clicked("reporte_suspensiones"))
     boton_3.clicked.connect(lambda:on_button_clicked("reporte_IRST"))
-    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto))
+    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto,dimensiones=dimensiones))
     event_loop.exec_()
     return estado,info
 
@@ -745,24 +840,32 @@ def menu_KPIs(app, window, central_widget, dimensiones, estado=None, info={}):
     info = {}
 
     screen_width = dimensiones[0]
+    screen_height = dimensiones[1]
+    factor_escala = calcular_factor_escala(screen_width, screen_height)
     titulo = "Reportes KPIs"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=75)
     x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
-    titulo_espacios.move(x, 40)
+    titulo_espacios.move(x, escalar_valor(40, factor_escala))
     mostrar_label(titulo_espacios)
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    size = escalar_qsize(pixmap.size(), factor_escala)
+    pixmap = pixmap.scaled(
+        size,
+        aspectRatioMode=Qt.KeepAspectRatio,
+        transformMode=Qt.SmoothTransformation
+    )
     icon = QIcon(pixmap)
     image_button.setIcon(icon)
     image_button.setIconSize(pixmap.size())
-    image_button.move(20,20)
+    image_button.move(escalar_valor(20, factor_escala),escalar_valor(20, factor_escala))
     mostrar_label(image_button)
     image_button_1 = QPushButton("", central_widget)
     pixmap_1 = QPixmap(ruta_imagenes+"lupa.png")
     icon_1 = QIcon(pixmap_1)
     image_button_1.setIcon(icon_1)
-    image_button_1.setIconSize(QSize(80, 80))  # Ajusta el tamaño del ícono
-    image_button_1.setFixedSize(150, 150)
+    image_button_1.setIconSize(QSize(escalar_valor(80, factor_escala), escalar_valor(80, factor_escala)))  # Ajusta el tamaño del ícono
+    image_button_1.setFixedSize(escalar_valor(150, factor_escala), escalar_valor(150, factor_escala))
     x = round((screen_width-(image_button_1.sizeHint().width()))*0.95)
     image_button_1.move(x,5)
     mostrar_label(image_button_1)
@@ -781,19 +884,19 @@ def menu_KPIs(app, window, central_widget, dimensiones, estado=None, info={}):
     for boton in botones:
         boton.setFixedWidth(max_width)
     x = round((((screen_width)-max_width)*0.5))
-    boton_1.move(x,350)
+    boton_1.move(x,escalar_valor(350, factor_escala))
     boton_1.setParent(central_widget)
     mostrar_label(boton_1)
-    boton_2.move(x,500)
+    boton_2.move(x,escalar_valor(500, factor_escala))
     boton_2.setParent(central_widget)
     mostrar_label(boton_2)
-    boton_3.move(x,650)
+    boton_3.move(x,escalar_valor(650, factor_escala))
     boton_3.setParent(central_widget)
     mostrar_label(boton_3)
-    boton_4.move(x,800)
+    boton_4.move(x,escalar_valor(800, factor_escala))
     boton_4.setParent(central_widget)
     mostrar_label(boton_4)
-    boton_5.move(x,950)
+    boton_5.move(x,escalar_valor(950, factor_escala))
     boton_5.setParent(central_widget)
     mostrar_label(boton_5)
 
@@ -823,7 +926,7 @@ def menu_KPIs(app, window, central_widget, dimensiones, estado=None, info={}):
     boton_3.clicked.connect(lambda:on_button_clicked("matriz_requerimientos"))
     boton_4.clicked.connect(lambda:on_button_clicked("gastos_AOM"))
     boton_5.clicked.connect(lambda:on_button_clicked("contribuciones_MME"))
-    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto))
+    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto,dimensiones=dimensiones))
     event_loop.exec_()
     return estado,info
 
@@ -832,31 +935,39 @@ def menu_CLD_PRD(app, window, central_widget, dimensiones, estado=None, info={},
     info = {}
 
     screen_width = dimensiones[0]
+    screen_height = dimensiones[1]
+    factor_escala = calcular_factor_escala(screen_width, screen_height)
     titulo = "Menú selección de comparación"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=50)
     x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
-    titulo_espacios.move(x, 40)
+    titulo_espacios.move(x, escalar_valor(40, factor_escala))
     mostrar_label(titulo_espacios)
     titulo = "CER - CLD - PRD"
     titulo_espacios_1 = crear_label(titulo, central_widget, font="bold", font_size=50)
     x = round((screen_width-titulo_espacios_1.sizeHint().width())*0.5)
-    titulo_espacios_1.move(x, 180)
+    titulo_espacios_1.move(x, escalar_valor(180, factor_escala))
     mostrar_label(titulo_espacios_1)
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    size = escalar_qsize(pixmap.size(), factor_escala)
+    pixmap = pixmap.scaled(
+        size,
+        aspectRatioMode=Qt.KeepAspectRatio,
+        transformMode=Qt.SmoothTransformation
+    )
     icon = QIcon(pixmap)
     image_button.setIcon(icon)
     image_button.setIconSize(pixmap.size())
-    image_button.move(20,20)
+    image_button.move(escalar_valor(20, factor_escala),escalar_valor(20, factor_escala))
     mostrar_label(image_button)
     image_button_1 = QPushButton("", central_widget)
     pixmap_1 = QPixmap(ruta_imagenes+"lupa.png")
     icon_1 = QIcon(pixmap_1)
     image_button_1.setIcon(icon_1)
-    image_button_1.setIconSize(QSize(80, 80))  # Ajusta el tamaño del ícono
-    image_button_1.setFixedSize(150, 150)
+    image_button_1.setIconSize(QSize(escalar_valor(80, factor_escala), escalar_valor(80, factor_escala)))
+    image_button_1.setFixedSize(escalar_valor(150, factor_escala), escalar_valor(150, factor_escala))
     x = round((screen_width-(image_button_1.sizeHint().width()))*0.95)
-    image_button_1.move(x,5)
+    image_button_1.move(x,escalar_valor(5, factor_escala))
     mostrar_label(image_button_1)
     dic_texto = {"Comparación Certificación - Calidad - Producción (GRC1-SAP)":"Comparación entre los GRC1 para la información cerificada, y descargada de los ambientes de producción (PRD) y calidad (CLD)"}
     boton_1 = crear_boton("Comparación Certificación - Calidad - Producción (GRC1-SAP)", central_widget)
@@ -868,16 +979,16 @@ def menu_CLD_PRD(app, window, central_widget, dimensiones, estado=None, info={},
     for boton in botones:
         boton.setFixedWidth(max_width)
     x = round((((screen_width)-max_width)*0.5))
-    boton_1.move(x,450)
+    boton_1.move(x,escalar_valor(450, factor_escala))
     boton_1.setParent(central_widget)
     mostrar_label(boton_1)
-    boton_2.move(x,600)
+    boton_2.move(x,escalar_valor(600, factor_escala))
     boton_2.setParent(central_widget)
     mostrar_label(boton_2)
-    boton_3.move(x,750)
+    boton_3.move(x,escalar_valor(750, factor_escala))
     boton_3.setParent(central_widget)
     mostrar_label(boton_3)
-    boton_4.move(x,900)
+    boton_4.move(x,escalar_valor(900, factor_escala))
     boton_4.setParent(central_widget)
     mostrar_label(boton_4)
 
@@ -904,7 +1015,7 @@ def menu_CLD_PRD(app, window, central_widget, dimensiones, estado=None, info={},
     boton_2.clicked.connect(lambda:on_button_clicked("comparacion_CER_CLD"))
     boton_3.clicked.connect(lambda:on_button_clicked("comparacion_CER_PRD"))
     boton_4.clicked.connect(lambda:on_button_clicked("comparacion_CLD_PRD"))
-    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto))
+    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto,dimensiones=dimensiones))
     event_loop.exec_()
     return estado,info
 
@@ -913,58 +1024,73 @@ def menu_comercial_calidad_info(app, window, central_widget, dimensiones, estado
     info = {}
 
     screen_width = dimensiones[0]
+    screen_height = dimensiones[1]
+    factor_escala = calcular_factor_escala(screen_width, screen_height)
     titulo = "Menú comprobación de"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=50)
     x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
-    titulo_espacios.move(x, 40)
+    titulo_espacios.move(x, escalar_valor(40, factor_escala))
     mostrar_label(titulo_espacios)
     titulo = "calidad de la información (comercial)"
     titulo_espacios_1 = crear_label(titulo, central_widget, font="bold", font_size=45)
     x = round((screen_width-titulo_espacios_1.sizeHint().width())*0.5)
-    titulo_espacios_1.move(x, 180)
+    titulo_espacios_1.move(x, escalar_valor(180, factor_escala))
     mostrar_label(titulo_espacios_1)
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    size = escalar_qsize(pixmap.size(), factor_escala)
+    pixmap = pixmap.scaled(
+        size,
+        aspectRatioMode=Qt.KeepAspectRatio,
+        transformMode=Qt.SmoothTransformation
+    )
     icon = QIcon(pixmap)
     image_button.setIcon(icon)
     image_button.setIconSize(pixmap.size())
-    image_button.move(20,20)
+    image_button.move(escalar_valor(20, factor_escala),escalar_valor(20, factor_escala))
     mostrar_label(image_button)
     image_button_1 = QPushButton("", central_widget)
     pixmap_1 = QPixmap(ruta_imagenes+"lupa.png")
     icon_1 = QIcon(pixmap_1)
     image_button_1.setIcon(icon_1)
-    image_button_1.setIconSize(QSize(80, 80))  # Ajusta el tamaño del ícono
-    image_button_1.setFixedSize(150, 150)
+    image_button_1.setIconSize(QSize(escalar_valor(80, factor_escala), escalar_valor(80, factor_escala)))  # Ajusta el tamaño del ícono
+    image_button_1.setFixedSize(escalar_valor(150, factor_escala), escalar_valor(150, factor_escala))
     x = round((screen_width-(image_button_1.sizeHint().width()))*0.95)
-    image_button_1.move(x,5)
+    image_button_1.move(x,escalar_valor(5, factor_escala))
     mostrar_label(image_button_1)
     dic_texto = {"Comprobación de información para inventario de suscriptores":"Análisis del informe GRTT2 para comprobar la calidad de la información (generación de información a certificar)",
                 "Correción de errores para inventario de suscriptores":"Cargue del archivo \'_error.csv\' para corregir los errores encontrados en en el informe GRTT2",
                 "Generar información para inventario de suscriptores":"Generación de información para el inventario de suscriptores como \'NIU\',\'Codigo_DANE\',\'Direccion\',\'Cedula_Catastral\',\'Estrato\',\'Longitud\',\'Latitud\',\'Estado\'",
-                "Generar información de facturación para usuarios regulados / no regulados":"Generación de información de facturación para usuarios regulados / no regulados como \'NIU\', \'Cantidad_facturas\', \'Consumo\', \'Valor_consumo_facturado\', \'Valor_total_facturado\', \'Codigo_DANE\', \'Sector_consumo\'"}
+                "Generar información de facturación para usuarios regulados / no regulados":"Generación de información de facturación para usuarios regulados / no regulados como \'NIU\', \'Cantidad_facturas\', \'Consumo\', \'Valor_consumo_facturado\', \'Valor_total_facturado\', \'Codigo_DANE\', \'Sector_consumo\'",
+                "Generar información de usuarios con número de equipo":"Generar información de usuarios con número de equipo"}
     boton_1 = crear_boton("Comprobación de info.\npara inventario de suscriptores", central_widget)
     boton_2 = crear_boton("Corrección de errores\npara inventario de suscriptores", central_widget)
     boton_3 = crear_boton("Generar info. para\ninventario de suscriptores", central_widget)
     boton_4 = crear_boton("Generar info.para\nusuarios regulados / no regulados", central_widget)
-    botones = [boton_1, boton_2, boton_3, boton_4]
+    boton_5 = crear_boton("Generar info.para\nusuarios con número de equipo", central_widget)
+    botones = [boton_1, boton_2, boton_3, boton_4, boton_5]
     max_width = max([boton.sizeHint().width() for boton in botones])+20
     for boton in botones:
         boton.setFixedWidth(max_width)
     x = round(((screen_width*0.5)-max_width)*0.5)
-    boton_1.move(x,550)
+    boton_1.move(x,escalar_valor(450, factor_escala))
     boton_1.setParent(central_widget)
     mostrar_label(boton_1)
-    boton_2.move(x,850)
+    boton_2.move(x,escalar_valor(700, factor_escala))
     boton_2.setParent(central_widget)
     mostrar_label(boton_2)
     x = round((((screen_width*0.5)-max_width)*0.5)+(screen_width*0.5))
-    boton_3.move(x,550)
+    boton_3.move(x,escalar_valor(450, factor_escala))
     boton_3.setParent(central_widget)
     mostrar_label(boton_3)
-    boton_4.move(x,850)
+    boton_4.move(x,escalar_valor(700, factor_escala))
     boton_4.setParent(central_widget)
     mostrar_label(boton_4)
+    x = round((screen_width-boton_5.sizeHint().width())*0.5)
+    boton_5.move(x,escalar_valor(950, factor_escala))
+    boton_5.setParent(central_widget)
+    mostrar_label(boton_5)
+
     event_loop = QEventLoop()
     def on_button_clicked(texto):
         nonlocal estado, info
@@ -977,6 +1103,7 @@ def menu_comercial_calidad_info(app, window, central_widget, dimensiones, estado
         esconder_label(boton_2)
         esconder_label(boton_3)
         esconder_label(boton_4)
+        esconder_label(boton_5)
         esconder_label(image_button_1)
         if texto == "volver":
             estado,info = menu_inicial(app, window, central_widget, dimensiones)
@@ -988,93 +1115,96 @@ def menu_comercial_calidad_info(app, window, central_widget, dimensiones, estado
     boton_2.clicked.connect(lambda:on_button_clicked("corregir_errores_GRTT2"))
     boton_3.clicked.connect(lambda:on_button_clicked("generar_info_GRTT2"))
     boton_4.clicked.connect(lambda:on_button_clicked("generar_info_usuarios_R_NR"))
-    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto))
+    boton_5.clicked.connect(lambda: on_button_clicked("generar_info_usuarios_con_equipo"))
+    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto,dimensiones=dimensiones))
     event_loop.exec_()
     return estado,info
 
 def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=None, estado=None, info={}, incluir_anual=True, c_meses=13):
     c_meses -= 1
     screen_width = dimensiones[0]
+    screen_height = dimensiones[1]
+    factor_escala = calcular_factor_escala(screen_width, screen_height)
 
     titulo = "Selección información"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=60)
     x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
-    titulo_espacios.move(x, 10)
+    titulo_espacios.move(x, escalar_valor(10, factor_escala))
     titulo_espacios.setParent(central_widget)
     mostrar_label(titulo_espacios)
     t_filial = crear_label("Filiales", central_widget, font="bold", font_size=50)
-    t_filial.move(50, 150)
+    t_filial.move(escalar_valor(50, factor_escala), escalar_valor(150, factor_escala))
     t_filial.setParent(central_widget)
     mostrar_label(t_filial)
     t_periodo = crear_label("Periodos", central_widget, font="bold", font_size=50)
-    t_periodo.move(700, 150)
+    t_periodo.move(escalar_valor(700, factor_escala), escalar_valor(150, factor_escala))
     t_periodo.setParent(central_widget)
     mostrar_label(t_periodo)
     if incluir_anual:
         boton_2 = crear_boton("", central_widget, font_size=60, padding=5)
-        boton_2.setFixedSize(60,60)
-        boton_2.move(1200,210)
+        boton_2.setFixedSize(escalar_valor(60, factor_escala),escalar_valor(60, factor_escala))
+        boton_2.move(escalar_valor(1200, factor_escala),escalar_valor(210, factor_escala))
         boton_2.setParent(central_widget)
         mostrar_label(boton_2)
         t_anual = crear_label("Anual", central_widget, font="bold", font_size=40)
-        t_anual.move(1300, 170)
+        t_anual.move(escalar_valor(1300, factor_escala), escalar_valor(170, factor_escala))
         t_anual.setParent(central_widget)
         mostrar_label(t_anual)
     anual = False
     f1 = crear_boton("", central_widget, font_size=60, padding=5)
-    f1.setFixedSize(80,80)
-    f1.move(50,350)
+    f1.setFixedSize(escalar_valor(80, factor_escala), escalar_valor(80, factor_escala))
+    f1.move(escalar_valor(50, factor_escala), escalar_valor(350, factor_escala))
     f1.setParent(central_widget)
     mostrar_label(f1)
     t_f1 = crear_label("VANTI", central_widget, font="bold", font_size=40)
-    t_f1.move(150, 310)
+    t_f1.move(escalar_valor(150, factor_escala), escalar_valor(310, factor_escala))
     t_f1.setParent(central_widget)
     mostrar_label(t_f1)
     f2 = crear_boton("", central_widget, font_size=60, padding=5)
-    f2.setFixedSize(80,80)
-    f2.move(50,500)
+    f2.setFixedSize(escalar_valor(80, factor_escala),escalar_valor(80, factor_escala))
+    f2.move(escalar_valor(50, factor_escala),escalar_valor(500, factor_escala))
     f2.setParent(central_widget)
     mostrar_label(f2)
     t_f2 = crear_label("GNCB", central_widget, font="bold", font_size=40)
-    t_f2.move(150, 460)
+    t_f2.move(escalar_valor(150, factor_escala), escalar_valor(460, factor_escala))
     t_f2.setParent(central_widget)
     mostrar_label(t_f2)
     f3 = crear_boton("", central_widget, font_size=60, padding=5)
-    f3.setFixedSize(80,80)
-    f3.move(50,650)
+    f3.setFixedSize(escalar_valor(80, factor_escala),escalar_valor(80, factor_escala))
+    f3.move(escalar_valor(50, factor_escala),escalar_valor(650, factor_escala))
     f3.setParent(central_widget)
     mostrar_label(f3)
     t_f3 = crear_label("GNCR", central_widget, font="bold", font_size=40)
-    t_f3.move(150, 610)
+    t_f3.move(escalar_valor(150, factor_escala), escalar_valor(610, factor_escala))
     t_f3.setParent(central_widget)
     mostrar_label(t_f3)
     f4 = crear_boton("", central_widget, font_size=60, padding=5)
-    f4.setFixedSize(80,80)
-    f4.move(50,800)
+    f4.setFixedSize(escalar_valor(80, factor_escala), escalar_valor(80, factor_escala))
+    f4.move(escalar_valor(50, factor_escala), escalar_valor(800, factor_escala))
     f4.setParent(central_widget)
     mostrar_label(f4)
     t_f4 = crear_label("GOR", central_widget, font="bold", font_size=40)
-    t_f4.move(150, 760)
+    t_f4.move(escalar_valor(150, factor_escala), escalar_valor(760, factor_escala))
     t_f4.setParent(central_widget)
     mostrar_label(t_f4)
     f5 = crear_boton("", central_widget, font_size=60, padding=5)
-    f5.setFixedSize(80,80)
-    f5.move(50,950)
+    f5.setFixedSize(escalar_valor(80, factor_escala),escalar_valor(80, factor_escala))
+    f5.move(escalar_valor(50, factor_escala), escalar_valor(950, factor_escala))
     f5.setParent(central_widget)
     mostrar_label(f5)
     t_f5 = crear_label("Todas", central_widget, font="bold", font_size=40)
-    t_f5.move(150, 910)
+    t_f5.move(escalar_valor(150, factor_escala), escalar_valor(910, factor_escala))
     t_f5.setParent(central_widget)
     mostrar_label(t_f5)
     dic_botones_filiales = {"VANTI":[f1,t_f1,False], "GNCB":[f2,t_f2,False], "GNCR":[f3,t_f3,False], "GOR":[f4,t_f4,False], "Todas":[f5,t_f5,False]}
     boton_1 = crear_boton("Aceptar", central_widget, font_size=25)
     x = round((((screen_width*0.5)-boton_1.sizeHint().width())*0.5)+(screen_width*0.53))
-    boton_1.move(x,1100)
+    boton_1.move(x,escalar_valor(1100, factor_escala))
     boton_1.setParent(central_widget)
     mostrar_label(boton_1)
     boton_3 = crear_boton("Limpiar", central_widget, font_size=25)
     x = round((((screen_width*0.5)-boton_3.sizeHint().width())*0.5)+(screen_width*0.53))
-    boton_3.move(1700,150)
+    boton_3.move(escalar_valor(1700, factor_escala),escalar_valor(150, factor_escala))
     boton_3.setParent(central_widget)
     mostrar_label(boton_3)
     if len(lista_anios) >=3 :
@@ -1083,28 +1213,34 @@ def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=Non
         lista_anios_sel = lista_anios.copy()
     lista_fechas_sel = []
     dic_fechas = {}
-    x_fecha = 620
+    x_fecha = escalar_valor(620, factor_escala)
     for anio in lista_anios_sel:
-        y_fecha = 300
+        y_fecha = escalar_valor(300, factor_escala)
         for mes in lista_meses:
             llave = anio+" / "+mes[:3]
             lista_fechas_sel.append(llave)
             dic_fechas[llave] = [(anio, mes), False, crear_boton("", central_widget, font_size=42, padding=1, radius=5), crear_label(llave, central_widget, font_size=15)]
-            dic_fechas[llave][2].setFixedSize(48,48)
+            dic_fechas[llave][2].setFixedSize(escalar_valor(48, factor_escala),escalar_valor(48, factor_escala))
             dic_fechas[llave][2].setParent(central_widget)
             dic_fechas[llave][3].setParent(central_widget)
             dic_fechas[llave][2].move(x_fecha,y_fecha)
-            dic_fechas[llave][3].move(x_fecha + 100, y_fecha-10)
-            y_fecha += 65
+            dic_fechas[llave][3].move(x_fecha + escalar_valor(100, factor_escala), y_fecha - escalar_valor(10, factor_escala))
+            y_fecha += escalar_valor(65, factor_escala)
             mostrar_label(dic_fechas[llave][2])
             mostrar_label(dic_fechas[llave][3])
-        x_fecha += 450
+        x_fecha += escalar_valor(450, factor_escala)
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    size = escalar_qsize(pixmap.size(), factor_escala)
+    pixmap = pixmap.scaled(
+        size,
+        aspectRatioMode=Qt.KeepAspectRatio,
+        transformMode=Qt.SmoothTransformation
+    )
     icon = QIcon(pixmap)
     image_button.setIcon(icon)
     image_button.setIconSize(pixmap.size())
-    image_button.move(20,20)
+    image_button.move(escalar_valor(20, factor_escala), escalar_valor(20, factor_escala))
     mostrar_label(image_button)
 
     event_loop = QEventLoop()
@@ -1288,6 +1424,9 @@ def menu_seleccion(app, window, central_widget, dimensiones, estado_anterior=Non
                 elif estado == "generar_info_GRTT2":
                     opciones = {"regenerar":True, "usuarios_activos":True}
                     estado, info = opciones_adicionales(app, window, central_widget, dimensiones, estado_anterior="menu_seleccion", estado=estado, info=info, opciones=opciones)
+                elif estado == "generar_info_usuarios_con_equipo":
+                    opciones = {"regenerar":True}
+                    estado, info = opciones_adicionales(app, window, central_widget, dimensiones, estado_anterior="menu_seleccion", estado=estado, info=info, opciones=opciones)
                 else:
                     if anual and "anual" not in estado:
                         estado += "_anual"
@@ -1353,27 +1492,29 @@ def unir_listas_anio_tri(lista_anios, lista_tri):
 
 def menu_seleccion_trimestres(app, window, central_widget, dimensiones, estado_anterior=None, estado=None, info={}):
     screen_width = dimensiones[0]
+    screen_height = dimensiones[1]
+    factor_escala = calcular_factor_escala(screen_width, screen_height)
 
     titulo = "Selección información trimestral"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=55)
     x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
-    titulo_espacios.move(x, 10)
+    titulo_espacios.move(x, escalar_valor(10, factor_escala))
     titulo_espacios.setParent(central_widget)
     mostrar_label(titulo_espacios)
     t_periodo = crear_label("Periodos", central_widget, font="bold", font_size=45)
     x = round((screen_width-t_periodo.sizeHint().width())*0.5)
-    t_periodo.move(x, 150)
+    t_periodo.move(x, escalar_valor(150, factor_escala))
     t_periodo.setParent(central_widget)
     mostrar_label(t_periodo)
     anual = True
     boton_1 = crear_boton("Aceptar", central_widget, font_size=25)
     x = round((((screen_width*0.5)-boton_1.sizeHint().width())*0.5)+(screen_width*0.53))
-    boton_1.move(x,1100)
+    boton_1.move(x,escalar_valor(1100, factor_escala))
     boton_1.setParent(central_widget)
     mostrar_label(boton_1)
     boton_3 = crear_boton("Limpiar", central_widget, font_size=25)
     x = round((((screen_width*0.5)-boton_3.sizeHint().width())*0.5)+(screen_width*0.53))
-    boton_3.move(1700,150)
+    boton_3.move(escalar_valor(1700, factor_escala), escalar_valor(150, factor_escala))
     boton_3.setParent(central_widget)
     mostrar_label(boton_3)
     if len(lista_anios) >=3 :
@@ -1382,29 +1523,35 @@ def menu_seleccion_trimestres(app, window, central_widget, dimensiones, estado_a
         lista_anios_sel = lista_anios.copy()
     lista_fechas_sel = []
     dic_fechas = {}
-    x_fecha = 80
+    x_fecha = escalar_valor(80, factor_escala)
     lista_trimestre_anios = unir_listas_anio_tri(lista_anios_sel, lista_trimestres)
     for anio in lista_anios_sel:
-        y_fecha = 350
+        y_fecha = escalar_valor(350, factor_escala)
         for trim in lista_trimestres:
             llave = anio+" / "+trim
             lista_fechas_sel.append(llave)
             dic_fechas[llave] = [(anio, trim), False, crear_boton("", central_widget, font_size=70, padding=1, radius=5), crear_label(llave, central_widget, font_size=30)]
-            dic_fechas[llave][2].setFixedSize(110,110)
+            dic_fechas[llave][2].setFixedSize(escalar_valor(110, factor_escala), escalar_valor(110, factor_escala))
             dic_fechas[llave][2].setParent(central_widget)
             dic_fechas[llave][3].setParent(central_widget)
             dic_fechas[llave][2].move(x_fecha,y_fecha)
-            dic_fechas[llave][3].move(x_fecha + 95, y_fecha-10)
-            y_fecha += 180
+            dic_fechas[llave][3].move(x_fecha + escalar_valor(95, factor_escala), y_fecha - escalar_valor(10, factor_escala))
+            y_fecha += escalar_valor(180, factor_escala)
             mostrar_label(dic_fechas[llave][2])
             mostrar_label(dic_fechas[llave][3])
-        x_fecha += 620
+        x_fecha += escalar_valor(620, factor_escala)
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    size = escalar_qsize(pixmap.size(), factor_escala)
+    pixmap = pixmap.scaled(
+        size,
+        aspectRatioMode=Qt.KeepAspectRatio,
+        transformMode=Qt.SmoothTransformation
+    )
     icon = QIcon(pixmap)
     image_button.setIcon(icon)
     image_button.setIconSize(pixmap.size())
-    image_button.move(20,20)
+    image_button.move(escalar_valor(20, factor_escala), escalar_valor(20, factor_escala))
     mostrar_label(image_button)
 
     event_loop = QEventLoop()
@@ -1485,25 +1632,27 @@ def menu_dashboard(app, window, central_widget, dimensiones, estado_anterior=Non
     anio_actual = str(anio_actual)
     fecha_DB_actual = f"{anio_actual} / {mes_actual}"
     screen_width = dimensiones[0]
+    screen_height = dimensiones[1]
+    factor_escala = calcular_factor_escala(screen_width, screen_height)
     titulo = "Selección información Dashboard"
     if estado == "reportes_existentes":
         titulo = "Selección información anual"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=55)
     x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
-    titulo_espacios.move(x, 10)
+    titulo_espacios.move(x, escalar_valor(10, factor_escala))
     titulo_espacios.setParent(central_widget)
     mostrar_label(titulo_espacios)
     anual = True
     boton_1 = crear_boton("Aceptar", central_widget, font_size=25)
     x = round((((screen_width*0.5)-boton_1.sizeHint().width())*0.5)+(screen_width*0.53))
-    boton_1.move(x,1100)
+    boton_1.move(x,escalar_valor(1110, factor_escala))
     boton_1.setParent(central_widget)
     mostrar_label(boton_1)
     boton_3 = crear_boton("Limpiar", central_widget, font_size=25)
-    boton_3.move(1700,280)
+    boton_3.move(escalar_valor(1700, factor_escala),escalar_valor(280, factor_escala))
     boton_3.setParent(central_widget)
     boton_4 = crear_boton("Actual", central_widget, font_size=25)
-    boton_4.move(1700,180)
+    boton_4.move(escalar_valor(1700, factor_escala),escalar_valor(180, factor_escala))
     boton_4.setParent(central_widget)
     botones = [boton_3, boton_4]
     max_width = max([boton.sizeHint().width() for boton in botones])
@@ -1518,28 +1667,34 @@ def menu_dashboard(app, window, central_widget, dimensiones, estado_anterior=Non
         lista_anios_sel = lista_anios.copy()
     lista_fechas_sel = []
     dic_fechas = {}
-    x_fecha = 65
+    x_fecha = escalar_valor(65, factor_escala)
     for anio in lista_anios_sel:
-        y_fecha = 300
+        y_fecha = escalar_valor(300, factor_escala)
         for mes in lista_meses:
             llave = anio+" / "+mes
             lista_fechas_sel.append(llave)
             dic_fechas[llave] = [(anio, mes), False, crear_boton("", central_widget, font_size=42, padding=1, radius=5), crear_label(llave, central_widget, font_size=15)]
-            dic_fechas[llave][2].setFixedSize(48,48)
+            dic_fechas[llave][2].setFixedSize(escalar_valor(48, factor_escala),escalar_valor(48, factor_escala))
             dic_fechas[llave][2].setParent(central_widget)
             dic_fechas[llave][3].setParent(central_widget)
             dic_fechas[llave][2].move(x_fecha,y_fecha)
-            dic_fechas[llave][3].move(x_fecha + 85, y_fecha-10)
-            y_fecha += 65
+            dic_fechas[llave][3].move(x_fecha + escalar_valor(85, factor_escala), y_fecha - escalar_valor(10, factor_escala))
+            y_fecha += escalar_valor(65, factor_escala)
             mostrar_label(dic_fechas[llave][2])
             mostrar_label(dic_fechas[llave][3])
-        x_fecha += 425
+        x_fecha += escalar_valor(425, factor_escala)
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    size = escalar_qsize(pixmap.size(), factor_escala)
+    pixmap = pixmap.scaled(
+        size,
+        aspectRatioMode=Qt.KeepAspectRatio,
+        transformMode=Qt.SmoothTransformation
+    )
     icon = QIcon(pixmap)
     image_button.setIcon(icon)
     image_button.setIconSize(pixmap.size())
-    image_button.move(20,20)
+    image_button.move(escalar_valor(20, factor_escala), escalar_valor(20, factor_escala))
     mostrar_label(image_button)
 
     event_loop = QEventLoop()
@@ -1661,36 +1816,37 @@ def opciones_adicionales_dashboard(app, window, central_widget, dimensiones, est
     if not len(opciones):
         return estado, info
     screen_width = dimensiones[0]
-    ancho_texto = 80
+    screen_height = dimensiones[1]
+    factor_escala = calcular_factor_escala(screen_width, screen_height)
     titulo = "Opciones adicionales"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=45)
     x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
-    titulo_espacios.move(x, 10)
+    titulo_espacios.move(x, escalar_valor(10, factor_escala))
     titulo_espacios.setParent(central_widget)
     mostrar_label(titulo_espacios)
     titulo_espacios_1 = crear_label(f"Dashboard ({fecha_personalizada[0][1][:3]}/{fecha_personalizada[0][0]} - {fecha_personalizada[1][1][:3]}/{fecha_personalizada[1][0]})", central_widget, font="bold", font_size=45)
     x = round((screen_width-titulo_espacios_1.sizeHint().width())*0.5)
-    titulo_espacios_1.move(x, 150)
+    titulo_espacios_1.move(x, escalar_valor(150, factor_escala))
     titulo_espacios_1.setParent(central_widget)
     mostrar_label(titulo_espacios_1)
 
     label_codigo_DANE = crear_label("", central_widget, font="bold", font_size=12)
-    label_codigo_DANE.move(50, 980)
+    label_codigo_DANE.move(escalar_valor(50, factor_escala), escalar_valor(980, factor_escala))
     label_codigo_DANE.setParent(central_widget)
     esconder_label(label_codigo_DANE)
     label_check = QPushButton("", central_widget)
     pixmap_check = QPixmap(ruta_imagenes+"check.png")
-    pixmap_check = pixmap_check.scaled(320,80, aspectRatioMode=1)
+    pixmap_check = pixmap_check.scaled(escalar_valor(320, factor_escala), escalar_valor(80, factor_escala), aspectRatioMode=1)
     icon_check = QIcon(pixmap_check)
     label_check.setIcon(icon_check)
     label_check.setIconSize(pixmap_check.size())
-    label_check.move(1660,980)
+    label_check.move(escalar_valor(1660, factor_escala), escalar_valor(980, factor_escala))
     esconder_label(label_check)
-    lista_x_pos = [200, 780, 1400]
+    lista_x_pos = [escalar_valor(200, factor_escala), escalar_valor(780, factor_escala), escalar_valor(1400, factor_escala)]
     c_x = 0
-    c_y = 500
+    c_y = escalar_valor(500, factor_escala)
     c_c = 0
-    cambio = 300
+    cambio = escalar_valor(300, factor_escala)
     dic_opciones_botones = {}
     dic_texto = {}
     for llave, valor in opciones.items():
@@ -1699,11 +1855,11 @@ def opciones_adicionales_dashboard(app, window, central_widget, dimensiones, est
             dic_opciones_botones[llave] = None
         boton_for = crear_boton("", central_widget, font_size=60, padding=10, radius=10)
         label_for = crear_label(dic_adicionales_texto[llave], central_widget, font_size=30)
-        boton_for.setFixedSize(110,110)
+        boton_for.setFixedSize(escalar_valor(110, factor_escala), escalar_valor(110, factor_escala))
         boton_for.setParent(central_widget)
         label_for.setParent(central_widget)
         boton_for.move(lista_x_pos[c_x], c_y)
-        label_for.move(lista_x_pos[c_x]+150, c_y)
+        label_for.move(lista_x_pos[c_x] + escalar_valor(150, factor_escala), c_y)
         dic_opciones_botones[llave] = [False, boton_for, label_for]
         mostrar_label(label_for)
         mostrar_label(boton_for)
@@ -1712,34 +1868,40 @@ def opciones_adicionales_dashboard(app, window, central_widget, dimensiones, est
         if c_c > 5:
             c_x += 1
             c_c = 0
-            c_y = 350
+            c_y = escalar_valor(350, factor_escala)
     boton_1 = crear_boton("Aceptar", central_widget, font_size=25)
     x = round((((screen_width*0.5)-boton_1.sizeHint().width())*0.5)+(screen_width*0.53))
-    boton_1.move(x,1100)
+    boton_1.move(x,escalar_valor(1100, factor_escala))
     boton_1.setParent(central_widget)
     mostrar_label(boton_1)
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    size = escalar_qsize(pixmap.size(), factor_escala)
+    pixmap = pixmap.scaled(
+        size,
+        aspectRatioMode=Qt.KeepAspectRatio,
+        transformMode=Qt.SmoothTransformation
+    )
     icon = QIcon(pixmap)
     image_button.setIcon(icon)
     image_button.setIconSize(pixmap.size())
-    image_button.move(20,20)
+    image_button.move(escalar_valor(20, factor_escala),escalar_valor(20, factor_escala))
     mostrar_label(image_button)
     image_button_1 = QPushButton("", central_widget)
     pixmap_1 = QPixmap(ruta_imagenes+"lupa.png")
     icon_1 = QIcon(pixmap_1)
     image_button_1.setIcon(icon_1)
-    image_button_1.setIconSize(QSize(80, 80))
-    image_button_1.setFixedSize(150, 150)
+    image_button_1.setIconSize(QSize(escalar_valor(20, factor_escala), escalar_valor(20, factor_escala)))
+    image_button_1.setFixedSize(escalar_valor(150, factor_escala), escalar_valor(150, factor_escala))
     x = round((screen_width-(image_button_1.sizeHint().width()))*0.95)
     image_button_1.move(x,5)
     image_button_2 = QPushButton("", central_widget)
     pixmap_2 = QPixmap(ruta_imagenes+"lupa.png")
     icon_2 = QIcon(pixmap_2)
     image_button_2.setIcon(icon_2)
-    image_button_2.setIconSize(QSize(45, 45))
-    image_button_2.setFixedSize(45, 45)
-    image_button_2.move(740,1000)
+    image_button_2.setIconSize(QSize(escalar_valor(45, factor_escala), escalar_valor(45, factor_escala)))
+    image_button_2.setFixedSize(escalar_valor(45, factor_escala), escalar_valor(45, factor_escala))
+    image_button_2.move(escalar_valor(740, factor_escala), escalar_valor(1000, factor_escala))
     mostrar_label(image_button_1)
 
     event_loop = QEventLoop()
@@ -1785,7 +1947,7 @@ def opciones_adicionales_dashboard(app, window, central_widget, dimensiones, est
                 info["Opciones_adicionales"] = dic_opciones_botones
     image_button.clicked.connect(lambda:on_button_clicked("volver"))
     boton_1.clicked.connect(lambda:on_button_clicked("aceptar"))
-    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto))
+    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto,dimensiones=dimensiones))
     for llave, valor in dic_opciones_botones.items():
         valor[1].clicked.connect(lambda _, l=llave: cambiar_botones_reporte(l))
     event_loop.exec_()
@@ -1793,6 +1955,8 @@ def opciones_adicionales_dashboard(app, window, central_widget, dimensiones, est
 
 def seleccionar_reporte(app, window, central_widget, dimensiones, estado=None, info={}, estado_anterior=""):
     screen_width = dimensiones[0]
+    screen_height = dimensiones[1]
+    factor_escala = calcular_factor_escala(screen_width, screen_height)
     elegir_1 = False
     if estado_anterior == "menu_inicial":
         elegir_1 = True
@@ -1800,25 +1964,25 @@ def seleccionar_reporte(app, window, central_widget, dimensiones, estado=None, i
     titulo = "Selección de reportes"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=60)
     x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
-    titulo_espacios.move(x, 10)
+    titulo_espacios.move(x, escalar_valor(10, factor_escala))
     titulo_espacios.setParent(central_widget)
     mostrar_label(titulo_espacios)
     t_comercial = crear_label("Reportes comerciales", central_widget, font="bold", font_size=32)
-    t_comercial.move(50, 150)
+    t_comercial.move(escalar_valor(50, factor_escala), escalar_valor(150, factor_escala))
     t_comercial.setParent(central_widget)
     mostrar_label(t_comercial)
     t_tarifario = crear_label("Reportes tarifarios", central_widget, font="bold", font_size=32)
-    t_tarifario.move(780, 150)
+    t_tarifario.move(escalar_valor(780, factor_escala), escalar_valor(150, factor_escala))
     t_tarifario.setParent(central_widget)
     mostrar_label(t_tarifario)
     t_tecnico = crear_label("Reportes técnicos", central_widget, font="bold", font_size=32)
-    t_tecnico.move(1400, 150)
+    t_tecnico.move(escalar_valor(1400, factor_escala), escalar_valor(150, factor_escala))
     t_tecnico.setParent(central_widget)
     mostrar_label(t_tecnico)
     dic_reportes = {}
-    lista_x_reportes = [50, 780, 1400]
+    lista_x_reportes = [escalar_valor(50, factor_escala), escalar_valor(780, factor_escala), escalar_valor(1400, factor_escala)]
     for i, (llave, valor) in enumerate(reportes_disponibles.items()):
-        y_reporte = 300
+        y_reporte = escalar_valor(300, factor_escala)
         for elemento in valor:
             if elemento != "GRTT2SAP":
                 if llave not in dic_reportes:
@@ -1827,35 +1991,41 @@ def seleccionar_reporte(app, window, central_widget, dimensiones, estado=None, i
                     dic_reportes[llave][elemento] = None
                 boton_for = crear_boton("", central_widget, font_size=42, padding=10, radius=10)
                 label_for = crear_label(elemento, central_widget, font_size=20)
-                boton_for.setFixedSize(56,56)
+                boton_for.setFixedSize(escalar_valor(56, factor_escala),escalar_valor(56, factor_escala))
                 boton_for.setParent(central_widget)
                 label_for.setParent(central_widget)
-                boton_for.move(lista_x_reportes[i] + 80,y_reporte)
-                label_for.move(lista_x_reportes[i] + 180, y_reporte - 15)
+                boton_for.move(lista_x_reportes[i] + escalar_valor(80, factor_escala),y_reporte)
+                label_for.move(lista_x_reportes[i] + escalar_valor(180, factor_escala), y_reporte - escalar_valor(15, factor_escala))
                 dic_reportes[llave][elemento] = [False, boton_for, label_for]
                 mostrar_label(label_for)
                 mostrar_label(boton_for)
-                y_reporte += 80
+                y_reporte += escalar_valor(80, factor_escala)
     boton_1 = crear_boton("Aceptar", central_widget, font_size=25)
     x = round((((screen_width*0.5)-boton_1.sizeHint().width())*0.5)+(screen_width*0.53))
-    boton_1.move(x,1100)
+    boton_1.move(x,escalar_valor(1100, factor_escala))
     boton_1.setParent(central_widget)
     mostrar_label(boton_1)
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    size = escalar_qsize(pixmap.size(), factor_escala)
+    pixmap = pixmap.scaled(
+        size,
+        aspectRatioMode=Qt.KeepAspectRatio,
+        transformMode=Qt.SmoothTransformation
+    )
     icon = QIcon(pixmap)
     image_button.setIcon(icon)
     image_button.setIconSize(pixmap.size())
-    image_button.move(20,20)
+    image_button.move(escalar_valor(20, factor_escala),escalar_valor(20, factor_escala))
     mostrar_label(image_button)
     image_button_1 = QPushButton("", central_widget)
     pixmap_1 = QPixmap(ruta_imagenes+"lupa.png")
     icon_1 = QIcon(pixmap_1)
     image_button_1.setIcon(icon_1)
-    image_button_1.setIconSize(QSize(80, 80))  # Ajusta el tamaño del ícono
-    image_button_1.setFixedSize(150, 150)
+    image_button_1.setIconSize(QSize(escalar_valor(80, factor_escala), escalar_valor(80, factor_escala)))
+    image_button_1.setFixedSize(escalar_valor(150, factor_escala), escalar_valor(150, factor_escala))
     x = round((screen_width-(image_button_1.sizeHint().width()))*0.95)
-    image_button_1.move(x,5)
+    image_button_1.move(x,escalar_valor(5, factor_escala))
     mostrar_label(image_button_1)
     dic_texto = {"Reportes comerciales":[("GRC1","Información comercial de usuarios regulados"),("GRC2","Información comercial de suministro, transporte, distribución y comercialización"),("GRC3","Información de compensación sector residencial y\nno residencial usuarios regulados"),("GRTT2","Inventario de suscriptores"),("DS56","Usuarios con consumos estacionales"),("DS57","Investigaciones por Desviaciones Significativas"),("DS58"," Resultados Investigaciones por Desviaciones Significativas")],
                 "Reportes tarifarios":[("GRT1","Estructura tarifaria de gas combustible por redes"),("GRT3","Opción tarifaria")],
@@ -1916,7 +2086,7 @@ def seleccionar_reporte(app, window, central_widget, dimensiones, estado=None, i
                     estado, info = seleccionar_carpetas(app, window, central_widget, dimensiones, estado, info)
     image_button.clicked.connect(lambda:on_button_clicked("volver"))
     boton_1.clicked.connect(lambda:on_button_clicked("aceptar"))
-    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto))
+    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto,dimensiones=dimensiones))
     for llave, dic_llave in dic_reportes.items():
         for reporte, lista_reporte in dic_llave.items():
             lista_reporte[1].clicked.connect(lambda _, l=llave, v=reporte: cambiar_botones_reporte(l, v))
@@ -1925,46 +2095,48 @@ def seleccionar_reporte(app, window, central_widget, dimensiones, estado=None, i
 
 def seleccionar_reporte_categoria(app, window, central_widget, dimensiones, estado=None, info={}, estado_anterior=""):
     screen_width = dimensiones[0]
+    screen_height = dimensiones[1]
+    factor_escala = calcular_factor_escala(screen_width, screen_height)
     titulo = "Selección de reportes"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=60)
     x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
-    titulo_espacios.move(x, 10)
+    titulo_espacios.move(x, escalar_valor(10, factor_escala))
     titulo_espacios.setParent(central_widget)
     mostrar_label(titulo_espacios)
     boton_com = crear_boton("", central_widget, font_size=42, padding=2, radius=10)
-    boton_com.setFixedSize(56,56)
+    boton_com.setFixedSize(escalar_valor(56, factor_escala), escalar_valor(56, factor_escala))
     boton_com.setParent(central_widget)
-    boton_com.move(15,275)
+    boton_com.move(escalar_valor(15, factor_escala),escalar_valor(275, factor_escala))
     mostrar_label(boton_com)
     t_comercial = crear_label("Reportes comerciales", central_widget, font="bold", font_size=28)
-    t_comercial.move(55, 250)
+    t_comercial.move(escalar_valor(55, factor_escala), escalar_valor(250, factor_escala))
     t_comercial.setParent(central_widget)
     mostrar_label(t_comercial)
     boton_tar = crear_boton("", central_widget, font_size=42, padding=2, radius=10)
-    boton_tar.setFixedSize(56,56)
+    boton_tar.setFixedSize(escalar_valor(56, factor_escala), escalar_valor(56, factor_escala))
     boton_tar.setParent(central_widget)
-    boton_tar.move(745,275)
+    boton_tar.move(escalar_valor(745, factor_escala),escalar_valor(275, factor_escala))
     mostrar_label(boton_tar)
     t_tarifario = crear_label("Reportes tarifarios", central_widget, font="bold", font_size=28)
-    t_tarifario.move(785, 250)
+    t_tarifario.move(escalar_valor(785, factor_escala), escalar_valor(250, factor_escala))
     t_tarifario.setParent(central_widget)
     mostrar_label(t_tarifario)
     boton_tec = crear_boton("", central_widget, font_size=42, padding=2, radius=10)
-    boton_tec.setFixedSize(56,56)
+    boton_tec.setFixedSize(escalar_valor(56, factor_escala),escalar_valor(56, factor_escala))
     boton_tec.setParent(central_widget)
-    boton_tec.move(1365,275)
+    boton_tec.move(escalar_valor(1365, factor_escala),escalar_valor(275, factor_escala))
     mostrar_label(boton_tec)
     t_tecnico = crear_label("Reportes técnicos", central_widget, font="bold", font_size=28)
-    t_tecnico.move(1405, 250)
+    t_tecnico.move(escalar_valor(1405, factor_escala), escalar_valor(250, factor_escala))
     t_tecnico.setParent(central_widget)
     mostrar_label(t_tecnico)
     dic_categorias = {"Comercial":[False, boton_com, t_comercial],
                     "Tarifario":[False, boton_tar, t_tarifario],
                     "Tecnico":[False, boton_tec, t_tecnico]}
     dic_reportes = {}
-    lista_x_reportes = [50, 780, 1400]
+    lista_x_reportes = [escalar_valor(50, factor_escala), escalar_valor(780, factor_escala), escalar_valor(1400, factor_escala)]
     for i, (llave, valor) in enumerate(reportes_disponibles.items()):
-        y_reporte = 400
+        y_reporte = escalar_valor(400, factor_escala)
         for elemento in valor:
             if elemento != "GRTT2SAP":
                 if llave not in dic_reportes:
@@ -1973,35 +2145,41 @@ def seleccionar_reporte_categoria(app, window, central_widget, dimensiones, esta
                     dic_reportes[llave][elemento] = None
                 boton_for = crear_boton("", central_widget, font_size=42, padding=2, radius=10)
                 label_for = crear_label(elemento, central_widget, font_size=20)
-                boton_for.setFixedSize(56,56)
+                boton_for.setFixedSize(escalar_valor(56, factor_escala),escalar_valor(56, factor_escala))
                 boton_for.setParent(central_widget)
                 label_for.setParent(central_widget)
-                boton_for.move(lista_x_reportes[i] + 80,y_reporte)
-                label_for.move(lista_x_reportes[i] + 180, y_reporte - 15)
+                boton_for.move(lista_x_reportes[i] + escalar_valor(80, factor_escala),y_reporte)
+                label_for.move(lista_x_reportes[i] + escalar_valor(180, factor_escala), y_reporte - escalar_valor(15, factor_escala))
                 dic_reportes[llave][elemento] = [False, boton_for, label_for]
                 mostrar_label(label_for)
                 mostrar_label(boton_for)
-                y_reporte += 80
+                y_reporte += escalar_valor(80, factor_escala)
     boton_1 = crear_boton("Aceptar", central_widget, font_size=25)
     x = round((((screen_width*0.5)-boton_1.sizeHint().width())*0.5)+(screen_width*0.53))
-    boton_1.move(x,1100)
+    boton_1.move(x,escalar_valor(1100, factor_escala))
     boton_1.setParent(central_widget)
     mostrar_label(boton_1)
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    size = escalar_qsize(pixmap.size(), factor_escala)
+    pixmap = pixmap.scaled(
+        size,
+        aspectRatioMode=Qt.KeepAspectRatio,
+        transformMode=Qt.SmoothTransformation
+    )
     icon = QIcon(pixmap)
     image_button.setIcon(icon)
     image_button.setIconSize(pixmap.size())
-    image_button.move(20,20)
+    image_button.move(escalar_valor(20, factor_escala),escalar_valor(20, factor_escala))
     mostrar_label(image_button)
     image_button_1 = QPushButton("", central_widget)
     pixmap_1 = QPixmap(ruta_imagenes+"lupa.png")
     icon_1 = QIcon(pixmap_1)
     image_button_1.setIcon(icon_1)
-    image_button_1.setIconSize(QSize(80, 80))  # Ajusta el tamaño del ícono
-    image_button_1.setFixedSize(150, 150)
+    image_button_1.setIconSize(QSize(escalar_valor(80, factor_escala),escalar_valor(80, factor_escala)))  # Ajusta el tamaño del ícono
+    image_button_1.setFixedSize(escalar_valor(150, factor_escala), escalar_valor(150, factor_escala))
     x = round((screen_width-(image_button_1.sizeHint().width()))*0.95)
-    image_button_1.move(x,5)
+    image_button_1.move(x,escalar_valor(5, factor_escala))
     mostrar_label(image_button_1)
     dic_texto = {"Reportes comerciales":[("GRC1","Información comercial de usuarios regulados"),("GRC2","Información comercial de suministro, transporte, distribución y comercialización"),("GRC3","Información de compensación sector residencial y\nno residencial usuarios regulados"),("GRTT2","Inventario de suscriptores"),("DS56","Usuarios con consumos estacionales"),("DS57","Investigaciones por Desviaciones Significativas"),("DS58"," Resultados Investigaciones por Desviaciones Significativas")],
                 "Reportes tarifarios":[("GRT1","Estructura tarifaria de gas combustible por redes"),("GRT3","Opción tarifaria")],
@@ -2082,7 +2260,7 @@ def seleccionar_reporte_categoria(app, window, central_widget, dimensiones, esta
                     estado, info = seleccionar_carpetas(app, window, central_widget, dimensiones, estado, info)
     image_button.clicked.connect(lambda:on_button_clicked("volver"))
     boton_1.clicked.connect(lambda:on_button_clicked("aceptar"))
-    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto))
+    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto,dimensiones=dimensiones))
     for llave, dic_llave in dic_reportes.items():
         for reporte, lista_reporte in dic_llave.items():
             lista_reporte[1].clicked.connect(lambda _, l=llave, v=reporte: cambiar_botones_reporte(l, v))
@@ -2094,31 +2272,33 @@ def seleccionar_reporte_categoria(app, window, central_widget, dimensiones, esta
 def seleccionar_periodo(app, window, central_widget, dimensiones, estado=None, info={}, estado_anterior="", incluir_anual=True, c_meses=12):
     c_meses -= 1
     screen_width = dimensiones[0]
+    screen_height = dimensiones[1]
+    factor_escala = calcular_factor_escala(screen_width, screen_height)
     titulo = "Selección de periodo"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=60)
     x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
-    titulo_espacios.move(x, 10)
+    titulo_espacios.move(x, escalar_valor(10, factor_escala))
     titulo_espacios.setParent(central_widget)
     mostrar_label(titulo_espacios)
     if incluir_anual:
         boton_2 = crear_boton("", central_widget, font_size=60, padding=5)
-        boton_2.setFixedSize(60,60)
-        boton_2.move(1200,210)
+        boton_2.setFixedSize(escalar_valor(60, factor_escala), escalar_valor(60, factor_escala))
+        boton_2.move(escalar_valor(1200, factor_escala),escalar_valor(210, factor_escala))
         boton_2.setParent(central_widget)
         mostrar_label(boton_2)
         t_anual = crear_label("Anual", central_widget, font="bold", font_size=40)
-        t_anual.move(1300, 170)
+        t_anual.move(escalar_valor(1300, factor_escala), escalar_valor(170, factor_escala))
         t_anual.setParent(central_widget)
         mostrar_label(t_anual)
     anual = False
     boton_1 = crear_boton("Aceptar", central_widget, font_size=25)
     x = round((((screen_width*0.5)-boton_1.sizeHint().width())*0.5)+(screen_width*0.53))
-    boton_1.move(x,1100)
+    boton_1.move(x,escalar_valor(1100, factor_escala))
     boton_1.setParent(central_widget)
     mostrar_label(boton_1)
     boton_3 = crear_boton("Limpiar", central_widget, font_size=25)
     x = round((((screen_width*0.5)-boton_3.sizeHint().width())*0.5)+(screen_width*0.53))
-    boton_3.move(1700,150)
+    boton_3.move(escalar_valor(1700, factor_escala),escalar_valor(150, factor_escala))
     boton_3.setParent(central_widget)
     mostrar_label(boton_3)
     if len(lista_anios) >=3 :
@@ -2127,28 +2307,34 @@ def seleccionar_periodo(app, window, central_widget, dimensiones, estado=None, i
         lista_anios_sel = lista_anios.copy()
     lista_fechas_sel = []
     dic_fechas = {}
-    x_fecha = 65
+    x_fecha = escalar_valor(65, factor_escala)
     for anio in lista_anios_sel:
-        y_fecha = 300
+        y_fecha = escalar_valor(300, factor_escala)
         for mes in lista_meses:
             llave = anio+" / "+mes
             lista_fechas_sel.append(llave)
             dic_fechas[llave] = [(anio, mes), False, crear_boton("", central_widget, font_size=42, padding=1, radius=5), crear_label(llave, central_widget, font_size=15)]
-            dic_fechas[llave][2].setFixedSize(48,48)
+            dic_fechas[llave][2].setFixedSize(escalar_valor(48, factor_escala),escalar_valor(48, factor_escala))
             dic_fechas[llave][2].setParent(central_widget)
             dic_fechas[llave][3].setParent(central_widget)
             dic_fechas[llave][2].move(x_fecha,y_fecha)
-            dic_fechas[llave][3].move(x_fecha + 85, y_fecha-10)
-            y_fecha += 65
+            dic_fechas[llave][3].move(x_fecha + escalar_valor(85, factor_escala), y_fecha - escalar_valor(10, factor_escala))
+            y_fecha += escalar_valor(65, factor_escala)
             mostrar_label(dic_fechas[llave][2])
             mostrar_label(dic_fechas[llave][3])
-        x_fecha += 425
+        x_fecha += escalar_valor(425, factor_escala)
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    size = escalar_qsize(pixmap.size(), factor_escala)
+    pixmap = pixmap.scaled(
+        size,
+        aspectRatioMode=Qt.KeepAspectRatio,
+        transformMode=Qt.SmoothTransformation
+    )
     icon = QIcon(pixmap)
     image_button.setIcon(icon)
     image_button.setIconSize(pixmap.size())
-    image_button.move(20,20)
+    image_button.move(escalar_valor(20, factor_escala), escalar_valor(20, factor_escala))
     mostrar_label(image_button)
 
     event_loop = QEventLoop()
@@ -2248,6 +2434,8 @@ def seleccionar_periodo(app, window, central_widget, dimensiones, estado=None, i
                     estado, info = seleccionar_reporte_categoria(app, window, central_widget, dimensiones, estado=estado, info=info)
                 elif estado_anterior == "menu_reportes_comerciales":
                     estado, info = menu_reportes_comerciales(app, window, central_widget, dimensiones, estado=estado, info=info)
+                elif estado_anterior == "seleccionar_carpetas":
+                    estado, info = seleccionar_carpetas(app, window, central_widget, dimensiones, estado=estado, info=info)
                 elif estado == "convertir_archivos":
                     estado, info = seleccionar_reporte_categoria(app, window, central_widget, dimensiones, estado=estado, info=info)
                 else:
@@ -2272,6 +2460,8 @@ def seleccionar_periodo(app, window, central_widget, dimensiones, estado=None, i
 
 def seleccionar_categoria(app, window, central_widget, dimensiones, estado=None, info={}, estado_anterior=""):
     screen_width = dimensiones[0]
+    screen_height = dimensiones[1]
+    factor_escala = calcular_factor_escala(screen_width, screen_height)
     elegir_1 = False
     if estado_anterior == "menu_inicial":
         elegir_1 = True
@@ -2279,61 +2469,67 @@ def seleccionar_categoria(app, window, central_widget, dimensiones, estado=None,
     titulo = "Selección de reportes"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=60)
     x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
-    titulo_espacios.move(x, 10)
+    titulo_espacios.move(x, escalar_valor(10, factor_escala))
     titulo_espacios.setParent(central_widget)
     mostrar_label(titulo_espacios)
     lista_categorias = ["Reporte comercial", "Reporte tarifario", "Reporte técnico"]
     dic_categorias = {}
-    lista_y = [300,450,600]
+    lista_y = [escalar_valor(300, factor_escala),escalar_valor(450, factor_escala),escalar_valor(600, factor_escala)]
     for i in range(len(lista_categorias)):
         y_reporte = lista_y[i]
         elemento = lista_categorias[i]
         label_for = crear_label(elemento, central_widget, font_size=20)
         boton_for = crear_boton("", central_widget, font_size=42, padding=10, radius=10)
-        boton_for.setFixedSize(56,56)
+        boton_for.setFixedSize(escalar_valor(56, factor_escala), escalar_valor(56, factor_escala))
         boton_for.setParent(central_widget)
         label_for.setParent(central_widget)
-        boton_for.move(700,y_reporte)
-        label_for.move(800,y_reporte-20)
+        boton_for.move(escalar_valor(700, factor_escala),y_reporte)
+        label_for.move(escalar_valor(800, factor_escala),y_reporte - escalar_valor(20, factor_escala))
         mostrar_label(boton_for)
         mostrar_label(label_for)
         dic_categorias[elemento] = [False, boton_for, label_for]
     boton_1 = crear_boton("Aceptar", central_widget, font_size=25)
     x = round((((screen_width*0.5)-boton_1.sizeHint().width())*0.5)+(screen_width*0.53))
-    boton_1.move(x,1100)
+    boton_1.move(x,escalar_valor(1100, factor_escala))
     boton_1.setParent(central_widget)
     mostrar_label(boton_1)
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    size = escalar_qsize(pixmap.size(), factor_escala)
+    pixmap = pixmap.scaled(
+        size,
+        aspectRatioMode=Qt.KeepAspectRatio,
+        transformMode=Qt.SmoothTransformation
+    )
     icon = QIcon(pixmap)
     image_button.setIcon(icon)
     image_button.setIconSize(pixmap.size())
-    image_button.move(20,20)
+    image_button.move(escalar_valor(20, factor_escala), escalar_valor(20, factor_escala))
     mostrar_label(image_button)
     image_button_1 = QPushButton("", central_widget)
     pixmap_1 = QPixmap(ruta_imagenes+"lupa.png")
     icon_1 = QIcon(pixmap_1)
     image_button_1.setIcon(icon_1)
-    image_button_1.setIconSize(QSize(80, 80))  # Ajusta el tamaño del ícono
-    image_button_1.setFixedSize(150, 150)
+    image_button_1.setIconSize(QSize(escalar_valor(80, factor_escala),escalar_valor(80, factor_escala)))  # Ajusta el tamaño del ícono
+    image_button_1.setFixedSize(escalar_valor(150, factor_escala),escalar_valor(150, factor_escala))
     x = round((screen_width-(image_button_1.sizeHint().width()))*0.95)
     image_button_1.move(x,5)
     mostrar_label(image_button_1)
     label_nuevo_reporte = crear_label("", central_widget, font="bold", font_size=30)
-    label_nuevo_reporte.move(50, 980)
+    label_nuevo_reporte.move(escalar_valor(50, factor_escala), escalar_valor(980, factor_escala))
     label_nuevo_reporte.setParent(central_widget)
     esconder_label(label_nuevo_reporte)
     v_line_edit = crear_label("Nuevo reporte: ", central_widget, font_size=25, line_edit=True)
-    v_line_edit.move(700,1000)
+    v_line_edit.move(escalar_valor(700, factor_escala),escalar_valor(1000, factor_escala))
     v_line_edit.setParent(central_widget)
     mostrar_label(v_line_edit)
     label_check = QPushButton("", central_widget)
     pixmap_check = QPixmap(ruta_imagenes+"check.png")
-    pixmap_check = pixmap_check.scaled(320,80, aspectRatioMode=1)
+    pixmap_check = pixmap_check.scaled(escalar_valor(320, factor_escala),escalar_valor(80, factor_escala), aspectRatioMode=1)
     icon_check = QIcon(pixmap_check)
     label_check.setIcon(icon_check)
     label_check.setIconSize(pixmap_check.size())
-    label_check.move(1660,980)
+    label_check.move(escalar_valor(1660, factor_escala),escalar_valor(980, factor_escala))
     esconder_label(label_check)
     dic_texto = {"Reportes comerciales":"Valores de facturación, consumo y lecturas de clientes R y NR",
                 "Reportes tarifarios":"Componentes tarifarios de los diferentes sectores de mercado para clientes R y NR",
@@ -2400,7 +2596,7 @@ def seleccionar_categoria(app, window, central_widget, dimensiones, estado=None,
     image_button.clicked.connect(lambda:on_button_clicked("volver"))
     v_line_edit.returnPressed.connect(lambda: guardar_nombre(label_nuevo_reporte))
     boton_1.clicked.connect(lambda:on_button_clicked("aceptar"))
-    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto))
+    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto,dimensiones=dimensiones))
     for elemento, lista_elemento in dic_categorias.items():
         lista_elemento[1].clicked.connect(lambda _, l=elemento: cambiar_botones_reporte(l))
     event_loop.exec_()
@@ -2408,59 +2604,67 @@ def seleccionar_categoria(app, window, central_widget, dimensiones, estado=None,
 
 def seleccionar_carpetas(app, window, central_widget, dimensiones, estado=None, info={}, estado_anterior=""):
     screen_width = dimensiones[0]
+    screen_height = dimensiones[1]
+    factor_escala = calcular_factor_escala(screen_width, screen_height)
 
     titulo = "Selección de carpetas"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=60)
     x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
-    titulo_espacios.move(x, 10)
+    titulo_espacios.move(x, escalar_valor(10, factor_escala))
     titulo_espacios.setParent(central_widget)
     mostrar_label(titulo_espacios)
     dic_carpetas = {}
-    lista_x_reportes = [50, 900]
+    lista_x_reportes = [escalar_valor(50, factor_escala), escalar_valor(900, factor_escala)]
     c_x = 0
-    c_y = 300
+    c_y = escalar_valor(300, factor_escala)
     c_c = 0
     for valor in lista_carpetas_extra:
         if valor not in dic_carpetas:
             dic_carpetas[valor] = None
         boton_for = crear_boton("", central_widget, font_size=48, padding=10, radius=10)
         label_for = crear_label(valor, central_widget, font_size=30)
-        boton_for.setFixedSize(80,80)
+        boton_for.setFixedSize(escalar_valor(80, factor_escala),escalar_valor(80, factor_escala))
         boton_for.setParent(central_widget)
         label_for.setParent(central_widget)
-        boton_for.move(lista_x_reportes[c_x] + 80, c_y)
-        label_for.move(lista_x_reportes[c_x] + 180, c_y - 25)
+        boton_for.move(lista_x_reportes[c_x] + escalar_valor(80, factor_escala), c_y)
+        label_for.move(lista_x_reportes[c_x] + escalar_valor(180, factor_escala), c_y - escalar_valor(25, factor_escala))
         dic_carpetas[valor] = [False, boton_for, label_for]
         mostrar_label(label_for)
         mostrar_label(boton_for)
         c_c += 1
-        c_y += 120
+        c_y += escalar_valor(120, factor_escala)
         if c_c > 5:
             c_x += 1
             c_c = 0
-            c_y = 300
+            c_y = escalar_valor(300, factor_escala)
     boton_1 = crear_boton("Aceptar", central_widget, font_size=25)
     x = round((((screen_width*0.5)-boton_1.sizeHint().width())*0.5)+(screen_width*0.53))
-    boton_1.move(x,1100)
+    boton_1.move(x,escalar_valor(1100, factor_escala))
     boton_1.setParent(central_widget)
     mostrar_label(boton_1)
 
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    size = escalar_qsize(pixmap.size(), factor_escala)
+    pixmap = pixmap.scaled(
+        size,
+        aspectRatioMode=Qt.KeepAspectRatio,
+        transformMode=Qt.SmoothTransformation
+    )
     icon = QIcon(pixmap)
     image_button.setIcon(icon)
     image_button.setIconSize(pixmap.size())
-    image_button.move(20,20)
+    image_button.move(escalar_valor(20, factor_escala), escalar_valor(20, factor_escala))
     mostrar_label(image_button)
 
     image_button_1 = QPushButton("", central_widget)
     pixmap_1 = QPixmap(ruta_imagenes+"lupa.png")
     icon_1 = QIcon(pixmap_1)
     image_button_1.setIcon(icon_1)
-    image_button_1.setIconSize(QSize(80, 80))  # Ajusta el tamaño del ícono
-    image_button_1.setFixedSize(150, 150)
+    image_button_1.setIconSize(QSize(escalar_valor(80, factor_escala),escalar_valor(80, factor_escala)))  # Ajusta el tamaño del ícono
+    image_button_1.setFixedSize(escalar_valor(150, factor_escala),escalar_valor(150, factor_escala))
     x = round((screen_width-(image_button_1.sizeHint().width()))*0.95)
-    image_button_1.move(x,5)
+    image_button_1.move(x,escalar_valor(5, factor_escala))
     mostrar_label(image_button_1)
     dic_texto = {"Reportes Nuevo SUI":"Información original, certificada y archivos .SUI reportada a la SSPD","Seguimiento":"Información de consecutivos de años anteriores, evidencias SOX\nhallazgos y mesas de ayuda",
                 "ANS":"Acuerdos de Nivel de Servicio (información enviada por la áreas)","Reportes CREG":"Reportes de activos (cumplimiento del Anexo 18 Resolución CREG 202 de 2013)",
@@ -2502,12 +2706,27 @@ def seleccionar_carpetas(app, window, central_widget, dimensiones, estado=None, 
             elif texto == "aceptar":
                 info["Carpetas"] = dic_carpetas
                 if estado == "convertir_archivos":
-                    estado, info = seleccionar_reporte_categoria(app, window, central_widget, dimensiones, estado=estado, info=info, estado_anterior="seleccionar_carpetas")
+                    if dic_carpetas ['Reportes Nuevo SUI'][0]:
+                        estado, info = seleccionar_reporte_categoria(app, window, central_widget, dimensiones, estado=estado, info=info, estado_anterior="seleccionar_carpetas")
+                    else:
+                        info["Categoria"] = {"Comercial":[True, None, None],
+                                            "Tarifario":[True, None, None],
+                                            "Tecnico":[True, None, None]}
+                        dic_reportes = {}
+                        for i, (llave, valor) in enumerate(reportes_disponibles.items()):
+                            for elemento in valor:
+                                if llave not in dic_reportes:
+                                    dic_reportes[llave] = {}
+                                if elemento not in dic_reportes[llave]:
+                                    dic_reportes[llave][elemento] = None
+                                dic_reportes[llave][elemento] = [True, None, None]
+                        info["Reporte"] = dic_reportes
+                        estado, info = seleccionar_periodo(app, window, central_widget, dimensiones, estado, info, estado_anterior="seleccionar_carpetas", c_meses=12)
                 else:
                     estado, info = seleccionar_reporte(app, window, central_widget, dimensiones, estado=estado, info=info)
     image_button.clicked.connect(lambda:on_button_clicked("volver"))
     boton_1.clicked.connect(lambda:on_button_clicked("aceptar"))
-    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto))
+    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto,dimensiones=dimensiones))
     for llave, valor in dic_carpetas.items():
         valor[1].clicked.connect(lambda _, l=llave: cambiar_botones_reporte(l))
     event_loop.exec_()
@@ -2517,26 +2736,33 @@ def confirmacion_seleccion(app, window, central_widget, dimensiones, texto, op, 
     estado = op
     info = None
     screen_width, screen_height = dimensiones
+    factor_escala = calcular_factor_escala(screen_width, screen_height)
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    size = escalar_qsize(pixmap.size(), factor_escala)
+    pixmap = pixmap.scaled(
+        size,
+        aspectRatioMode=Qt.KeepAspectRatio,
+        transformMode=Qt.SmoothTransformation
+    )
     icon = QIcon(pixmap)
     image_button.setIcon(icon)
     image_button.setIconSize(pixmap.size())
-    image_button.move(20,20)
+    image_button.move(escalar_valor(20, factor_escala),escalar_valor(20, factor_escala))
     mostrar_label(image_button)
     cuadro = crear_cuadro(central_widget, dimensiones)
     mostrar_label(cuadro)
     titulo_espacios = crear_label(texto, central_widget, font="bold", font_size=40, color="#030918", background_color="white")
     x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
-    titulo_espacios.move(x, 400)
+    titulo_espacios.move(x, escalar_valor(400, factor_escala))
     mostrar_label(titulo_espacios)
     texto_1 = crear_label("¿Desea continuar con la selección?", central_widget, font_size=30, color="#030918", background_color="white")
     x = round((screen_width-texto_1.sizeHint().width())*0.5)
-    texto_1.move(x, 600)
+    texto_1.move(x, escalar_valor(600, factor_escala))
     mostrar_label(texto_1)
     boton_1 = crear_boton("Aceptar", central_widget)
     x = round((((screen_width*0.5)-boton_1.sizeHint().width())*0.5)+(screen_width*0.53))
-    boton_1.move(x,1040)
+    boton_1.move(x, escalar_valor(1040, factor_escala))
     boton_1.setParent(central_widget)
     mostrar_label(boton_1)
 
@@ -2610,10 +2836,12 @@ def opciones_adicionales(app, window, central_widget, dimensiones, opciones={}, 
     if not len(opciones):
         return estado, info
     screen_width = dimensiones[0]
+    screen_height = dimensiones[1]
+    factor_escala = calcular_factor_escala(screen_width, screen_height)
     lista_cod_DANE = [f"{l}, {v}" for l,v in dic_DANE_nombres.items()]
     largo_lista_cod_DANE = len(lista_cod_DANE)
     lista_cod_DANE_c = []
-    ancho_texto = 80
+    ancho_texto = escalar_valor(80, factor_escala)
     for i in range(0,largo_lista_cod_DANE,2):
         t1 = str(lista_cod_DANE[i])
         if i+1 < largo_lista_cod_DANE:
@@ -2626,27 +2854,27 @@ def opciones_adicionales(app, window, central_widget, dimensiones, opciones={}, 
     titulo = "Opciones adicionales"
     titulo_espacios = crear_label(titulo, central_widget, font="bold", font_size=50)
     x = round((screen_width-titulo_espacios.sizeHint().width())*0.5)
-    titulo_espacios.move(x, 10)
+    titulo_espacios.move(x, escalar_valor(10, factor_escala))
     titulo_espacios.setParent(central_widget)
     mostrar_label(titulo_espacios)
     label_codigo_DANE = crear_label("", central_widget, font="bold", font_size=12)
-    label_codigo_DANE.move(50, 980)
+    label_codigo_DANE.move(escalar_valor(50, factor_escala), escalar_valor(980, factor_escala))
     label_codigo_DANE.setParent(central_widget)
     esconder_label(label_codigo_DANE)
     label_cantidad_filas = crear_label("", central_widget, font="bold", font_size=12)
-    label_cantidad_filas.move(50, 980)
+    label_cantidad_filas.move(escalar_valor(50, factor_escala), escalar_valor(980, factor_escala))
     label_cantidad_filas.setParent(central_widget)
     esconder_label(label_cantidad_filas)
-    cambio = 120
+    cambio = escalar_valor(120, factor_escala)
     codigo_DANE = False
     if "codigo_DANE" in opciones:
         if opciones["codigo_DANE"]:
             v_line_edit = crear_label("Código DANE: ", central_widget, font_size=15, line_edit=True)
             x = round((screen_width-v_line_edit.sizeHint().width())*0.5)
-            v_line_edit.move(x,1000)
+            v_line_edit.move(x,escalar_valor(1000, factor_escala))
             v_line_edit.setParent(central_widget)
             mostrar_label(v_line_edit)
-            cambio = 150
+            cambio = escalar_valor(150, factor_escala)
             codigo_DANE = True
     cantidad_filas = False
     if "cantidad_filas" in opciones:
@@ -2654,20 +2882,20 @@ def opciones_adicionales(app, window, central_widget, dimensiones, opciones={}, 
             cantidad_filas = True
             v_line_edit = crear_label("Cantidad de filas mínimo: ", central_widget, font_size=15, line_edit=True)
             x = round((screen_width-v_line_edit.sizeHint().width())*0.5)
-            v_line_edit.move(x,1000)
+            v_line_edit.move(x,escalar_valor(1000, factor_escala))
             v_line_edit.setParent(central_widget)
             mostrar_label(v_line_edit)
     label_check = QPushButton("", central_widget)
     pixmap_check = QPixmap(ruta_imagenes+"check.png")
-    pixmap_check = pixmap_check.scaled(320,80, aspectRatioMode=1)
+    pixmap_check = pixmap_check.scaled(escalar_valor(320, factor_escala),escalar_valor(80, factor_escala), aspectRatioMode=1)
     icon_check = QIcon(pixmap_check)
     label_check.setIcon(icon_check)
     label_check.setIconSize(pixmap_check.size())
-    label_check.move(1660,980)
+    label_check.move(escalar_valor(1660, factor_escala),escalar_valor(980, factor_escala))
     esconder_label(label_check)
-    lista_x_pos = [50, 780, 1400]
+    lista_x_pos = [escalar_valor(50, factor_escala), escalar_valor(780, factor_escala), escalar_valor(1400, factor_escala)]
     c_x = 0
-    c_y = 200
+    c_y = escalar_valor(200, factor_escala)
     c_c = 0
     dic_opciones_botones = {}
     dic_texto = {}
@@ -2678,11 +2906,11 @@ def opciones_adicionales(app, window, central_widget, dimensiones, opciones={}, 
                 dic_opciones_botones[llave] = None
             boton_for = crear_boton("", central_widget, font_size=48, padding=10, radius=10)
             label_for = crear_label(dic_adicionales_texto[llave], central_widget, font_size=20)
-            boton_for.setFixedSize(80,80)
+            boton_for.setFixedSize(escalar_valor(80, factor_escala),escalar_valor(80, factor_escala))
             boton_for.setParent(central_widget)
             label_for.setParent(central_widget)
-            boton_for.move(lista_x_pos[c_x] + 80, c_y)
-            label_for.move(lista_x_pos[c_x] + 150, c_y - 25)
+            boton_for.move(lista_x_pos[c_x] + escalar_valor(80, factor_escala), c_y)
+            label_for.move(lista_x_pos[c_x] + escalar_valor(150, factor_escala), c_y - escalar_valor(25, factor_escala))
             dic_opciones_botones[llave] = [False, boton_for, label_for]
             mostrar_label(label_for)
             mostrar_label(boton_for)
@@ -2691,34 +2919,40 @@ def opciones_adicionales(app, window, central_widget, dimensiones, opciones={}, 
             if c_c > 5:
                 c_x += 1
                 c_c = 0
-                c_y = 200
+                c_y = escalar_valor(200, factor_escala)
     boton_1 = crear_boton("Aceptar", central_widget, font_size=25)
     x = round((((screen_width*0.5)-boton_1.sizeHint().width())*0.5)+(screen_width*0.53))
-    boton_1.move(x,1100)
+    boton_1.move(x,escalar_valor(1100, factor_escala))
     boton_1.setParent(central_widget)
     mostrar_label(boton_1)
     image_button = QPushButton("", central_widget)
     pixmap = QPixmap(ruta_imagenes+"flecha.png")
+    size = escalar_qsize(pixmap.size(), factor_escala)
+    pixmap = pixmap.scaled(
+        size,
+        aspectRatioMode=Qt.KeepAspectRatio,
+        transformMode=Qt.SmoothTransformation
+    )
     icon = QIcon(pixmap)
     image_button.setIcon(icon)
     image_button.setIconSize(pixmap.size())
-    image_button.move(20,20)
+    image_button.move(escalar_valor(20, factor_escala),escalar_valor(20, factor_escala))
     mostrar_label(image_button)
     image_button_1 = QPushButton("", central_widget)
     pixmap_1 = QPixmap(ruta_imagenes+"lupa.png")
     icon_1 = QIcon(pixmap_1)
     image_button_1.setIcon(icon_1)
-    image_button_1.setIconSize(QSize(80, 80))
-    image_button_1.setFixedSize(150, 150)
+    image_button_1.setIconSize(QSize(escalar_valor(80, factor_escala), escalar_valor(80, factor_escala)))
+    image_button_1.setFixedSize(escalar_valor(150, factor_escala), escalar_valor(150, factor_escala))
     x = round((screen_width-(image_button_1.sizeHint().width()))*0.95)
-    image_button_1.move(x,5)
+    image_button_1.move(x,escalar_valor(5, factor_escala))
     image_button_2 = QPushButton("", central_widget)
     pixmap_2 = QPixmap(ruta_imagenes+"lupa.png")
     icon_2 = QIcon(pixmap_2)
     image_button_2.setIcon(icon_2)
-    image_button_2.setIconSize(QSize(45, 45))
-    image_button_2.setFixedSize(45, 45)
-    image_button_2.move(740,1000)
+    image_button_2.setIconSize(QSize(escalar_valor(45, factor_escala), escalar_valor(45, factor_escala)))
+    image_button_2.setFixedSize(escalar_valor(45, factor_escala), escalar_valor(45, factor_escala))
+    image_button_2.move(escalar_valor(740, factor_escala), escalar_valor(1000, factor_escala))
     mostrar_label(image_button_1)
     if codigo_DANE:
         mostrar_label(image_button_2)
@@ -2788,8 +3022,8 @@ def opciones_adicionales(app, window, central_widget, dimensiones, opciones={}, 
                 info["Opciones_adicionales"] = dic_opciones_botones
     image_button.clicked.connect(lambda:on_button_clicked("volver"))
     boton_1.clicked.connect(lambda:on_button_clicked("aceptar"))
-    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto))
-    image_button_2.clicked.connect(lambda: ventana_secundaria(central_widget,"Códigos DANE disponibles",dic_texto_2, lista=False))
+    image_button_1.clicked.connect(lambda: ventana_secundaria(central_widget,titulo,dic_texto,dimensiones=dimensiones))
+    image_button_2.clicked.connect(lambda: ventana_secundaria(central_widget,"Códigos DANE disponibles",dic_texto_2, lista=False,dimensiones=dimensiones))
     if codigo_DANE:
         v_line_edit.returnPressed.connect(lambda: guardar_nombre(label_codigo_DANE))
     if cantidad_filas:
@@ -2800,13 +3034,16 @@ def opciones_adicionales(app, window, central_widget, dimensiones, opciones={}, 
     event_loop.exec_()
     return estado, info
 
-def ventana_secundaria(central_widget, titulo, dic_texto, lista=True):
+def ventana_secundaria(central_widget, titulo, dic_texto, lista=True, dimensiones=(1920, 1200)):
     ventana = QDialog(central_widget)
     ventana.setWindowTitle(titulo)
     ventana.setGeometry(central_widget.geometry().left(), central_widget.geometry().top(), int(central_widget.width()*0.9), int(central_widget.height()*0.9))
     ventana.setStyleSheet(f"""QWidget{{background-color: #030918; border: 5px solid #030918}}""")
     layout = QVBoxLayout()
-    font_size = 24
+    screen_width = dimensiones[0]
+    screen_height = dimensiones[1]
+    factor_escala = calcular_factor_escala(screen_width, screen_height)
+    font_size = escalar_valor(24, factor_escala)
     font_id = QFontDatabase().addApplicationFont(ruta_fuente)
     font_family = QFontDatabase().applicationFontFamilies(font_id)[0]
     font_id_1 = QFontDatabase().addApplicationFont(ruta_fuente_negrilla)

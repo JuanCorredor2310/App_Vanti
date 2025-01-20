@@ -478,10 +478,10 @@ def variables_reportes(reporte):
         elif reporte == "GRTT2SAP":
                 generales_carga = ["NIU","Tipo_usuario","ID_Comercializador","ID_Mercado","Codigo_DANE","Ubicacion","Direccion","Informacion_predial_actualizada",
                                 "Cedula_Catastral","Estrato","Altitud","Longitud","Latitud","Estado","Fecha_ajuste",
-                                "Desc_tipo_usuario","ID_Sociedad_SAP","Municipio","Llave_Signatura","Tipo_tarifa", "STS_Regularizacion","Codigo_SAP"]
+                                "Desc_tipo_usuario","ID_Sociedad_SAP","Municipio","Llave_Signatura","Tipo_tarifa", "STS_Regularizacion","Codigo_STS_Regularizacion", "Numero_equipo"]
                 generales_presentacion = ["NIU","Tipo_usuario","ID_Comercializador","ID_Mercado","Codigo_DANE","Ubicacion","Direccion","Informacion_predial_actualizada",
                                 "Cedula_Catastral","Estrato","Altitud","Longitud","Latitud","Estado","Fecha_ajuste",
-                                "Desc_tipo_usuario","ID_Sociedad_SAP","Municipio","Llave_Signatura","Tipo_tarifa", "STS_Regularizacion","Codigo_SAP"]
+                                "Desc_tipo_usuario","ID_Sociedad_SAP","Municipio","Llave_Signatura","Tipo_tarifa", "STS_Regularizacion","Codigo_STS_Regularizacion", "Numero_equipo"]
                 generales_no_float = ["NIU","Tipo_usuario","ID_Comercializador","ID_Mercado","Codigo_DANE","Ubicacion","Direccion","Informacion_predial_actualizada",
                                         "Cedula_Catastral","Estrato","Altitud","Estado"]
                 generales_float = ["Longitud","Latitud"]

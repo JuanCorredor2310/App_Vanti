@@ -21,7 +21,8 @@
         "Llave_Signatura": "Llave_Signatura",
         "Tipo_tarifa": "Tipo_tarifa",
         "STS_Regularizacion": "STS_Regularizacion",
-        "Codigo_SAP": "Codigo_SAP"
+        "Codigo_STS_Regularizacion": "Codigo_STS_Regularizacion",
+        "Numero_equipo": "Numero_equipo"
     },
     "generales_no_float": [
         "NIU",
@@ -67,7 +68,8 @@
         "Llave_Signatura",
         "Tipo_tarifa",
         "STS_Regularizacion",
-        "Codigo_SAP"
+        "Codigo_STS_Regularizacion",
+        "Numero_equipo"
     ],
-    "cantidad_columnas": 22
+    "cantidad_columnas": 23
 }

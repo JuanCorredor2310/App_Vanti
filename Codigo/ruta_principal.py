@@ -27,6 +27,10 @@ def v_guardar_archivos():
     valor = v_ruta_principal(r"Archivos\\Guardar_Archivos\\")
     return valor
 
+def v_carpeta_comprimida():
+    valor = v_ruta_principal(r"Archivos\\Carpetas_Comprimidas\\")
+    return valor
+
 def v_fuentes():
     valor = v_ruta_principal(r"App_Vanti\\Fuentes\\")
     return valor
