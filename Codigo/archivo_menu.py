@@ -44,7 +44,7 @@ lista_reportes_generados = ["_resumen","_form_estandar", #formatos generales
                             "_indicador_tecnico","_reporte_suspension","_indicador_tecnico_IRST","_indicador_tecnico_IRST_minutos","_indicador_tecnico_IRST_horas", #formatos tecnicos
                             "_inventario_suscriptores","_usuarios_unicos","_reporte_facturacion",#calidad de la información
                             "porcentaje_cumplimientos_regulatorios",
-                            "_error","_nuevo","_completo","_procesado","_cambios","_numero_equipo"] #formatos regulatorios
+                            "_error","_nuevo","_completo","_procesado","_cambios","_numero_equipo","_usuarios_regulados_activos"] #formatos regulatorios
 cantidad_datos_estilo_excel = 80000
 fecha_actual = datetime.now()
 anio_actual = fecha_actual.year
@@ -3580,7 +3580,3 @@ if __name__ == "__main__":
 
 # TODO: Pendientes Urgentes
     #Creación de mapa de suspensiones
-    #Revisión Business Plan
-
-# TODO Documento:
-    #Incluir tiempo estimado promedio por mes para la documentación de explicación (Pruebas de tiempo con otros dispositivos)

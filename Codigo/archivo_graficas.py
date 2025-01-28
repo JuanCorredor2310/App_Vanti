@@ -251,6 +251,18 @@ def velocimetro_cumplimientos_regulatorios(archivo, fecha, thread=None):
                     porcentaje = round(df_estado["Porcentaje_cumplimiento"].sum(),2)
                     dic_cantidad_reportes[estado] = conversion_decimales(estado+" ("+str(df_estado["Cantidad_reportes"].sum())+" - "+str(porcentaje)+" %)")
                     dic_df[estado] = porcentaje
+                """
+                if filial == grupo_vanti:
+                    for estado in lista_estado:
+                        if estado == "En plazo":
+                            cantidad = 1100
+                            porcentaje = 100.0
+                        elif estado == "Fuera de plazo":
+                            cantidad = 0
+                            porcentaje = 0.0
+                        dic_cantidad_reportes[estado] = conversion_decimales(f"{estado} ({cantidad} - {porcentaje})%")
+                        dic_df[estado] = porcentaje
+                """
                 ordenadas_llaves = sorted(dic_df, key=lambda x: lista.index(x))
                 dic_df = {k: dic_df[k] for k in ordenadas_llaves}
                 data = {}
@@ -509,6 +521,7 @@ def grafica_pie_tipo_usuario(archivo, fecha, thread=None):
                 plt.gca().spines['right'].set_visible(False)
                 plt.gca().spines['bottom'].set_visible(False)
                 plt.gca().spines['left'].set_visible(False)
+                archivo_copia = archivo_copia.replace("_reporte_consumo_sumatoria", "")
                 n_imagen = archivo_copia.replace(".csv", f"_{dic_filiales_largo[filial]}_pie_consumo_m3.png")
                 plt.savefig(n_imagen, transparent=True, dpi=300)
                 plt.close()
@@ -517,8 +530,8 @@ def grafica_pie_tipo_usuario(archivo, fecha, thread=None):
                 imagen_recortada = imagen.crop(recorte)
                 imagen_recortada.save(n_imagen)
                 informar_imagen(n_imagen, thread=thread)
-    except BaseException:
-        pass
+    except BaseException as e:
+        print(e)
 
 def grafico_barras_consumo(archivo, dic_metricas, thread=None):
     try:

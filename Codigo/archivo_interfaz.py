@@ -172,6 +172,7 @@ def pantalla_inicio(app, window, central_widget, dimensiones):
     image_button.setIcon(icon)
     image_button.setIconSize(pixmap.size())
     image_button.move(escalar_valor(1400, factor_escala),escalar_valor(165, factor_escala))
+    #image_button.move(escalar_valor(1500, factor_escala),escalar_valor(140, factor_escala))
     mostrar_label(image_button)
 
     event_loop = QEventLoop()
@@ -263,6 +264,7 @@ def menu_inicial(app, window, central_widget, dimensiones, estado=None, info=Non
     image_button_2.setIcon(icon)
     image_button_2.setIconSize(pixmap.size())
     image_button_2.move(escalar_valor(1260, factor_escala),escalar_valor(115, factor_escala))
+    #image_button_2.move(escalar_valor(1260, factor_escala),escalar_valor(115, factor_escala))
     mostrar_label(image_button_2)
 
     dic_texto = {"Configuración inicial":"Configuración del aplicativo. Recomendado si no existen las carpetas o archivos necesarios en el dispositivo",

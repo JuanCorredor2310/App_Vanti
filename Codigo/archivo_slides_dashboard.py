@@ -175,7 +175,7 @@ def slide_portada(ubi,fecha,fecha_actual,ubi_carpeta,texto_fecha, dic_metricas, 
                 print(f"No existe la imagen ...{acortar_nombre(nueva_imagen)}")
         ubi_imagen = ubi_carpeta+"\\00. Comercial\\Imagenes\\"
         esp = [(730,440),(1180,440),(1180,670),(730,670)]
-        nueva_imagen = ubi_imagen+texto_fecha+"_reporte_consumo_sumatoria_grupo_vanti_pie_consumo_m3.png"
+        nueva_imagen = ubi_imagen+texto_fecha+"_grupo_vanti_pie_consumo_m3.png"
         if  os.path.exists(nueva_imagen):
             nueva_imagen = Image.open(nueva_imagen).convert("RGBA")
             nueva_imagen,pos = ubicacion_imagen(nueva_imagen,esp)
@@ -336,16 +336,16 @@ def slide_pie_consumo(ubi, fecha_actual, ubi_carpeta, texto_fecha, dic_metricas,
             dibujo.text((850,520), str(dic_metricas["consumo_mes"])+" M", fill=dic_colores["morado_v"], font=ImageFont.truetype(ruta_fuente, 60))
             ubi_imagen = ubi_carpeta+"\\00. Comercial\\Imagenes\\"
             esp = [(120,90),(725,90),(725,520),(120,520)]
-            nueva_imagen = ubi_imagen+texto_fecha+"_reporte_consumo_sumatoria_VANTI_pie_consumo_m3.png"
+            nueva_imagen = ubi_imagen+texto_fecha+"_VANTI_pie_consumo_m3.png"
             imagen = pegar_imagen(nueva_imagen, imagen, esp)
             esp = [(120,590),(725,590),(725,1020),(120,1020)]
-            nueva_imagen = ubi_imagen+texto_fecha+"_reporte_consumo_sumatoria_GNCR_pie_consumo_m3.png"
+            nueva_imagen = ubi_imagen+texto_fecha+"_GNCR_pie_consumo_m3.png"
             imagen = pegar_imagen(nueva_imagen, imagen, esp)
             esp = [(1150,90),(1720,90),(1720,520),(1150,520)]
-            nueva_imagen = ubi_imagen+texto_fecha+"_reporte_consumo_sumatoria_GNCB_pie_consumo_m3.png"
+            nueva_imagen = ubi_imagen+texto_fecha+"_GNCB_pie_consumo_m3.png"
             imagen = pegar_imagen(nueva_imagen, imagen, esp)
             esp = [(1150,590),(1720,590),(1720,1020),(1150,1020)]
-            nueva_imagen = ubi_imagen+texto_fecha+"_reporte_consumo_sumatoria_GOR_pie_consumo_m3.png"
+            nueva_imagen = ubi_imagen+texto_fecha+"_GOR_pie_consumo_m3.png"
             imagen = pegar_imagen(nueva_imagen, imagen, esp)
             imagen.save(ubi+f"slide_{c_slide}.png")
             c_slide += 1
